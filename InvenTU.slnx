@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="backend/InvenTU.Application/InvenTU.Application.csproj" />
+  <Project Path="backend/InvenTU.Core/InvenTU.Core.csproj" />
+  <Project Path="backend/InvenTU.Api/InvenTU.Api.csproj" />
+  <Project Path="backend/InvenTU.Infrastructure/InvenTU.Infrastructure.csproj" />
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="nuget.config" />
+  </Folder>
+</Solution>
