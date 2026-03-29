@@ -1,23 +1,152 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+import '../styles/global.css';
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const navItems = [
+  { label: 'Dashboard', href: '/' },
+  { label: 'Products', href: '/products' },
+  { label: 'Warehouses', href: '/warehouses' },
+  { label: 'Stock Operations', href: '/stock' },
+  { label: 'Reports', href: '/reports' },
+  { label: 'Users', href: '/users' },
+  { label: 'Suppliers', href: '/suppliers' },
+];
+---
+
+<!doctype html>
+<html lang="en" class="h-full bg-surface-alt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title} | invenTU</title>
+    <script is:inline>
+      (function() {
+        const stored = localStorage.getItem('theme');
+        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body class="h-full">
+    <div class="flex h-full">
+      <!-- Sidebar -->
+      <aside
+        id="sidebar"
+        class="fixed inset-y-0 left-0 z-30 w-64 transform bg-sidebar text-sidebar-text transition-transform duration-200 ease-in-out -translate-x-full lg:translate-x-0 lg:static lg:inset-auto"
+      >
+        <div class="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
+          <a href="/" class="text-xl font-bold tracking-wide">invenTU</a>
+        </div>
+        <nav class="mt-4 flex flex-col gap-1 px-3">
+          {navItems.map((item) => {
+            const isActive = currentPath === item.href
+              || (item.href !== '/' && currentPath.startsWith(item.href));
+            return (
+              <a
+                href={item.href}
+                class:list={[
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-sidebar-active text-sidebar-text'
+                    : 'text-sidebar-text-muted hover:bg-sidebar-hover-muted hover:text-sidebar-text',
+                ]}
+              >
+                {item.label}
+              </a>
+            );
+          })}
+        </nav>
+      </aside>
+
+      <!-- Sidebar overlay for mobile -->
+      <div
+        id="sidebar-overlay"
+        class="fixed inset-0 z-20 bg-black/50 hidden lg:hidden"
+      ></div>
+
+      <!-- Main content area -->
+      <div class="flex flex-1 flex-col lg:ml-0">
+        <!-- Topbar -->
+        <header class="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-surface-border bg-surface px-4 shadow-sm">
+          <button
+            id="sidebar-toggle"
+            class="lg:hidden rounded-md p-2 text-text-subtle hover:bg-secondary-100 hover:text-text-primary"
+            type="button"
+            aria-label="Toggle sidebar"
+          >
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h1 class="text-lg font-semibold text-text-primary">{title}</h1>
+          <div class="ml-auto flex items-center gap-4">
+            <button
+              id="theme-toggle"
+              class="btn btn-ghost btn-icon"
+              type="button"
+              aria-label="Toggle dark mode"
+            >
+              <!-- Sun icon (visible in dark mode) -->
+              <svg class="hidden h-5 w-5 dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              <!-- Moon icon (visible in light mode) -->
+              <svg class="block h-5 w-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            </button>
+            <span class="text-sm text-text-muted">User</span>
+          </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="flex-1 overflow-y-auto p-6">
+          <slot />
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      const toggle = document.getElementById('sidebar-toggle');
+
+      function openSidebar() {
+        sidebar?.classList.remove('-translate-x-full');
+        sidebar?.classList.add('translate-x-0');
+        overlay?.classList.remove('hidden');
+      }
+
+      function closeSidebar() {
+        sidebar?.classList.add('-translate-x-full');
+        sidebar?.classList.remove('translate-x-0');
+        overlay?.classList.add('hidden');
+      }
+
+      toggle?.addEventListener('click', () => {
+        const isHidden = sidebar?.classList.contains('-translate-x-full');
+        if (isHidden) openSidebar();
+        else closeSidebar();
+      });
+
+      overlay?.addEventListener('click', closeSidebar);
+
+      // Dark mode toggle
+      const themeToggle = document.getElementById('theme-toggle');
+      themeToggle?.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    </script>
+  </body>
+</html>
