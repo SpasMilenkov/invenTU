@@ -2,6 +2,9 @@ namespace InvenTU.Core.Enums;
 
 public enum MovementType
 {
-    Transfer,
-    Adjustment
+    Receipt,
+    Issue,
+    Adjustment,
+    Count,
+    WriteOff
 }

@@ -4,9 +4,11 @@ namespace InvenTU.Core.Entities;
 
 public sealed class User : IdentityUser<Guid>
 {
-    public string FirstName { get; set; } = null!;
-    public string LastName { get; set; } = null!;
-    public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+    public ICollection<StockMovement> CreatedStockMovements { get; set; } = [];
+    public ICollection<PurchaseOrder> CreatedPurchaseOrders { get; set; } = [];
+    public ICollection<AlertUserState> AlertUserStates { get; set; } = [];
 }
