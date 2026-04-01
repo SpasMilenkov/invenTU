@@ -1,3 +1,4 @@
+using Microsoft.OpenApi;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,13 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer(async (document, context, cancellationToken) =>
     {
+        document.Info = new()
+        {
+            Title = "InvenTU API",
+            Version = "v1",
+            Description = "Inventory Management API"
+        };
+
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 
@@ -48,7 +56,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "InvenTU.API v1");
+        options.SwaggerEndpoint("/openapi/v1.json", "InvenTU API v1");
     });
 }
 
