@@ -1,3 +1,4 @@
+using Microsoft.OpenApi;
 using Serilog;
 
 using InvenTU.Infrastructure;
@@ -13,7 +14,41 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer(async (document, context, cancellationToken) =>
+    {
+        document.Info = new()
+        {
+            Title = "InvenTU API",
+            Version = "v1",
+            Description = "Inventory Management API"
+        };
+
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+
+        // Add JWT bearer security scheme
+        document.Components.SecuritySchemes.Add("bearer", new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "JWT Authorization header using the Bearer scheme."
+        });
+
+        // Apply security scheme globally
+        document.Security = [
+            new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("bearer", document)] = []
+            }
+        ];
+
+        // Set host document with security scheme for all elements 
+        document.SetReferenceHostDocument();
+    });
+});
 
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
 
@@ -23,6 +58,10 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "InvenTU API v1");
+    });
 }
 
 app.UseSerilogRequestLogging(options =>
