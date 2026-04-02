@@ -1,6 +1,8 @@
 using Microsoft.OpenApi;
 using Serilog;
 
+using InvenTU.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
@@ -48,6 +50,8 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
+builder.Services.AddInvenTUInfrastructure(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -73,6 +77,7 @@ app.UseSerilogRequestLogging(options =>
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
