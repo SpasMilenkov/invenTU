@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\InvenTU.Core\InvenTU.Core.csproj" />
+  </ItemGroup>
+
 </Project>
