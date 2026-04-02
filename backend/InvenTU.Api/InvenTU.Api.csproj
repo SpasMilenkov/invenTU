@@ -16,5 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InvenTU.Infrastructure\InvenTU.Infrastructure.csproj" />
+    <ProjectReference Include="..\InvenTU.Application\InvenTU.Application.csproj" />
   </ItemGroup>
 </Project>
