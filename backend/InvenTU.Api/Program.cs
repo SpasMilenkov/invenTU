@@ -1,5 +1,7 @@
 using Serilog;
 
+using InvenTU.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
@@ -12,6 +14,8 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddInvenTUInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

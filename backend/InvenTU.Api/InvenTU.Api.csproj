@@ -13,4 +13,8 @@
     <PackageReference Include="Serilog.Sinks.File" />
     <PackageReference Include="Serilog.Expressions" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\InvenTU.Infrastructure\InvenTU.Infrastructure.csproj" />
+  </ItemGroup>
 </Project>
