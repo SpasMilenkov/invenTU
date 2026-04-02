@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import LoginForm from '../components/auth/LoginForm';
 ---
 
 <!doctype html>
@@ -21,8 +22,9 @@ import '../styles/global.css';
   </head>
   <body class="flex h-full items-center justify-center">
     <div class="w-full max-w-md rounded-lg bg-surface p-8 shadow-card">
-      <h1 class="mb-6 text-center text-2xl font-bold text-text-primary">invenTU</h1>
-      <p class="text-center text-text-muted">Login page — under construction.</p>
+      <h1 class="mb-2 text-center text-2xl font-bold text-text-primary">invenTU</h1>
+      <p class="mb-6 text-center text-sm text-text-muted">Sign in to your account</p>
+      <LoginForm client:only="react" />
     </div>
   </body>
 </html>

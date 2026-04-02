@@ -29,6 +29,11 @@ const navItems = [
     <meta name="generator" content={Astro.generator} />
     <title>{title} | invenTU</title>
     <script is:inline>
+      if (!localStorage.getItem('access_token')) {
+        window.location.assign('/login');
+      }
+    </script>
+    <script is:inline>
       (function() {
         const stored = localStorage.getItem('theme');
         if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
