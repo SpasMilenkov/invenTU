@@ -4,15 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { registerSchema, type RegisterFormData } from '../../lib/auth/schemas';
 import { register as registerUser } from '../../lib/auth/api';
-import { FormField, SelectField } from '../ui/FormField';
+import { FormField } from '../ui/FormField';
 import QueryProvider from '../providers/QueryProvider';
 import type { AxiosError } from 'axios';
-
-const ROLE_OPTIONS = [
-  { value: 'Worker', label: 'Worker' },
-  { value: 'Manager', label: 'Manager' },
-  { value: 'Admin', label: 'Admin' },
-];
 
 function RegisterFormInner() {
   const {
@@ -21,7 +15,6 @@ function RegisterFormInner() {
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { role: 'Worker' },
   });
 
   useEffect(() => {
@@ -82,13 +75,6 @@ function RegisterFormInner() {
         error={errors.confirmPassword}
         placeholder="••••••••"
       />
-      <SelectField
-        label="Role"
-        registration={register('role')}
-        error={errors.role}
-        options={ROLE_OPTIONS}
-      />
-
       {errorMessage && (
         <p className="input-error-msg text-center">{errorMessage}</p>
       )}
