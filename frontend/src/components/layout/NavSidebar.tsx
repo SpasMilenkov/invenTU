@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Reports', href: '/reports' },
   { label: 'Users', href: '/users' },
   { label: 'Suppliers', href: '/suppliers' },
+  { label: 'Profile', href: '/profile' },
 ];
 
 function NavSidebarInner({ currentPath }: { currentPath: string }) {
