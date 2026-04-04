@@ -71,6 +71,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }
