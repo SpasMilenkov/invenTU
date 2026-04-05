@@ -1,5 +1,7 @@
 using System.Text;
 using InvenTU.Application.Auth;
+using InvenTU.Application.Validators;
+using FluentValidation;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Auth;
 using InvenTU.Infrastructure.Data;
@@ -68,6 +70,8 @@ public static class ServiceCollectionExtensions
                     ClockSkew = TimeSpan.Zero,
                 };
             });
+
+        services.AddValidatorsFromAssemblyContaining<RegisterDTOValidator>();
 
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<ITokenService, TokenService>();

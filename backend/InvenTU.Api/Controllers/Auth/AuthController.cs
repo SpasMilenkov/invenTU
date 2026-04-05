@@ -1,3 +1,4 @@
+using FluentValidation;
 using InvenTU.Application.Auth;
 using InvenTU.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -11,9 +12,11 @@ namespace InvenTU.Api.Controllers.Auth;
 public class AuthController : ControllerBase
 {
     private IAuthService _authService;
-    public AuthController(IAuthService authService)
+    private IValidator<RegisterDTO> _registerDtoValidator;
+    public AuthController(IAuthService authService, IValidator<RegisterDTO> registerDtoValidator)
     {
         _authService = authService;
+        _registerDtoValidator = registerDtoValidator;
     }
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDTO loginDto)
@@ -21,13 +24,20 @@ public class AuthController : ControllerBase
         var token = await _authService.LoginAsync(loginDto);
 
         if (token == "")
-            return BadRequest();
+            return Unauthorized();
         return Ok(token);
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDTO registerDto)
     {
+        var validationResult = _registerDtoValidator.Validate(registerDto);
+
+        if (!validationResult.IsValid)
+        {
+            return BadRequest(validationResult.Errors);
+        }
+
         await _authService.RegisterAsync(registerDto);
 
         return Created();

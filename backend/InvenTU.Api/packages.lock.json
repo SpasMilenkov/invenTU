@@ -53,6 +53,12 @@
           "Serilog": "4.2.0"
         }
       },
+      "Swashbuckle.AspNetCore.SwaggerUI": {
+        "type": "Direct",
+        "requested": "[10.1.7, )",
+        "resolved": "10.1.7",
+        "contentHash": "iJo3ODyUb/M8Vm8AH1r9y9iAba0w95xsCn3zFVl96ISRHbTDWxi+l7oFVCZqUEdjd97B8VMDPnMliWAdomR8uw=="
+      },
       "Humanizer.Core": {
         "type": "Transitive",
         "resolved": "2.14.1",
@@ -191,12 +197,6 @@
         "dependencies": {
           "Microsoft.IdentityModel.Logging": "8.0.1"
         }
-      },
-      "Swashbuckle.AspNetCore.SwaggerUI": {
-        "type": "Direct",
-        "requested": "[10.1.7, )",
-        "resolved": "10.1.7",
-        "contentHash": "iJo3ODyUb/M8Vm8AH1r9y9iAba0w95xsCn3zFVl96ISRHbTDWxi+l7oFVCZqUEdjd97B8VMDPnMliWAdomR8uw=="
       },
       "Microsoft.OpenApi": {
         "type": "Transitive",
@@ -338,6 +338,7 @@
       "inventu.application": {
         "type": "Project",
         "dependencies": {
+          "FluentValidation": "[12.1.1, )",
           "InvenTU.Core": "[1.0.0, )"
         }
       },
@@ -350,6 +351,7 @@
       "inventu.infrastructure": {
         "type": "Project",
         "dependencies": {
+          "FluentValidation.DependencyInjectionExtensions": "[12.1.1, )",
           "InvenTU.Application": "[1.0.0, )",
           "InvenTU.Core": "[1.0.0, )",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.5, )",
@@ -358,6 +360,21 @@
           "Microsoft.EntityFrameworkCore.Design": "[10.0.5, )",
           "Microsoft.EntityFrameworkCore.Tools": "[10.0.5, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.1, )"
+        }
+      },
+      "FluentValidation": {
+        "type": "CentralTransitive",
+        "requested": "[12.1.1, )",
+        "resolved": "12.1.1",
+        "contentHash": "EPpkIe1yh1a0OXyC100oOA8WMbZvqUu5plwhvYcb7oSELfyUZzfxV48BLhvs3kKo4NwG7MGLNgy1RJiYtT8Dpw=="
+      },
+      "FluentValidation.DependencyInjectionExtensions": {
+        "type": "CentralTransitive",
+        "requested": "[12.1.1, )",
+        "resolved": "12.1.1",
+        "contentHash": "D0VXh4dtjjX2aQizuaa0g6R8X3U1JaVqJPfGCvLwZX9t/O2h7tkpbitbadQMfwcgSPdDbI2vDxuwRMv/Uf9dHA==",
+        "dependencies": {
+          "FluentValidation": "12.1.1"
         }
       },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
