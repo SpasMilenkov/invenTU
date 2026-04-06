@@ -1,6 +1,7 @@
 using FluentValidation;
 using InvenTU.Application.Auth;
 using InvenTU.Application.DTOs;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -18,16 +19,28 @@ public class AuthController : ControllerBase
         _authService = authService;
         _registerDtoValidator = registerDtoValidator;
     }
+    /// <summary>
+    /// Signs in as existing user
+    /// </summary>
+    /// <param name="loginDto">Form input used to sign in as existing user</param>
+    /// <returns></returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDTO loginDto)
     {
-        var token = await _authService.LoginAsync(loginDto);
+        var result = await _authService.LoginAsync(loginDto);
 
-        if (token == "")
+        if (result.AccessToken == null || result.RefreshToken == null)
             return Unauthorized();
-        return Ok(token);
+
+        Response.Cookies.Append("refreshToken", result.RefreshToken);
+        return Ok(result.AccessToken);
     }
 
+    /// <summary>
+    /// Registers a new user
+    /// </summary>
+    /// <param name="registerDto">Form input used to create a new user</param>
+    /// <returns></returns>
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDTO registerDto)
     {
@@ -38,7 +51,14 @@ public class AuthController : ControllerBase
             return BadRequest(validationResult.Errors);
         }
 
-        await _authService.RegisterAsync(registerDto);
+        var registerResult = await _authService.RegisterAsync(registerDto);
+        if (!registerResult.Succeeded)
+        {
+            // Return 409 on duplicate email input 
+            if (registerResult.Errors.Any(e=>e.Code == (new IdentityErrorDescriber()).DuplicateEmail(registerDto.Email!).Code))
+                return Conflict(registerResult.Errors);
+            return BadRequest(registerResult.Errors);
+        }
 
         return Created();
     }

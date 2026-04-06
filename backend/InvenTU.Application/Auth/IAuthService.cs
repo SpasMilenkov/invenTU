@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using InvenTU.Application.DTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace InvenTU.Application.Auth;
 
 public interface IAuthService
 {
-    Task<string> LoginAsync(LoginDTO loginDto);
-    Task RegisterAsync(RegisterDTO registerDto);
+    Task<LoginResultDTO> LoginAsync(LoginDTO loginDto);
+    Task<IdentityResult> RegisterAsync(RegisterDTO registerDto);
 }

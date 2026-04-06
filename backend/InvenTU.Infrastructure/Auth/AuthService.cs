@@ -18,36 +18,36 @@ public class AuthService : IAuthService
         _tokenService = tokenService;
         _userManager = userManager;
     }
-    public async Task<string> LoginAsync(LoginDTO loginDto)
+    public async Task<LoginResultDTO> LoginAsync(LoginDTO loginDto)
     {
-        string token="";
+        var result = new LoginResultDTO();
 
         var user = await _userManager.FindByEmailAsync(loginDto.Email);
 
         if (user != null && await _userManager.CheckPasswordAsync(user, loginDto.Password))
         {
             var roles = await _userManager.GetRolesAsync(user);
-            token = _tokenService.GenerateAccessToken(user, roles);
-            await _tokenService.CreateRefreshTokenAsync(user.Id);
+            result.AccessToken = _tokenService.GenerateAccessToken(user, roles);
+            result.RefreshToken = await _tokenService.CreateRefreshTokenAsync(user.Id);
         }
 
-        return token;
+        return result;
     }
-    public async Task RegisterAsync(RegisterDTO registerDto)
+    public async Task<IdentityResult> RegisterAsync(RegisterDTO registerDto)
     {
         var newUser = new User {
+            UserName = registerDto.FirstName + registerDto.LastName,
             Email = registerDto.Email,
             FirstName = registerDto.FirstName,
-            LastName = registerDto.LastName
+            LastName = registerDto.LastName,
         };
 
-        var result = await _userManager.CreateAsync(newUser);
+        var result = await _userManager.CreateAsync(newUser, registerDto.Password??="");
 
         // Give user the default Worker role
         if (result.Succeeded)
-        {
             await _userManager.AddToRoleAsync(newUser, "Worker");
-        }
 
+        return result;
     }
 }
