@@ -1,5 +1,7 @@
 using System.Text;
 using InvenTU.Application.Auth;
+using InvenTU.Application.Validators;
+using FluentValidation;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Auth;
 using InvenTU.Infrastructure.Data;
@@ -10,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using InvenTU.Infrastructure.DataSeeders;
 
 namespace InvenTU.Infrastructure;
 
@@ -69,8 +72,11 @@ public static class ServiceCollectionExtensions
                 };
             });
 
+        services.AddValidatorsFromAssemblyContaining<RegisterDTOValidator>();
+
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }

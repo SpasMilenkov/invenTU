@@ -2,6 +2,7 @@ using Microsoft.OpenApi;
 using Serilog;
 
 using InvenTU.Infrastructure;
+using InvenTU.Infrastructure.DataSeeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +75,9 @@ app.UseSerilogRequestLogging(options =>
         diagnosticContext.Set("Protocol", httpContext.Request.Protocol);
     };
 });
+
+using (var scope = app.Services.CreateScope())
+    await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
 
 app.UseHttpsRedirection();
 
