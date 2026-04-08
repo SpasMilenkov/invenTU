@@ -4,21 +4,14 @@ using InvenTU.Application.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace InvenTU.Api.Controllers.Auth;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController : ControllerBase
+public class AuthController (IAuthService authService, IValidator<RegisterDTO> registerDtoValidator) : ControllerBase
 {
-    private IAuthService _authService;
-    private IValidator<RegisterDTO> _registerDtoValidator;
-    public AuthController(IAuthService authService, IValidator<RegisterDTO> registerDtoValidator)
-    {
-        _authService = authService;
-        _registerDtoValidator = registerDtoValidator;
-    }
+    private readonly IAuthService _authService = authService;
+    private readonly IValidator<RegisterDTO> _registerDtoValidator = registerDtoValidator;
     /// <summary>
     /// Signs in as existing user
     /// </summary>
@@ -33,7 +26,12 @@ public class AuthController : ControllerBase
             return Unauthorized();
 
         Response.Cookies.Append("refreshToken", result.RefreshToken);
-        return Ok(result.AccessToken);
+
+        return Ok(new { result.Id,
+                        result.UserName,
+                        result.Email,
+                        result.AccessToken,
+                        result.Roles});
     }
 
     /// <summary>

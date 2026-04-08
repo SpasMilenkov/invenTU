@@ -8,16 +8,10 @@ using Microsoft.AspNetCore.Identity;
 
 namespace InvenTU.Infrastructure.Auth;
 
-public class AuthService : IAuthService
+public sealed class AuthService (ITokenService tokenService, UserManager<User> userManager) : IAuthService 
 {
-    private ITokenService _tokenService;
-    private UserManager<User> _userManager;
-
-    public AuthService(ITokenService tokenService, UserManager<User> userManager)
-    {
-        _tokenService = tokenService;
-        _userManager = userManager;
-    }
+    private readonly ITokenService _tokenService = tokenService;
+    private readonly UserManager<User> _userManager = userManager;
     public async Task<LoginResultDTO> LoginAsync(LoginDTO loginDto)
     {
         var result = new LoginResultDTO();
@@ -29,6 +23,10 @@ public class AuthService : IAuthService
             var roles = await _userManager.GetRolesAsync(user);
             result.AccessToken = _tokenService.GenerateAccessToken(user, roles);
             result.RefreshToken = await _tokenService.CreateRefreshTokenAsync(user.Id);
+            result.UserName = user.UserName;
+            result.Id = user.Id;
+            result.Email = user.Email;
+            result.Roles = roles;
         }
 
         return result;

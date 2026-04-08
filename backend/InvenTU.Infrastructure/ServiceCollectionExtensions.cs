@@ -39,8 +39,6 @@ public static class ServiceCollectionExtensions
             .AddEntityFrameworkStores<InvenTUDbContext>()
             .AddDefaultTokenProviders();
 
-        services.AddHostedService<IdentityRoleSeeder>();
-
         var jwtSection = configuration.GetSection(JwtSettings.SectionName);
         services.Configure<JwtSettings>(jwtSection);
 
