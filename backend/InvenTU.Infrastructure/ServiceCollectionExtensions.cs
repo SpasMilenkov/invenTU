@@ -74,9 +74,12 @@ public static class ServiceCollectionExtensions
 
         services.AddValidatorsFromAssemblyContaining<RegisterDTOValidator>();
 
+        services.AddHttpContextAccessor();
+
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
     }
