@@ -1,8 +1,9 @@
-using Microsoft.OpenApi;
-using Serilog;
-
+using InvenTU.Application.Middleware.Auth;
 using InvenTU.Infrastructure;
 using InvenTU.Infrastructure.DataSeeders;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +51,8 @@ builder.Services.AddOpenApi(options =>
         document.SetReferenceHostDocument();
     });
 });
+
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMessageResponseHandler>();
 
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
 

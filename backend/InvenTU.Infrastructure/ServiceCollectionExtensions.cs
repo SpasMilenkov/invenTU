@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using InvenTU.Infrastructure.DataSeeders;
 
 namespace InvenTU.Infrastructure;
 
