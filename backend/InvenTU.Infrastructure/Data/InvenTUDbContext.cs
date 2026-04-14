@@ -44,6 +44,15 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
             .HasKey(aus => new { aus.AlertId, aus.UserId });
 
         builder.Entity<Product>().HasIndex(p => p.SKU).IsUnique();
+
+        builder.Entity<Product>()
+            .Property(p => p.CreatedAt)
+            .HasDefaultValueSql("NOW()");
+
+        builder.Entity<Product>().HasIndex(p => p.DeletedAt);
+
+        builder.Entity<Product>().HasQueryFilter(p => p.DeletedAt == null);
+
         builder.Entity<Warehouse>().HasIndex(w => w.Code).IsUnique();
 
         builder.Entity<StockItem>().Property(s => s.RowVersion).IsRowVersion();
