@@ -1,6 +1,7 @@
 using Microsoft.OpenApi;
 using Serilog;
 
+using InvenTU.Api.Middleware;
 using InvenTU.Infrastructure;
 using InvenTU.Infrastructure.DataSeeders;
 
@@ -46,7 +47,7 @@ builder.Services.AddOpenApi(options =>
             }
         ];
 
-        // Set host document with security scheme for all elements 
+        // Set host document with security scheme for all elements
         document.SetReferenceHostDocument();
     });
 });
@@ -64,6 +65,8 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "InvenTU API v1");
     });
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseSerilogRequestLogging(options =>
 {
