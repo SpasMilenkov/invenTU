@@ -13,6 +13,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using InvenTU.Infrastructure.DataSeeders;
+using InvenTU.Application;
+using InvenTU.Core.Contracts.Repositories;
+using InvenTU.Infrastructure.Repositories;
 
 namespace InvenTU.Infrastructure;
 
@@ -77,6 +80,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
+
+        services.AddInvenTUApplication();
+        services.AddScoped<IProductRepository, ProductRepository>();
 
         return services;
     }
