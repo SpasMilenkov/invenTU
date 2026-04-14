@@ -1,0 +1,22 @@
+using FluentValidation;
+using InvenTU.Application.Products;
+using InvenTU.Application.Products.Validators;
+using InvenTU.Core.Contracts.Services;
+using InvenTU.Core.DTOs.Products;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace InvenTU.Application;
+
+public static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddInvenTUApplication(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IValidator<CreateProductRequest>, CreateProductRequestValidator>();
+        services.AddScoped<IValidator<UpdateProductRequest>, UpdateProductRequestValidator>();
+
+        return services;
+    }
+}
