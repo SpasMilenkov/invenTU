@@ -3,22 +3,21 @@ using InvenTU.Core.DTOs.Common;
 using InvenTU.Core.DTOs.Products;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Data;
+using InvenTU.Infrastructure.Projections;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvenTU.Infrastructure.Repositories;
 
 public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepository
 {
-    public async Task<PagedResult<Product>> GetPagedAsync(
+    public async Task<PagedResult<ProductDto>> GetPagedAsync(
         ProductQueryParams query,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
         var q = dbContext.Products
-            .Include(p => p.Category)
-            .Include(p => p.StockItems)
-            .AsQueryable();
+            .Where(p => p.DeletedAt == null);
 
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
@@ -42,25 +41,28 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
             .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(ProductProjections.ToDto)
             .ToListAsync(cancellationToken);
 
-        return PagedResult<Product>.Create(items, totalCount, page, pageSize);
+        return PagedResult<ProductDto>.Create(items, totalCount, page, pageSize);
     }
 
-    public Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Products
-            .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            .Where(p => p.Id == id && p.DeletedAt == null)
+            .Select(ProductProjections.ToDto)
+            .FirstOrDefaultAsync(cancellationToken);
 
-    public Task<Product?> GetByIdWithStockAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Product?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Products
-            .Include(p => p.Category)
-            .Include(p => p.StockItems)
-            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null, cancellationToken);
+
+    public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
+        => dbContext.Products
+            .AnyAsync(p => p.Id == id && p.DeletedAt == null, cancellationToken);
 
     public Task<bool> SkuExistsAsync(string sku, CancellationToken cancellationToken = default)
         => dbContext.Products
-            .IgnoreQueryFilters()
             .AnyAsync(p => p.SKU == sku, cancellationToken);
 
     public Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken = default)
@@ -77,8 +79,6 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
     public async Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(product);
-        // Entity is already tracked by EF change tracker (loaded via GetByIdAsync in the same scope).
-        // Calling SaveChangesAsync persists only the scalar changes detected by the change tracker.
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -93,7 +93,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
     public async Task ArchiveAsync(Guid id, DateTime deletedAt, CancellationToken cancellationToken = default)
     {
         await dbContext.Products
-            .Where(p => p.Id == id)
+            .Where(p => p.Id == id && p.DeletedAt == null)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(p => p.DeletedAt, deletedAt)

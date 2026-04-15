@@ -19,18 +19,13 @@ public sealed class ProductService(
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
-
-        var pagedProducts = await productRepository.GetPagedAsync(query, cancellationToken);
-        var dtos = pagedProducts.Items.Select(p => p.ToDto()).ToList();
-        return PagedResult<ProductDto>.Create(dtos, pagedProducts.TotalCount, pagedProducts.Page, pagedProducts.PageSize);
+        return await productRepository.GetPagedAsync(query, cancellationToken);
     }
 
     public async Task<ProductDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var product = await productRepository.GetByIdWithStockAsync(id, cancellationToken)
+        return await productRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new ProductNotFoundException(id);
-
-        return product.ToDto();
     }
 
     public async Task<ProductDto> CreateAsync(
@@ -60,10 +55,8 @@ public sealed class ProductService(
         var product = request.ToEntity();
         await productRepository.AddAsync(product, cancellationToken);
 
-        var created = await productRepository.GetByIdWithStockAsync(product.Id, cancellationToken)
+        return await productRepository.GetByIdAsync(product.Id, cancellationToken)
             ?? throw new InvalidOperationException("Failed to retrieve the newly created product.");
-
-        return created.ToDto();
     }
 
     public async Task<ProductDto> UpdateAsync(
@@ -73,7 +66,7 @@ public sealed class ProductService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var product = await productRepository.GetByIdAsync(id, cancellationToken)
+        var product = await productRepository.GetForUpdateAsync(id, cancellationToken)
             ?? throw new ProductNotFoundException(id);
 
         var validation = await updateValidator.ValidateAsync(request, cancellationToken);
@@ -93,16 +86,14 @@ public sealed class ProductService(
         product.ApplyUpdate(request);
         await productRepository.UpdateAsync(product, cancellationToken);
 
-        var updated = await productRepository.GetByIdWithStockAsync(id, cancellationToken)
+        return await productRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new InvalidOperationException("Failed to retrieve the updated product.");
-
-        return updated.ToDto();
     }
 
     public async Task ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _ = await productRepository.GetByIdAsync(id, cancellationToken)
-            ?? throw new ProductNotFoundException(id);
+        if (!await productRepository.ExistsAsync(id, cancellationToken))
+            throw new ProductNotFoundException(id);
 
         var totalStock = await productRepository.GetTotalStockAsync(id, cancellationToken);
         if (totalStock > 0)

@@ -6,9 +6,10 @@ namespace InvenTU.Core.Contracts.Repositories;
 
 public interface IProductRepository
 {
-    Task<PagedResult<Product>> GetPagedAsync(ProductQueryParams query, CancellationToken cancellationToken = default);
-    Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<Product?> GetByIdWithStockAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<PagedResult<ProductDto>> GetPagedAsync(ProductQueryParams query, CancellationToken cancellationToken = default);
+    Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Product?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<bool> SkuExistsAsync(string sku, CancellationToken cancellationToken = default);
     Task<bool> CategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken = default);
     Task AddAsync(Product product, CancellationToken cancellationToken = default);
