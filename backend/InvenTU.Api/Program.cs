@@ -3,6 +3,7 @@ using Serilog;
 
 using InvenTU.Api.Middleware;
 using InvenTU.Infrastructure;
+using InvenTU.Application;
 using InvenTU.Infrastructure.DataSeeders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +54,7 @@ builder.Services.AddOpenApi(options =>
 });
 
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
+builder.Services.AddInvenTUApplication();
 
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 

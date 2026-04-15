@@ -1,6 +1,8 @@
 using FluentValidation;
+using InvenTU.Application.Auth;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
+using InvenTU.Application.Users;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.DTOs.Products;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +16,8 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IValidator<CreateProductRequest>, CreateProductRequestValidator>();
         services.AddScoped<IValidator<UpdateProductRequest>, UpdateProductRequestValidator>();
 
