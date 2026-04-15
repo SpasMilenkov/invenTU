@@ -54,6 +54,8 @@ builder.Services.AddOpenApi(options =>
 
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
 
+builder.Services.AddTransient<ExceptionHandlingMiddleware>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
