@@ -7,5 +7,5 @@ namespace InvenTU.Application.Auth;
 
 public interface ICurrentUserService
 {
-    CurrentUserDTO GetCurrentUserAsync();
+    Task<CurrentUserDTO> GetCurrentUserAsync();
 }

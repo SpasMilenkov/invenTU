@@ -11,20 +11,28 @@ using Microsoft.AspNetCore.Identity;
 
 namespace InvenTU.Infrastructure.Auth;
 
-public sealed class CurrentUserService (IHttpContextAccessor httpContextAccessor) :ICurrentUserService
+public sealed class CurrentUserService (IHttpContextAccessor httpContextAccessor, UserManager<User> userManager) :ICurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-    public CurrentUserDTO GetCurrentUserAsync()
+    private readonly UserManager<User> _userManager = userManager;
+    public async Task<CurrentUserDTO> GetCurrentUserAsync()
     {
-        var currentUser = new CurrentUserDTO();
-
         var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (userId == null)
             return null;
 
-        currentUser.UserId = Guid.Parse(userId!);
-        currentUser.Roles = _httpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(c=>c.Value).ToList();
+        var user = await _userManager.FindByIdAsync(userId) ?? throw new InvalidDataException();
+
+        var currentUser = new CurrentUserDTO
+        {
+            UserId = Guid.Parse(userId),
+            UserName = user?.UserName,
+            Email = user?.Email,
+            FirstName = user?.FirstName,
+            LastName = user?.LastName,
+            Roles = await _userManager.GetRolesAsync(user!)
+        };
 
         return currentUser;
     }

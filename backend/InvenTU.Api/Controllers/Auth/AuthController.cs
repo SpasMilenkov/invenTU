@@ -1,6 +1,7 @@
 using FluentValidation;
 using InvenTU.Application.Auth;
 using InvenTU.Application.DTOs;
+using InvenTU.Infrastructure.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +9,10 @@ namespace InvenTU.Api.Controllers.Auth;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AuthController (IAuthService authService, IValidator<RegisterDTO> registerDtoValidator) : ControllerBase
+public class AuthController (IAuthService authService, IValidator<RegisterDTO> registerDtoValidator, ICurrentUserService currentUserService) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
+    private readonly ICurrentUserService _currentUserService = currentUserService;
     private readonly IValidator<RegisterDTO> _registerDtoValidator = registerDtoValidator;
     /// <summary>
     /// Signs in as existing user
@@ -59,5 +61,15 @@ public class AuthController (IAuthService authService, IValidator<RegisterDTO> r
         }
 
         return Created();
+    }
+    [HttpGet("current")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var currentUser = await _currentUserService.GetCurrentUserAsync();
+
+        if (currentUser==null)
+            return Unauthorized();
+
+        return Ok(currentUser);
     }
 }
