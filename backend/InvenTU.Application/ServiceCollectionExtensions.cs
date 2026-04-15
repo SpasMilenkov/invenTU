@@ -1,4 +1,5 @@
 using FluentValidation;
+using InvenTU.Application.Auth;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
 using InvenTU.Core.Contracts.Services;
@@ -14,6 +15,7 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IValidator<CreateProductRequest>, CreateProductRequestValidator>();
         services.AddScoped<IValidator<UpdateProductRequest>, UpdateProductRequestValidator>();
 

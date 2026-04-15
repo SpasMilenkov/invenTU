@@ -1,4 +1,4 @@
-using InvenTU.Application.Auth;
+using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

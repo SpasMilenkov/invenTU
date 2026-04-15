@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace InvenTU.Application.DTOs;
+namespace InvenTU.Core.DTOs.Auth;
 
 public class LoginResultDTO
 {
@@ -12,4 +8,5 @@ public class LoginResultDTO
     public IList<string>? Roles { get; set; }
     public string? AccessToken { get; set; }
     public string? RefreshToken { get; set; }
+    public string? ErrorMessage { get; set; }
 }

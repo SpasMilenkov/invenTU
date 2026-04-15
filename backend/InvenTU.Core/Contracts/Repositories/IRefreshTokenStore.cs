@@ -1,6 +1,6 @@
 using InvenTU.Core.Entities;
 
-namespace InvenTU.Application.Auth;
+namespace InvenTU.Core.Contracts.Repositories;
 
 public interface IRefreshTokenStore
 {
