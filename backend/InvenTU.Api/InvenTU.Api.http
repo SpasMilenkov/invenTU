@@ -1,6 +1,348 @@
-@InvenTU.Api_HostAddress = http://localhost:5283
+@host = http://localhost:4000
 
-GET {{InvenTU.Api_HostAddress}}/weatherforecast/
+# =====================================================================
+# AUTH SETUP
+# =====================================================================
+# 1. Obtain an admin JWT by calling POST /api/auth/login (once that
+#    endpoint is available) and paste the access_token below.
+# 2. Replace <paste-category-id-here> with an existing Category ID.
+#    If no categories exist, insert one directly:
+#      INSERT INTO "Categories" ("Id","Name") VALUES (gen_random_uuid(),'Test Category');
+# =====================================================================
+@adminToken = <paste-access-token-here>
+@categoryId = <paste-category-id-here>
+
+# =====================================================================
+# After running the CREATE requests below, paste the returned IDs here.
+# =====================================================================
+@productId  = <paste-id-from-widget-create-response>
+@product2Id = <paste-id-from-gadget-create-response>
+
+# =====================================================================
+# 1. LIST — GET all products (paginated, no filters)
+# =====================================================================
+### 1a. GET /api/v1/products — no filters
+GET {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
 Accept: application/json
 
-###
+### 1b. GET /api/v1/products — search filter
+GET {{host}}/api/v1/products?search=widget
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 1c. GET /api/v1/products — isActive=true filter
+GET {{host}}/api/v1/products?isActive=true
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 1d. GET /api/v1/products — isActive=false filter
+GET {{host}}/api/v1/products?isActive=false
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 1e. GET /api/v1/products — categoryId filter
+GET {{host}}/api/v1/products?categoryId={{categoryId}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 1f. GET /api/v1/products — pagination (page 1, 5 per page)
+GET {{host}}/api/v1/products?page=1&pageSize=5
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 1g. GET /api/v1/products — combined filters
+GET {{host}}/api/v1/products?search=widget&isActive=true&page=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+# =====================================================================
+# 2. GET BY ID
+# =====================================================================
+### 2a. GET non-existent product → expect 404 PRODUCT_NOT_FOUND
+GET {{host}}/api/v1/products/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 2b. GET product by id (fill @productId first) → expect 200
+GET {{host}}/api/v1/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+# =====================================================================
+# 3. CREATE
+# =====================================================================
+### 3a. CREATE without auth → expect 401
+POST {{host}}/api/v1/products
+Content-Type: application/json
+
+{
+  "sku": "UNAUTH-001",
+  "name": "Unauthorized Product",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 9.99,
+  "costPrice": 4.99,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 5,
+  "maxStockLevel": 100,
+  "reorderPoint": 10
+}
+
+### 3b. CREATE Widget — valid → expect 201 (copy "id" → @productId)
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "WIDGET-001",
+  "name": "Test Widget",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 29.99,
+  "costPrice": 12.50,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "description": "A test widget for API testing",
+  "barcode": "1234567890123",
+  "minStockLevel": 10,
+  "maxStockLevel": 500,
+  "reorderPoint": 50
+}
+
+### 3c. CREATE Gadget (inactive) — valid → expect 201 (copy "id" → @product2Id)
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "GADGET-001",
+  "name": "Test Gadget",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 49.99,
+  "costPrice": 22.00,
+  "unitOfMeasure": "pcs",
+  "isActive": false,
+  "description": "An inactive test gadget",
+  "minStockLevel": 5,
+  "maxStockLevel": 200,
+  "reorderPoint": 20
+}
+
+### 3d. CREATE duplicate SKU → expect 409 SKU_CONFLICT
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "WIDGET-001",
+  "name": "Duplicate Widget",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 19.99,
+  "costPrice": 8.00,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 5,
+  "maxStockLevel": 100,
+  "reorderPoint": 10
+}
+
+### 3e. CREATE missing required fields → expect 422 VALIDATION_ERROR
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "",
+  "name": "",
+  "categoryId": "00000000-0000-0000-0000-000000000000",
+  "unitPrice": -5.00,
+  "costPrice": -1.00,
+  "unitOfMeasure": "",
+  "isActive": true,
+  "minStockLevel": -1,
+  "maxStockLevel": 5,
+  "reorderPoint": 100
+}
+
+### 3f. CREATE non-existent category → expect 404 CATEGORY_NOT_FOUND
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "ORPHAN-001",
+  "name": "Orphan Product",
+  "categoryId": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+  "unitPrice": 9.99,
+  "costPrice": 4.99,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 0,
+  "maxStockLevel": 100,
+  "reorderPoint": 10
+}
+
+### 3g. CREATE invalid SKU characters → expect 422 VALIDATION_ERROR
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "INVALID SKU!@#",
+  "name": "Bad SKU Product",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 9.99,
+  "costPrice": 4.99,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 0,
+  "maxStockLevel": 100,
+  "reorderPoint": 10
+}
+
+### 3h. CREATE reorderPoint > maxStockLevel → expect 422 VALIDATION_ERROR
+POST {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "sku": "BAD-LEVELS-001",
+  "name": "Bad Levels Product",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 9.99,
+  "costPrice": 4.99,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 10,
+  "maxStockLevel": 50,
+  "reorderPoint": 200
+}
+
+# =====================================================================
+# 4. UPDATE
+# =====================================================================
+### 4a. UPDATE product → expect 200 (requires @productId)
+PUT {{host}}/api/v1/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Updated Test Widget",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 34.99,
+  "costPrice": 15.00,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "description": "Updated description for the test widget",
+  "barcode": "9876543210987",
+  "minStockLevel": 15,
+  "maxStockLevel": 600,
+  "reorderPoint": 60
+}
+
+### 4b. UPDATE non-existent product → expect 404 PRODUCT_NOT_FOUND
+PUT {{host}}/api/v1/products/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Ghost Product",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 9.99,
+  "costPrice": 4.99,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 0,
+  "maxStockLevel": 100,
+  "reorderPoint": 10
+}
+
+### 4c. UPDATE validation errors (maxStockLevel < minStockLevel) → expect 422 VALIDATION_ERROR
+PUT {{host}}/api/v1/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "",
+  "categoryId": "00000000-0000-0000-0000-000000000000",
+  "unitPrice": 0,
+  "costPrice": -10,
+  "unitOfMeasure": "",
+  "isActive": true,
+  "minStockLevel": 100,
+  "maxStockLevel": 10,
+  "reorderPoint": 200
+}
+
+### 4d. UPDATE without auth → expect 401
+PUT {{host}}/api/v1/products/{{productId}}
+Content-Type: application/json
+
+{
+  "name": "Unauthorized Update",
+  "categoryId": "{{categoryId}}",
+  "unitPrice": 9.99,
+  "costPrice": 4.99,
+  "unitOfMeasure": "pcs",
+  "isActive": true,
+  "minStockLevel": 0,
+  "maxStockLevel": 100,
+  "reorderPoint": 10
+}
+
+# =====================================================================
+# 5. ARCHIVE
+# =====================================================================
+### 5a. ARCHIVE product2 (no stock) → expect 204
+PATCH {{host}}/api/v1/products/{{product2Id}}/archive
+Authorization: Bearer {{adminToken}}
+
+### 5b. GET archived product2 → expect 404 (soft-delete filter excludes it)
+GET {{host}}/api/v1/products/{{product2Id}}
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+### 5c. ARCHIVE already-archived product → expect 404 PRODUCT_NOT_FOUND
+PATCH {{host}}/api/v1/products/{{product2Id}}/archive
+Authorization: Bearer {{adminToken}}
+
+### 5d. ARCHIVE non-existent product → expect 404 PRODUCT_NOT_FOUND
+PATCH {{host}}/api/v1/products/00000000-0000-0000-0000-000000000000/archive
+Authorization: Bearer {{adminToken}}
+
+### 5e. ARCHIVE product WITH stock → expect 409 PRODUCT_HAS_STOCK
+# PREREQUISITE: Manually seed a StockItem for @productId before running this.
+# Get a StockLocationId from the DB, then run:
+#   INSERT INTO "StockItems" ("Id","ProductId","StockLocationId","Quantity","QuantityReserved","RowVersion")
+#   VALUES (gen_random_uuid(), '<productId>', '<stockLocationId>', 50, 0, decode('0000000000000001','hex'));
+PATCH {{host}}/api/v1/products/{{productId}}/archive
+Authorization: Bearer {{adminToken}}
+
+### 5f. ARCHIVE without auth → expect 401
+PATCH {{host}}/api/v1/products/{{productId}}/archive
+
+# =====================================================================
+# 6. VERIFY LIST after partial cleanup
+# =====================================================================
+### 6a. GET all — product2 should no longer appear (archived)
+GET {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Accept: application/json
+
+# =====================================================================
+# CLEANUP
+# =====================================================================
+# Archive all test products created in this run to soft-delete them.
+# If @productId has stock seeded (test 5e), first DELETE the StockItem
+# from the DB:
+#   DELETE FROM "StockItems" WHERE "ProductId" = '<productId>';
+# Then run the archive below.
+
+### CLEANUP — Archive product1 (Widget)
+PATCH {{host}}/api/v1/products/{{productId}}/archive
+Authorization: Bearer {{adminToken}}
+
+### CLEANUP — Verify both products are gone from the list
+GET {{host}}/api/v1/products
+Authorization: Bearer {{adminToken}}
+Accept: application/json

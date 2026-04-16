@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using InvenTU.Application.Auth;
 using InvenTU.Application.DTOs;
+using InvenTU.Core.DTOs;
 using InvenTU.Core.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;

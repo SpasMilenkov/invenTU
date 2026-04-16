@@ -1,9 +1,10 @@
-using InvenTU.Application.Middleware.Auth;
-using InvenTU.Infrastructure;
-using InvenTU.Infrastructure.DataSeeders;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi;
 using Serilog;
+using InvenTU.Api.Middleware;
+using InvenTU.Infrastructure;
+using InvenTU.Application;
+using InvenTU.Infrastructure.DataSeeders;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +48,7 @@ builder.Services.AddOpenApi(options =>
             }
         ];
 
-        // Set host document with security scheme for all elements 
+        // Set host document with security scheme for all elements
         document.SetReferenceHostDocument();
     });
 });
@@ -55,6 +56,9 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationMessageResponseHandler>();
 
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
+builder.Services.AddInvenTUApplication();
+
+builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
 var app = builder.Build();
 
@@ -67,6 +71,8 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/openapi/v1.json", "InvenTU API v1");
     });
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseSerilogRequestLogging(options =>
 {

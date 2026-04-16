@@ -16,6 +16,9 @@ public sealed class Product
     public int MinStockLevel { get; set; }
     public int MaxStockLevel { get; set; }
     public int ReorderPoint { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     public Category Category { get; set; } = null!;
     public Warehouse? PrimaryWarehouse { get; set; }

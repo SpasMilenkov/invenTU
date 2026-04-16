@@ -1,5 +1,4 @@
 using System.Text;
-using InvenTU.Application.Auth;
 using InvenTU.Application.Validators;
 using FluentValidation;
 using InvenTU.Core.Entities;
@@ -12,6 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using InvenTU.Core.Contracts.Repositories;
+using InvenTU.Infrastructure.Repositories;
+using InvenTU.Core.Contracts.Services;
+using InvenTU.Application.Auth;
 
 namespace InvenTU.Infrastructure;
 
@@ -76,6 +79,8 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
 
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();

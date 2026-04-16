@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using FluentValidation;
-using InvenTU.Application.DTOs;
+using InvenTU.Core.DTOs.Auth;
 
 namespace InvenTU.Application.Validators;
 
