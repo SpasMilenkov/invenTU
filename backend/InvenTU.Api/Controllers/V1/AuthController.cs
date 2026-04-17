@@ -1,19 +1,24 @@
 using FluentValidation;
 using InvenTU.Api.Infrastructure;
+using InvenTU.Application.Auth;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.DTOs.Auth;
+using InvenTU.Infrastructure.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace InvenTU.Api.Controllers.Auth;
+namespace InvenTU.Api.Controllers.V1;
 
 // <summary>
 /// Controller for handling authentication-related actions like login and registration. Endpoints are public.
 // </summary>
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 [ApiController]
-public sealed class AuthController(IAuthService authService, IValidator<RegisterDTO> registerDtoValidator) : ControllerBase
+public sealed class AuthController(IAuthService authService, IValidator<RegisterDTO> registerDtoValidator, ICurrentUserService currentUserService) : ControllerBase
 {
+    private readonly IAuthService _authService = authService;
+    private readonly ICurrentUserService _currentUserService = currentUserService;
+    private readonly IValidator<RegisterDTO> _registerDtoValidator = registerDtoValidator;
     /// <summary>
     /// Signs in as existing user
     /// </summary>
@@ -111,5 +116,15 @@ public sealed class AuthController(IAuthService authService, IValidator<Register
         CookieHelpers.ClearAuthTokens(Response);
 
         return NoContent();
+    }
+    [HttpGet("current")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var currentUser = await _currentUserService.GetCurrentUserAsync();
+
+        if (currentUser==null)
+            return Unauthorized();
+
+        return Ok(currentUser);
     }
 }

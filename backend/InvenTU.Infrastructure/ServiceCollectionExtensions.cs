@@ -14,6 +14,7 @@ using Microsoft.IdentityModel.Tokens;
 using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Infrastructure.Repositories;
 using InvenTU.Core.Contracts.Services;
+using InvenTU.Application.Auth;
 
 namespace InvenTU.Infrastructure;
 
@@ -75,10 +76,13 @@ public static class ServiceCollectionExtensions
 
         services.AddValidatorsFromAssemblyContaining<RegisterDTOValidator>();
 
-        services.AddScoped<ITokenService, TokenService>();
+        services.AddHttpContextAccessor();
+
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
     }

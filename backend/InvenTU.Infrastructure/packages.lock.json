@@ -478,7 +478,8 @@
         "type": "Project",
         "dependencies": {
           "FluentValidation": "[12.1.1, )",
-          "InvenTU.Core": "[1.0.0, )"
+          "InvenTU.Core": "[1.0.0, )",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.5, )"
         }
       },
       "inventu.core": {
