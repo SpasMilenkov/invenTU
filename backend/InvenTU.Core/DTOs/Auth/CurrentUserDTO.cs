@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace InvenTU.Core.DTOs;
+namespace InvenTU.Core.DTOs.Auth;
 
 public class CurrentUserDTO
 {
