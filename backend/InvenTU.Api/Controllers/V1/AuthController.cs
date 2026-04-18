@@ -12,13 +12,10 @@ namespace InvenTU.Api.Controllers.V1;
 // <summary>
 /// Controller for handling authentication-related actions like login and registration. Endpoints are public.
 // </summary>
-[Route("api/v1/[controller]")]
+[Route("api/v1/auth")]
 [ApiController]
 public sealed class AuthController(IAuthService authService, IValidator<RegisterDTO> registerDtoValidator, ICurrentUserService currentUserService) : ControllerBase
 {
-    private readonly IAuthService _authService = authService;
-    private readonly ICurrentUserService _currentUserService = currentUserService;
-    private readonly IValidator<RegisterDTO> _registerDtoValidator = registerDtoValidator;
     /// <summary>
     /// Signs in as existing user
     /// </summary>
@@ -120,7 +117,7 @@ public sealed class AuthController(IAuthService authService, IValidator<Register
     [HttpGet("current")]
     public async Task<IActionResult> GetCurrentUser()
     {
-        var currentUser = await _currentUserService.GetCurrentUserAsync();
+        var currentUser = await currentUserService.GetCurrentUserAsync();
 
         if (currentUser==null)
             return Unauthorized();
