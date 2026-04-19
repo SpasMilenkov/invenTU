@@ -1,0 +1,10 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/bin
+**/obj
+frontend/
+*.md
+LICENSE
+docker-compose*.yml
