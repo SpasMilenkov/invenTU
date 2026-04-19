@@ -3,6 +3,7 @@ using System;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvenTU.Infrastructure.Migrations
 {
     [DbContext(typeof(InvenTUDbContext))]
-    partial class InvenTUDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419154015_AddStockMovementsCreatedAtIndex")]
+    partial class AddStockMovementsCreatedAtIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -552,6 +555,9 @@ namespace InvenTU.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Capacity")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("text");
@@ -561,9 +567,6 @@ namespace InvenTU.Infrastructure.Migrations
 
                     b.Property<string>("Location")
                         .HasColumnType("text");
-
-                    b.Property<int?>("MaxStockLevel")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
