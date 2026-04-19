@@ -17,6 +17,7 @@ WORKDIR "/src/backend/InvenTU.Api"
 RUN dotnet publish "InvenTU.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+RUN apk add --no-cache krb5-libs
 WORKDIR /app
 COPY --from=build /app/publish .
 USER $APP_UID

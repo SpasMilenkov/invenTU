@@ -73,6 +73,19 @@ public static class ServiceCollectionExtensions
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ClockSkew = TimeSpan.Zero,
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (string.IsNullOrEmpty(context.Token) &&
+                            context.Request.Cookies.TryGetValue("AccessToken", out var cookieToken))
+                        {
+                            context.Token = cookieToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddValidatorsFromAssemblyContaining<RegisterDTOValidator>();
