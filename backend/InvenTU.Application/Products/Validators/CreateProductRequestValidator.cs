@@ -30,14 +30,16 @@ public sealed class CreateProductRequestValidator : AbstractValidator<CreateProd
             .MaximumLength(20).WithMessage("UnitOfMeasure must not exceed 20 characters.");
 
         RuleFor(x => x.MinStockLevel)
-            .GreaterThanOrEqualTo(0).WithMessage("MinStockLevel must be 0 or greater.");
+            .GreaterThanOrEqualTo(0).WithMessage("MinStockLevel must be 0 or greater.")
+            .When(x => x.MaxStockLevel.HasValue);
 
         RuleFor(x => x.MaxStockLevel)
             .GreaterThanOrEqualTo(0).WithMessage("MaxStockLevel must be 0 or greater.")
-            .GreaterThanOrEqualTo(x => x.MinStockLevel).WithMessage("MaxStockLevel must be greater than or equal to MinStockLevel.");
+            .GreaterThanOrEqualTo(x => x.MinStockLevel).WithMessage("MaxStockLevel must be greater than or equal to MinStockLevel.")
+            .When(x => x.MaxStockLevel.HasValue);
 
         RuleFor(x => x.ReorderPoint)
             .GreaterThanOrEqualTo(0).WithMessage("ReorderPoint must be 0 or greater.")
-            .LessThanOrEqualTo(x => x.MaxStockLevel).WithMessage("ReorderPoint must be less than or equal to MaxStockLevel.");
+            .LessThanOrEqualTo(x => x.MinStockLevel).WithMessage("ReorderPoint must be less than or equal to MaxStockLevel.");
     }
 }
