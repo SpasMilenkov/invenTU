@@ -1,0 +1,14 @@
+---
+import Layout from '../layouts/Layout.astro';
+import WelcomeCard from '../components/dashboard/WelcomeCard';
+---
+
+<Layout title="Dashboard">
+  <div class="flex flex-col gap-6">
+    <WelcomeCard client:only="react" />
+    <div class="rounded-lg border border-dashed border-surface-border-strong bg-surface p-8 text-center">
+      <h2 class="text-xl font-semibold text-text-secondary">More widgets coming soon</h2>
+      <p class="mt-2 text-text-muted">This page is under construction.</p>
+    </div>
+  </div>
+</Layout>

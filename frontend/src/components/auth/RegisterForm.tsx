@@ -4,11 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { registerSchema, type RegisterFormData } from '../../lib/auth/schemas';
 import { register as registerUser } from '../../lib/auth/api';
+import { useCurrentUser } from '../../lib/auth/useCurrentUser';
+import { extractAuthErrorMessage } from '../../lib/auth/errors';
 import { FormField } from '../ui/FormField';
 import QueryProvider from '../providers/QueryProvider';
-import type { AxiosError } from 'axios';
 
 function RegisterFormInner() {
+  const { data: existingUser } = useCurrentUser();
   const {
     register,
     handleSubmit,
@@ -18,25 +20,19 @@ function RegisterFormInner() {
   });
 
   useEffect(() => {
-    if (localStorage.getItem('access_token')) {
+    if (existingUser) {
       window.location.assign('/dashboard');
     }
-  }, []);
+  }, [existingUser]);
 
-  const mutation = useMutation({
+  const mutation = useMutation<void, Error, RegisterFormData>({
     mutationFn: registerUser,
-    onSuccess: (data) => {
-      localStorage.setItem('access_token', data.accessToken);
-      window.location.assign('/dashboard');
+    onSuccess: () => {
+      window.location.assign('/login?registered=1');
     },
   });
 
   const onSubmit = (data: RegisterFormData) => mutation.mutate(data);
-
-  const errorMessage =
-    mutation.isError
-      ? ((mutation.error as AxiosError<{ message?: string }>)?.response?.data?.message ?? 'Registration failed. Please try again.')
-      : null;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
@@ -75,8 +71,11 @@ function RegisterFormInner() {
         error={errors.confirmPassword}
         placeholder="••••••••"
       />
-      {errorMessage && (
-        <p className="input-error-msg text-center">{errorMessage}</p>
+
+      {mutation.isError && (
+        <p className="input-error-msg text-center">
+          {extractAuthErrorMessage(mutation.error)}
+        </p>
       )}
 
       <button

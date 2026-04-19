@@ -1,13 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { loginSchema, type LoginFormData } from '../../lib/auth/schemas';
 import { login } from '../../lib/auth/api';
+import { useCurrentUser } from '../../lib/auth/useCurrentUser';
+import { extractAuthErrorMessage } from '../../lib/auth/errors';
 import { FormField } from '../ui/FormField';
 import QueryProvider from '../providers/QueryProvider';
 
 function LoginFormInner() {
+  const [registered, setRegistered] = useState(false);
+  const { data: existingUser } = useCurrentUser();
+
   const {
     register,
     handleSubmit,
@@ -17,15 +22,21 @@ function LoginFormInner() {
   });
 
   useEffect(() => {
-    if (localStorage.getItem('access_token')) {
-      window.location.assign('/dashboard');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('registered') === '1') {
+      setRegistered(true);
     }
   }, []);
 
+  useEffect(() => {
+    if (existingUser) {
+      window.location.assign('/dashboard');
+    }
+  }, [existingUser]);
+
   const mutation = useMutation({
     mutationFn: login,
-    onSuccess: (data) => {
-      localStorage.setItem('access_token', data.accessToken);
+    onSuccess: () => {
       window.location.assign('/dashboard');
     },
   });
@@ -34,6 +45,12 @@ function LoginFormInner() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+      {registered && (
+        <p className="rounded-md bg-green-50 px-4 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+          Account created — please sign in.
+        </p>
+      )}
+
       <FormField
         label="Email"
         type="email"
@@ -50,7 +67,9 @@ function LoginFormInner() {
       />
 
       {mutation.isError && (
-        <p className="input-error-msg text-center">Invalid email or password.</p>
+        <p className="input-error-msg text-center">
+          {extractAuthErrorMessage(mutation.error)}
+        </p>
       )}
 
       <button
