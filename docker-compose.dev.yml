@@ -25,6 +25,7 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      ASPNETCORE_URLS: http://+:${PORT}
       ASPNETCORE_ENVIRONMENT: Development
     depends_on:
       db:
@@ -42,7 +43,7 @@ services:
     ports:
       - "4321:4321"
     environment:
-      PUBLIC_API_BASE_URL: http://localhost:${PORT}/api
+      PUBLIC_API_BASE_URL: http://localhost:${PORT}/api/v1
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
     depends_on:
