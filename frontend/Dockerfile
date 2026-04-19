@@ -2,7 +2,7 @@
 FROM node:lts-alpine AS dev
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 EXPOSE 4321
 
 # --- Build stage ---
