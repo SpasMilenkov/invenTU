@@ -3,6 +3,7 @@ using InvenTU.Application.Auth;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
 using InvenTU.Application.Stock;
+using InvenTU.Application.Stock.Validators;
 using InvenTU.Application.StockLocations;
 using InvenTU.Application.StockLocations.Validators;
 using InvenTU.Application.Users;
@@ -10,6 +11,7 @@ using InvenTU.Application.Warehouses;
 using InvenTU.Application.Warehouses.Validators;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.DTOs.Products;
+using InvenTU.Core.DTOs.Stock;
 using InvenTU.Core.DTOs.StockLocations;
 using InvenTU.Core.DTOs.Warehouses;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +39,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IValidator<UpdateStockLocationRequest>, UpdateStockLocationRequestValidator>();
 
         services.AddScoped<IStockItemService, StockItemService>();
+        services.AddScoped<IStockTransferService, StockTransferService>();
+        services.AddScoped<IValidator<TransferStockRequest>, TransferStockRequestValidator>();
 
         return services;
     }

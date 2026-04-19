@@ -16,7 +16,7 @@ public static class WarehouseMappingExtensions
             Name = request.Name.Trim(),
             IsActive = request.IsActive,
             Location = request.Location?.Trim(),
-            Capacity = request.Capacity,
+            MaxStockLevel = request.MaxStockLevel,
         };
     }
 
@@ -27,6 +27,6 @@ public static class WarehouseMappingExtensions
 
         warehouse.Name = request.Name.Trim();
         warehouse.Location = request.Location?.Trim();
-        warehouse.Capacity = request.Capacity;
+        warehouse.MaxStockLevel = request.MaxStockLevel;
     }
 }

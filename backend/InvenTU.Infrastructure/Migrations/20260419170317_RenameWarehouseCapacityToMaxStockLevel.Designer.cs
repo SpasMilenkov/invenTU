@@ -3,6 +3,7 @@ using System;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvenTU.Infrastructure.Migrations
 {
     [DbContext(typeof(InvenTUDbContext))]
-    partial class InvenTUDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419170317_RenameWarehouseCapacityToMaxStockLevel")]
+    partial class RenameWarehouseCapacityToMaxStockLevel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -425,10 +428,6 @@ namespace InvenTU.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt")
-                        .IsDescending()
-                        .HasDatabaseName("ix_stock_movements_created_at");
 
                     b.HasIndex("DestinationWarehouseId");
 
