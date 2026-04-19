@@ -114,12 +114,16 @@ public sealed class AuthController(IAuthService authService, IValidator<Register
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Returns the currently authenticated user's information based on the access token. Requires authentication.
+    /// </summary>
     [HttpGet("current")]
     public async Task<IActionResult> GetCurrentUser()
     {
         var currentUser = await currentUserService.GetCurrentUserAsync();
 
-        if (currentUser==null)
+        if (currentUser == null)
             return Unauthorized();
 
         return Ok(currentUser);
