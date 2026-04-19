@@ -1,5 +1,6 @@
 using FluentValidation;
 using InvenTU.Application.Auth;
+using InvenTU.Application.Categories;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
 using InvenTU.Application.Stock;
@@ -41,6 +42,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockItemService, StockItemService>();
         services.AddScoped<IStockTransferService, StockTransferService>();
         services.AddScoped<IValidator<TransferStockRequest>, TransferStockRequestValidator>();
+
+        services.AddScoped<ICategoryService, CategoryService>();
 
         return services;
     }
