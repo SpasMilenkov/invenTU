@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace InvenTU.Api.Controllers.V1;
 
+/// <summary>
+/// Controller for managing products.
+/// </summary>
 [ApiController]
 [Route("api/v1/products")]
 [Authorize]
