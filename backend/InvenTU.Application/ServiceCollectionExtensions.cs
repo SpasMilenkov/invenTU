@@ -2,6 +2,7 @@ using FluentValidation;
 using InvenTU.Application.Auth;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
+using InvenTU.Application.Stock;
 using InvenTU.Application.StockLocations;
 using InvenTU.Application.StockLocations.Validators;
 using InvenTU.Application.Users;
@@ -34,6 +35,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockLocationService, StockLocationService>();
         services.AddScoped<IValidator<CreateStockLocationRequest>, CreateStockLocationRequestValidator>();
         services.AddScoped<IValidator<UpdateStockLocationRequest>, UpdateStockLocationRequestValidator>();
+
+        services.AddScoped<IStockItemService, StockItemService>();
 
         return services;
     }
