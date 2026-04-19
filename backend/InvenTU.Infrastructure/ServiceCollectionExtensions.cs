@@ -81,6 +81,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IRefreshTokenStore, RefreshTokenStore>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IWarehouseRepository, WarehouseRepository>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
