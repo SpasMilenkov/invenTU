@@ -3,6 +3,7 @@ using System;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvenTU.Infrastructure.Migrations
 {
     [DbContext(typeof(InvenTUDbContext))]
-    partial class InvenTUDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419134630_MakeMaxStockNullable")]
+    partial class MakeMaxStockNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -172,31 +175,14 @@ namespace InvenTU.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Barcode")
-                        .HasDatabaseName("ix_products_barcode_trgm")
-                        .HasFilter("\"Barcode\" IS NOT NULL");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Barcode"), "GIN");
-                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Barcode"), new[] { "gin_trgm_ops" });
-
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Name")
-                        .HasDatabaseName("ix_products_name_trgm");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "GIN");
-                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
-
                     b.HasIndex("PrimaryWarehouseId");
 
                     b.HasIndex("SKU")
-                        .IsUnique()
-                        .HasDatabaseName("ix_products_sku_trgm");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SKU"), "GIN");
-                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SKU"), new[] { "gin_trgm_ops" });
+                        .IsUnique();
 
                     b.ToTable("Products");
                 });

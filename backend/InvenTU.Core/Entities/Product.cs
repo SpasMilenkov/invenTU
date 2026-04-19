@@ -14,7 +14,7 @@ public sealed class Product
     public string? Description { get; set; }
     public string? Barcode { get; set; }
     public int MinStockLevel { get; set; }
-    public int MaxStockLevel { get; set; }
+    public int? MaxStockLevel { get; set; }
     public int ReorderPoint { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

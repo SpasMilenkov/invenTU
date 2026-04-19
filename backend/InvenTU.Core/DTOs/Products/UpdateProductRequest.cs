@@ -12,6 +12,6 @@ public sealed class UpdateProductRequest
     public string? Description { get; init; }
     public string? Barcode { get; init; }
     public int MinStockLevel { get; init; }
-    public int MaxStockLevel { get; init; }
+    public int? MaxStockLevel { get; init; }
     public int ReorderPoint { get; init; }
 }
