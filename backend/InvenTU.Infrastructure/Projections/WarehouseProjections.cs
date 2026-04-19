@@ -13,7 +13,7 @@ internal static class WarehouseProjections
         Name = w.Name,
         IsActive = w.IsActive,
         Location = w.Location,
-        Capacity = w.Capacity,
+        MaxStockLevel = w.MaxStockLevel,
         TotalLocations = w.StockLocations.Count,
         TotalStockItems = w.StockLocations.SelectMany(l => l.StockItems).Count(),
         TotalQuantity = w.StockLocations.SelectMany(l => l.StockItems).Sum(si => si.Quantity),

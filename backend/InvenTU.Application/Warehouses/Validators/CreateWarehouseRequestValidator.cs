@@ -20,7 +20,8 @@ public sealed class CreateWarehouseRequestValidator : AbstractValidator<CreateWa
             .MaximumLength(500).WithMessage("Location must not exceed 500 characters.")
             .When(x => x.Location is not null);
 
-        RuleFor(x => x.Capacity)
-            .GreaterThan(0).WithMessage("Capacity must be greater than 0.");
+        RuleFor(x => x.MaxStockLevel)
+            .GreaterThan(0).WithMessage("MaxStockLevel must be greater than 0 when provided.")
+            .When(x => x.MaxStockLevel.HasValue);
     }
 }
