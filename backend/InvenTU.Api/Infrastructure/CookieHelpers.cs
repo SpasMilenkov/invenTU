@@ -13,7 +13,7 @@ public static class CookieHelpers
         HttpOnly = true,
         Secure = true,
         IsEssential = true,
-        SameSite = SameSiteMode.None
+        SameSite = SameSiteMode.Lax
     };
 
     /// <summary>
@@ -86,8 +86,15 @@ public static class CookieHelpers
     {
         ArgumentNullException.ThrowIfNull(response, nameof(response));
 
-        response.Cookies.Delete(ACCESS_TOKEN_NAME);
-        response.Cookies.Delete(REFRESH_TOKEN_NAME);
+        var deleteOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTime.UnixEpoch,
+        };
+        response.Cookies.Delete(ACCESS_TOKEN_NAME, deleteOptions);
+        response.Cookies.Delete(REFRESH_TOKEN_NAME, deleteOptions);
     }
 
     private static CookieOptions CreateCookieOptions(TimeSpan expiration)

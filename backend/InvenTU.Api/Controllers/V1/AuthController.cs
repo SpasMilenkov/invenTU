@@ -36,7 +36,6 @@ public sealed class AuthController(IAuthService authService, IValidator<Register
             result.Id,
             result.UserName,
             result.Email,
-            result.AccessToken,
             result.Roles
         });
     }
@@ -86,14 +85,13 @@ public sealed class AuthController(IAuthService authService, IValidator<Register
         if (result.AccessToken == null || result.RefreshToken == null)
             return Unauthorized(new { message = result.ErrorMessage ?? "Invalid or expired refresh token" });
 
-        CookieHelpers.SetRefreshToken(Response, result.RefreshToken);
+        CookieHelpers.SetAuthTokens(Response, result.AccessToken, result.RefreshToken);
 
         return Ok(new
         {
             result.Id,
             result.UserName,
             result.Email,
-            result.AccessToken,
             result.Roles
         });
     }

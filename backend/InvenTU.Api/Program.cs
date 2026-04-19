@@ -5,6 +5,8 @@ using InvenTU.Infrastructure;
 using InvenTU.Application;
 using InvenTU.Infrastructure.DataSeeders;
 using Microsoft.AspNetCore.Authorization;
+using InvenTU.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +62,18 @@ builder.Services.AddInvenTUApplication();
 
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -86,7 +100,13 @@ app.UseSerilogRequestLogging(options =>
 });
 
 using (var scope = app.Services.CreateScope())
-    await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
+  {
+      var db = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
+      await db.Database.MigrateAsync();
+      await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
+  }
+
+app.UseCors("Frontend");
 
 app.UseHttpsRedirection();
 

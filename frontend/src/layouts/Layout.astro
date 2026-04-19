@@ -1,5 +1,8 @@
 ---
 import '../styles/global.css';
+import NavSidebar from '../components/layout/NavSidebar';
+import UserMenu from '../components/layout/UserMenu';
+import RouteGuard from '../components/auth/RouteGuard';
 
 interface Props {
   title: string;
@@ -7,16 +10,6 @@ interface Props {
 
 const { title } = Astro.props;
 const currentPath = Astro.url.pathname;
-
-const navItems = [
-  { label: 'Dashboard', href: '/' },
-  { label: 'Products', href: '/products' },
-  { label: 'Warehouses', href: '/warehouses' },
-  { label: 'Stock Operations', href: '/stock' },
-  { label: 'Reports', href: '/reports' },
-  { label: 'Users', href: '/users' },
-  { label: 'Suppliers', href: '/suppliers' },
-];
 ---
 
 <!doctype html>
@@ -44,28 +37,7 @@ const navItems = [
         id="sidebar"
         class="fixed inset-y-0 left-0 z-30 w-64 transform bg-sidebar text-sidebar-text transition-transform duration-200 ease-in-out -translate-x-full lg:translate-x-0 lg:static lg:inset-auto"
       >
-        <div class="flex h-16 items-center justify-center border-b border-sidebar-border px-4">
-          <a href="/" class="text-xl font-bold tracking-wide">invenTU</a>
-        </div>
-        <nav class="mt-4 flex flex-col gap-1 px-3">
-          {navItems.map((item) => {
-            const isActive = currentPath === item.href
-              || (item.href !== '/' && currentPath.startsWith(item.href));
-            return (
-              <a
-                href={item.href}
-                class:list={[
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-sidebar-active text-sidebar-text'
-                    : 'text-sidebar-text-muted hover:bg-sidebar-hover-muted hover:text-sidebar-text',
-                ]}
-              >
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
+        <NavSidebar currentPath={currentPath} client:only="react" />
       </aside>
 
       <!-- Sidebar overlay for mobile -->
@@ -105,13 +77,15 @@ const navItems = [
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             </button>
-            <span class="text-sm text-text-muted">User</span>
+            <UserMenu client:only="react" />
           </div>
         </header>
 
         <!-- Page content -->
         <main class="flex-1 overflow-y-auto p-6">
-          <slot />
+          <RouteGuard currentPath={currentPath} client:only="react">
+            <slot />
+          </RouteGuard>
         </main>
       </div>
     </div>

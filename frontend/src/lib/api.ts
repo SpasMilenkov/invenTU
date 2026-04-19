@@ -1,7 +1,8 @@
-import axios, { AxiosHeaders } from 'axios';
-import type { InternalAxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { InternalAxiosRequestConfig, AxiosError } from 'axios';
 
-const AUTH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/refresh'];
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+const UNAUTH_PAGES = ['/login', '/register'];
 
 const apiClient = axios.create({
   baseURL: import.meta.env.PUBLIC_API_BASE_URL,
@@ -9,20 +10,8 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// --- Request interceptor: attach access token ---
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers = config.headers ?? new AxiosHeaders();
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
 // --- Response interceptor: refresh on 401, skip auth endpoints ---
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise: Promise<void> | null = null;
 
 function isAuthEndpoint(url: string): boolean {
   return AUTH_ENDPOINTS.some((ep) => url.includes(ep));
@@ -40,49 +29,42 @@ apiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    // SSR or non-401 → reject immediately
     if (typeof window === 'undefined' || error.response?.status !== 401) {
       return Promise.reject(error);
     }
 
-    // Auth endpoints → reject without intercepting (prevents redirect loops)
     if (isAuthEndpoint(originalRequest.url ?? '')) {
       return Promise.reject(error);
     }
 
-    // Already retried → give up
     if (originalRequest._retry) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
-    // Use promise lock: all concurrent 401s share one refresh call
     if (!refreshPromise) {
       refreshPromise = apiClient
-        .post<{ accessToken: string }>('/auth/refresh')
-        .then((res: AxiosResponse<{ accessToken: string }>) => {
-          const newToken = res.data.accessToken;
-          localStorage.setItem('access_token', newToken);
-          return newToken;
+        .post<void>('/auth/refresh')
+        .then(() => {
+          return;
         })
         .catch((refreshError: AxiosError) => {
-          // Only logout on auth failure (401/403) from refresh endpoint
-          if (isAuthFailure(refreshError)) {
-            localStorage.removeItem('access_token');
+          if (
+            isAuthFailure(refreshError) &&
+            !UNAUTH_PAGES.includes(window.location.pathname)
+          ) {
             window.location.assign('/login');
           }
           throw refreshError;
         })
         .finally(() => {
           refreshPromise = null;
-        });
+        }) as Promise<void>;
     }
 
     try {
-      const newToken = await refreshPromise;
-      originalRequest.headers = originalRequest.headers ?? new AxiosHeaders();
-      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      await refreshPromise;
       return apiClient(originalRequest);
     } catch (refreshError) {
       return Promise.reject(refreshError);
