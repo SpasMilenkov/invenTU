@@ -51,6 +51,31 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
 
         builder.Entity<Product>().HasIndex(p => p.DeletedAt);
 
+        builder.Entity<Product>()
+            .HasIndex(p => p.Name)
+            .HasDatabaseName("ix_products_name_trgm")
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops");
+
+        builder.Entity<Product>()
+            .HasIndex(p => p.SKU)
+            .IsUnique()
+            .HasDatabaseName("ix_products_sku_unique");
+
+        // New GIN index — unchanged
+        builder.Entity<Product>()
+            .HasIndex(p => p.SKU)
+            .HasDatabaseName("ix_products_sku_trgm")
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops");
+
+        builder.Entity<Product>()
+            .HasIndex(p => p.Barcode)
+            .HasDatabaseName("ix_products_barcode_trgm")
+            .HasMethod("GIN")
+            .HasOperators("gin_trgm_ops")
+            .HasFilter("\"Barcode\" IS NOT NULL");
+
         builder.Entity<Warehouse>().HasIndex(w => w.Code).IsUnique();
 
         builder.Entity<StockItem>().Property(s => s.RowVersion).IsRowVersion();
