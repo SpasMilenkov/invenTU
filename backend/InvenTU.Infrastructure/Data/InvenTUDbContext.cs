@@ -62,12 +62,16 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
             .IsUnique()
             .HasDatabaseName("ix_products_sku_unique");
 
-        // New GIN index — unchanged
         builder.Entity<Product>()
             .HasIndex(p => p.SKU)
             .HasDatabaseName("ix_products_sku_trgm")
             .HasMethod("GIN")
             .HasOperators("gin_trgm_ops");
+
+        builder.Entity<StockMovement>()
+            .HasIndex(sm => sm.CreatedAt)
+            .IsDescending()
+            .HasDatabaseName("ix_stock_movements_created_at");
 
         builder.Entity<Product>()
             .HasIndex(p => p.Barcode)

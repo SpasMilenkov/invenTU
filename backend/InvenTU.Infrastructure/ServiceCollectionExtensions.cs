@@ -15,6 +15,7 @@ using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Infrastructure.Repositories;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Application.Auth;
+using InvenTU.Application.Services;
 
 namespace InvenTU.Infrastructure;
 
@@ -84,6 +85,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWarehouseRepository, WarehouseRepository>();
         services.AddScoped<IStockLocationRepository, StockLocationRepository>();
         services.AddScoped<IStockItemRepository, StockItemRepository>();
+
+        services.AddScoped<IDashboardRepository, DashboardRepository>();
+        services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
