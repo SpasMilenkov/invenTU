@@ -71,7 +71,15 @@ public sealed class StockTransferRepository(InvenTUDbContext dbContext) : IStock
         };
         dbContext.StockMovements.Add(movement);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new StockConflictException();
+        }
+
         await transaction.CommitAsync(cancellationToken);
 
         return movement.Id;
