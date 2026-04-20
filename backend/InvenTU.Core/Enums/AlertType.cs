@@ -4,5 +4,6 @@ public enum AlertType
 {
     LowStock,
     NeedsReorder,
-    InactiveWarehouse
+    InactiveWarehouse,
+    InactiveWarehouseTransferAttempt
 }
