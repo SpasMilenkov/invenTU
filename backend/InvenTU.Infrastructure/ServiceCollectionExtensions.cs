@@ -16,6 +16,7 @@ using InvenTU.Infrastructure.Repositories;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Application.Auth;
 using InvenTU.Application.Services;
+using InvenTU.Application.Alerts;
 
 namespace InvenTU.Infrastructure;
 
@@ -105,6 +106,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IAlertRepository, AlertRepository>();
+        services.AddScoped<IAlertService, AlertService>();
 
         return services;
     }
