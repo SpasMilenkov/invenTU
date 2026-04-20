@@ -3,6 +3,7 @@ using InvenTU.Application.Auth;
 using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.DTOs.Stock;
+using InvenTU.Core.Enums;
 using InvenTU.Core.Exceptions;
 using CoreValidationException = InvenTU.Core.Exceptions.ValidationException;
 
@@ -13,9 +14,12 @@ public sealed class StockTransferService(
     IStockLocationRepository stockLocationRepository,
     IStockTransferRepository stockTransferRepository,
     ICurrentUserService currentUserService,
+    IAlertService alertService,
     IValidator<TransferStockRequest> validator) : IStockTransferService
 {
-    public async Task<StockTransferDto> TransferAsync(TransferStockRequest request, CancellationToken cancellationToken = default)
+    public async Task<StockTransferDto> TransferAsync(
+        TransferStockRequest request,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -33,6 +37,13 @@ public sealed class StockTransferService(
 
         if (!sourceWarehouse.IsActive)
         {
+            await alertService.CreateSystemAlertForRoleAsync(
+                AlertType.InactiveWarehouseTransferAttempt,
+                $"Consider activating warehouse '{sourceWarehouse.Name}' or choose an alternative.",
+                sourceWarehouse.Id,
+                "Admin",
+                cancellationToken);
+
             throw new WarehouseNotActiveException(sourceWarehouse.Id);
         }
 
@@ -41,6 +52,13 @@ public sealed class StockTransferService(
 
         if (!destWarehouse.IsActive)
         {
+            await alertService.CreateSystemAlertForRoleAsync(
+                AlertType.InactiveWarehouseTransferAttempt,
+                $"Consider activating warehouse '{destWarehouse.Name}' or choose an alternative.",
+                destWarehouse.Id,
+                "Admin",
+                cancellationToken);
+
             throw new WarehouseNotActiveException(destWarehouse.Id);
         }
 
@@ -60,7 +78,8 @@ public sealed class StockTransferService(
         _ = await stockLocationRepository.GetForUpdateAsync(request.DestinationWarehouseId, request.DestinationStockLocationId, cancellationToken)
             ?? throw new StockLocationNotFoundException(request.DestinationStockLocationId);
 
-        var currentUser = await currentUserService.GetCurrentUserAsync() ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
+        var currentUser = await currentUserService.GetCurrentUserAsync()
+            ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
 
         var movementId = await stockTransferRepository.ExecuteAsync(
             request.ProductId,
