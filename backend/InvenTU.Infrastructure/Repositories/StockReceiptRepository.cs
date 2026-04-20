@@ -1,6 +1,7 @@
 using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Entities;
 using InvenTU.Core.Enums;
+using InvenTU.Core.Exceptions;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,7 +58,15 @@ public sealed class StockReceiptRepository(InvenTUDbContext dbContext) : IStockR
         };
         dbContext.StockMovements.Add(movement);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new StockConflictException();
+        }
+
         await transaction.CommitAsync(cancellationToken);
 
         return (movement.Id, stockItem.Quantity);
