@@ -47,4 +47,19 @@ public sealed class UserRepository(UserManager<User> userManager, InvenTUDbConte
         user.IsActive = isActive;
         await userManager.UpdateAsync(user);
     }
+
+    public async Task<IReadOnlyList<Guid>> GetUserIdsByRoleAsync(
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedRole = roleName?.ToUpperInvariant();
+    
+        return await (
+            from u in dbContext.Users
+            join ur in dbContext.UserRoles on u.Id equals ur.UserId
+            join r in dbContext.Roles on ur.RoleId equals r.Id
+            where u.IsActive && r.NormalizedName == normalizedRole
+            select u.Id
+        ).ToListAsync(cancellationToken);
+    }
 }

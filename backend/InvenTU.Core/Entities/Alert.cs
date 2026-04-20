@@ -14,6 +14,7 @@ public sealed class Alert
     public int? MinStockLevel { get; set; }
     public decimal? ReorderSuggestion { get; set; }
     public DateTime? ResolvedAt { get; set; }
+     public string? Message { get; set; }
 
     public Product? Product { get; set; }
     public StockLocation? StockLocation { get; set; }
