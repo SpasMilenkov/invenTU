@@ -41,6 +41,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockItemService, StockItemService>();
         services.AddScoped<IStockTransferService, StockTransferService>();
         services.AddScoped<IValidator<TransferStockRequest>, TransferStockRequestValidator>();
+        services.AddScoped<IStockReceiptService, StockReceiptService>();
+        services.AddScoped<IValidator<ReceiveStockRequest>, ReceiveStockRequestValidator>();
 
         return services;
     }
