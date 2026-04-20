@@ -22,17 +22,17 @@ public sealed class StockTransferRepository(InvenTUDbContext dbContext) : IStock
     {
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+        var productName = await dbContext.Products
+            .Where(p => p.Id == productId)
+            .Select(p => p.Name)
+            .FirstOrDefaultAsync(cancellationToken) ?? "Unknown";
+
         var sourceItem = await dbContext.StockItems
             .Where(si => si.ProductId == productId && si.StockLocationId == sourceLocationId)
             .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new InsufficientStockException(quantity, 0m);
+            ?? throw new InsufficientStockException(productName, quantity, 0m);
 
-        if (sourceItem.Quantity < quantity)
-        {
-            throw new InsufficientStockException(quantity, sourceItem.Quantity);
-        }
-
-        sourceItem.Quantity -= quantity;
+        sourceItem.Deduct(quantity, productName);
 
         var destItem = await dbContext.StockItems
             .Where(si => si.ProductId == productId && si.StockLocationId == destinationLocationId)
