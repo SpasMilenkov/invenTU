@@ -52,7 +52,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     public async Task<IActionResult> GetUser(Guid id, CancellationToken cancellationToken = default)
     {
         var callerIsPrivileged = User.IsInRole("Admin") || User.IsInRole("Manager");
-        var callerId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (!callerIsPrivileged && callerId != id.ToString())
         {
@@ -88,7 +88,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         var callerIsAdmin = User.IsInRole("Admin");
-        var callerId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var callerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         // Non-admin may only edit their own profile
         if (!callerIsAdmin && callerId != id.ToString())
