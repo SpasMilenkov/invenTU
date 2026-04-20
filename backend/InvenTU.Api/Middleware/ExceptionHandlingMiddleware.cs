@@ -44,6 +44,11 @@ public sealed partial class ExceptionHandlingMiddleware(ILogger<ExceptionHandlin
             LogValidationError(ex, ex.ErrorCode);
             await WriteErrorResponseAsync(context, ex.StatusCode, ex.ErrorCode, ex.Message, ex.Errors);
         }
+        catch (InsufficientStockException ex)
+        {
+            LogApplicationError(ex, ex.ErrorCode);
+            await WriteInsufficientStockResponseAsync(context, ex);
+        }
         catch (AppException ex)
         {
             LogApplicationError(ex, ex.ErrorCode);
@@ -58,6 +63,23 @@ public sealed partial class ExceptionHandlingMiddleware(ILogger<ExceptionHandlin
             var message = isDev ? ex.Message : "An unexpected error occurred.";
             await WriteErrorResponseAsync(context, 500, "INTERNAL_ERROR", message, null);
         }
+    }
+
+    private static async Task WriteInsufficientStockResponseAsync(HttpContext context, InsufficientStockException ex)
+    {
+        context.Response.StatusCode = ex.StatusCode;
+        context.Response.ContentType = "application/json";
+
+        var body = new
+        {
+            error = ex.ErrorCode,
+            message = ex.Message,
+            productName = ex.ProductName,
+            requestedQuantity = ex.RequestedQuantity,
+            availableQuantity = ex.AvailableQuantity,
+        };
+
+        await context.Response.WriteAsync(JsonSerializer.Serialize(body, JsonOptions));
     }
 
     private static async Task WriteErrorResponseAsync(

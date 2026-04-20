@@ -1,3 +1,5 @@
+using InvenTU.Core.Exceptions;
+
 namespace InvenTU.Core.Entities;
 
 public sealed class StockItem
@@ -11,4 +13,14 @@ public sealed class StockItem
 
     public Product Product { get; set; } = null!;
     public StockLocation StockLocation { get; set; } = null!;
+
+    public void Deduct(decimal quantity, string productName)
+    {
+        if (Quantity - quantity < 0)
+        {
+            throw new InsufficientStockException(productName, quantity, Quantity);
+        }
+
+        Quantity -= quantity;
+    }
 }
