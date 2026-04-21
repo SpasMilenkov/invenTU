@@ -1,4 +1,40 @@
 import type { AxiosError } from 'axios';
+import type { Path, UseFormSetError } from 'react-hook-form';
+
+// Backend validation payloads may use PascalCase ("Email") or camelCase ("email").
+// buildFieldMap seeds both for each RHF path so callers don't have to enumerate casings.
+export function buildFieldMap<T extends Record<string, unknown>>(
+  paths: readonly Path<T>[],
+): Record<string, Path<T>> {
+  const map: Record<string, Path<T>> = {};
+  for (const path of paths) {
+    const key = String(path);
+    map[key] = path;
+    map[key.charAt(0).toUpperCase() + key.slice(1)] = path;
+  }
+  return map;
+}
+
+export function applyBackendFieldErrors<T extends Record<string, unknown>>(
+  err: unknown,
+  setError: UseFormSetError<T>,
+  fieldMap: Record<string, Path<T>>,
+): boolean {
+  const data = (err as { response?: { data?: unknown } })?.response?.data;
+  if (!data || typeof data !== 'object') return false;
+  const errors = (data as { errors?: Record<string, string[]> }).errors;
+  if (!errors || typeof errors !== 'object') return false;
+
+  let mapped = false;
+  for (const [rawKey, messages] of Object.entries(errors)) {
+    const target = fieldMap[rawKey] ?? fieldMap[rawKey.toLowerCase()];
+    if (target && messages?.length) {
+      setError(target, { type: 'server', message: messages.join(' ') });
+      mapped = true;
+    }
+  }
+  return mapped;
+}
 
 export function extractAuthErrorMessage(err: unknown): string {
   const axiosErr = err as AxiosError;
