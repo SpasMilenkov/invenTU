@@ -104,6 +104,11 @@ using (var scope = app.Services.CreateScope())
       var db = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
       await db.Database.MigrateAsync();
       await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
+
+      if (app.Environment.IsDevelopment())
+      {
+          await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
+      }
   }
 
 app.UseCors("Frontend");
