@@ -12,7 +12,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
 {
     public Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Products
-            .Where(p => p.Id == id && p.DeletedAt == null)
+            .Where(p => p.Id == id)
             .Select(ProductProjections.ToDto)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -60,7 +60,8 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(p => p.DeletedAt, deletedAt)
-                    .SetProperty(p => p.UpdatedAt, deletedAt),
+                    .SetProperty(p => p.UpdatedAt, deletedAt)
+                    .SetProperty(p => p.IsActive, false),
                 cancellationToken);
     }
 
@@ -79,8 +80,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
         ProductQueryParams query,
         CancellationToken cancellationToken)
     {
-        var q = dbContext.Products
-            .Where(p => p.DeletedAt == null);
+        var q = dbContext.Products.AsQueryable();
 
         if (query.CategoryId.HasValue)
             q = q.Where(p => p.CategoryId == query.CategoryId.Value);
@@ -161,8 +161,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
             .SqlQuery<int>($"""
                 SELECT COUNT(*)::int AS "Value"
                 FROM   "Products" p
-                WHERE  p."DeletedAt" IS NULL
-                  AND  (
+                WHERE  (
                            p."SKU"     ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                         OR p."Name"    ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                         OR p."Barcode" ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
@@ -213,8 +212,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
                     END                        AS "MatchPriority"
                 FROM  "Products"   p
                 INNER JOIN "Categories" c ON c."Id" = p."CategoryId"
-                WHERE p."DeletedAt" IS NULL
-                  AND (
+                WHERE (
                           p."SKU"     ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                        OR p."Name"    ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                        OR p."Barcode" ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
