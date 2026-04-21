@@ -6,6 +6,7 @@ import {
   type UpdateProfileValues,
   type ChangePasswordValues,
 } from '../../lib/schemas/profile';
+import { roleBadgeClasses } from '../../lib/users/roleBadge';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -36,19 +37,6 @@ function getInitials(firstName?: string, lastName?: string): string {
   const f = firstName?.[0] ?? '';
   const l = lastName?.[0] ?? '';
   return (f + l).toUpperCase() || 'U';
-}
-
-function roleBadgeClasses(role: string): string {
-  switch (role) {
-    case 'Admin':
-      return 'bg-accent-100 text-accent-800 ring-1 ring-accent-300/60 dark:bg-accent-900/40 dark:text-accent-200 dark:ring-accent-600/40';
-    case 'Manager':
-      return 'bg-primary-100 text-primary-800 ring-1 ring-primary-300/60 dark:bg-primary-900/40 dark:text-primary-200 dark:ring-primary-600/40';
-    case 'Worker':
-      return 'bg-secondary-100 text-secondary-800 ring-1 ring-secondary-300/60 dark:bg-secondary-700/60 dark:text-secondary-200 dark:ring-secondary-500/40';
-    default:
-      return 'bg-secondary-100 text-secondary-700 ring-1 ring-secondary-300/60 dark:bg-secondary-800 dark:text-secondary-300 dark:ring-secondary-600/40';
-  }
 }
 
 // ---------------------------------------------------------------------------
