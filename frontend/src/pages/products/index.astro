@@ -1,18 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ProductsPage from '../../components/products/ProductsPage';
 ---
 
-<Layout title="Products" crumb="Products">
-  <div class="page-head">
-    <div>
-      <div class="page-sub">OPERATE / PRODUCTS</div>
-      <h1 class="page-title">Products</h1>
-    </div>
-  </div>
-  <div class="empty">
-    <div class="micro" style="margin-bottom: 8px;">UNDER CONSTRUCTION</div>
-    <p class="text-[13px]" style="color: var(--color-ink-3);">
-      The product catalog UI will live here. Use Stock Operations for now.
-    </p>
-  </div>
+<Layout title="Products">
+  <ProductsPage client:only="react" />
 </Layout>
