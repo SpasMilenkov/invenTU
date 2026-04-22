@@ -21,11 +21,11 @@ public sealed class CategoriesController(ICategoryService categoryService) : Con
     /// </summary>
     /// <returns></returns>
     [HttpGet]
-    public async Task<IActionResult> GetAllCategories()
+    public async Task<IActionResult> GetAllCategories(CancellationToken cancellationToken)
     {
-        var categories = await _categoryService.GetAllCategoriesAsync();
+        var categories = await _categoryService.GetAllCategoriesAsync(cancellationToken);
 
-        return Ok();
+        return Ok(categories);
     }
     /// <summary>
     /// Creates a new product category
@@ -33,23 +33,24 @@ public sealed class CategoriesController(ICategoryService categoryService) : Con
     /// <returns></returns>
     [HttpPost]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> CreateCategory(CategoryDTO categoryDto)
+    public async Task<IActionResult> CreateCategory(CreateCategoryRequest createCategoryRequest, CancellationToken cancellationToken)
     {
-        await _categoryService.CreateCategoryAsync(categoryDto);
+        var newCategory = await _categoryService.CreateCategoryAsync(createCategoryRequest, cancellationToken);
 
-        return Ok();
+        return Ok(newCategory);
     }
     /// <summary>
     /// Modifies an existing product category
     /// </summary>
     /// <param name="id"></param>
-    /// <param name="categoryDto"></param>
+    /// <param name="updateCategoryRequest"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> EditCategory(string id, CategoryDTO categoryDto)
+    public async Task<IActionResult> UpdateCategory(Guid id, UpdateCategoryRequest updateCategoryRequest, CancellationToken cancellationToken)
     {
-        await _categoryService.EditCategoryAsync(categoryDto);
+        await _categoryService.UpdateCategoryAsync(id, updateCategoryRequest, cancellationToken);
 
         return Ok();
     }
@@ -57,12 +58,13 @@ public sealed class CategoriesController(ICategoryService categoryService) : Con
     /// Soft delete on an existing category
     /// </summary>
     /// <param name="id"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> DeleteCategory(string id)
+    public async Task<IActionResult> DeleteCategory(Guid id, CancellationToken cancellationToken)
     {
-        await _categoryService.DeleteCategoryAsync(id);
+        await _categoryService.DeleteCategoryAsync(id, cancellationToken);
 
         return Ok();
     }

@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using InvenTU.Core.DTOs.Categories;
+using InvenTU.Core.Entities;
 
 namespace InvenTU.Core.Contracts.Repositories;
 
 public interface ICategoryRepository
 {
-    Task CreateCategoryAsync(CategoryDTO categoryDto);
-    Task DeleteCategoryAsync(string id);
-    Task EditCategoryAsync(CategoryDTO categoryDto);
-    Task<CategoryDTO> GetAllCategoriesAsync();
+    Task<CategoryDTO> CreateCategoryAsync(Category category, CancellationToken cancellationToken = default);
+    Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken = default);
+    Task UpdateCategoryAsync(Category category, CancellationToken cancellationToken = default);
+    Task<Category?> GetCategoryForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<CategoryDTO>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
 }

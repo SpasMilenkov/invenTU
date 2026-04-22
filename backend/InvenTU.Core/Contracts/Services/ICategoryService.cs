@@ -7,8 +7,8 @@ namespace InvenTU.Core.Contracts.Services;
 
 public interface ICategoryService
 {
-    Task CreateCategoryAsync(CategoryDTO categoryDto);
-    Task DeleteCategoryAsync(string id);
-    Task EditCategoryAsync(CategoryDTO categoryDto);
-    Task<CategoryDTO> GetAllCategoriesAsync();
+    Task<CategoryDTO> CreateCategoryAsync(CreateCategoryRequest createCategoryRequest, CancellationToken cancellationToken);
+    Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken);
+    Task UpdateCategoryAsync(Guid id, UpdateCategoryRequest updateCategoryRequest, CancellationToken cancellationToken);
+    Task<CategoryDTO> GetAllCategoriesAsync(CancellationToken cancellationToken);
 }
