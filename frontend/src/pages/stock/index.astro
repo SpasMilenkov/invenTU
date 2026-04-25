@@ -3,8 +3,49 @@ import Layout from '../../layouts/Layout.astro';
 ---
 
 <Layout title="Stock Operations">
-  <div class="rounded-lg border border-dashed border-surface-border-strong bg-surface p-8 text-center">
-    <h2 class="text-xl font-semibold text-text-secondary">Stock Operations</h2>
-    <p class="mt-2 text-text-muted">This page is under construction.</p>
+  <div class="mx-auto max-w-5xl">
+    <header class="mb-6">
+      <p class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">Inventory</p>
+      <h1 class="mt-1 text-2xl font-semibold text-text-primary">Stock Operations</h1>
+      <p class="mt-1 text-sm text-text-muted">Choose an operation below.</p>
+    </header>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <a
+        href="/stock/receive"
+        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
+      >
+        <h2 class="font-semibold text-text-primary">Receive Stock</h2>
+        <p class="mt-1 text-sm text-text-muted">
+          Record inbound goods from a purchase order or direct delivery.
+        </p>
+      </a>
+      <a
+        href="/stock/issue"
+        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
+      >
+        <h2 class="font-semibold text-text-primary">Issue / Pick Stock</h2>
+        <p class="mt-1 text-sm text-text-muted">
+          Remove stock from a location for an order or other outbound use.
+        </p>
+      </a>
+      <a
+        href="/stock/transfer"
+        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
+      >
+        <h2 class="font-semibold text-text-primary">Transfer Stock</h2>
+        <p class="mt-1 text-sm text-text-muted">
+          Move stock between locations or warehouses within the system.
+        </p>
+      </a>
+      <a
+        href="/stock/adjustments"
+        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
+      >
+        <h2 class="font-semibold text-text-primary">Stock Adjustments</h2>
+        <p class="mt-1 text-sm text-text-muted">
+          Submit count corrections. Large discrepancies are sent for manager approval.
+        </p>
+      </a>
+    </div>
   </div>
 </Layout>

@@ -10,4 +10,7 @@ public interface IUserRepository
     Task<UserDetailDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
     Task SetIsActiveAsync(User user, bool isActive, CancellationToken cancellationToken = default);
+    /// Returns the IDs of all active users belonging to the specified role.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> GetUserIdsByRoleAsync(string roleName, CancellationToken cancellationToken = default);
 }

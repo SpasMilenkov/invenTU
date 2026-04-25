@@ -1,6 +1,7 @@
 using FluentValidation;
 using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Contracts.Services;
+using InvenTU.Core.DTOs.Common;
 using InvenTU.Core.DTOs.Warehouses;
 using InvenTU.Core.Exceptions;
 using InvenTU.Core.Extensions;
@@ -13,8 +14,13 @@ public sealed class WarehouseService(
     IValidator<CreateWarehouseRequest> createValidator,
     IValidator<UpdateWarehouseRequest> updateValidator) : IWarehouseService
 {
-    public async Task<IReadOnlyList<WarehouseDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await warehouseRepository.GetAllAsync(cancellationToken);
+    public Task<PagedResult<WarehouseDto>> GetAllAsync(
+        int page,
+        int pageSize,
+        string? search,
+        WarehouseStatusFilter status,
+        CancellationToken cancellationToken = default)
+        => warehouseRepository.GetPagedAsync(page, pageSize, search, status, cancellationToken);
 
     public async Task<WarehouseDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => await warehouseRepository.GetByIdAsync(id, cancellationToken)
@@ -94,6 +100,14 @@ public sealed class WarehouseService(
         var warehouse = await warehouseRepository.GetForUpdateAsync(id, cancellationToken) ?? throw new WarehouseNotFoundException(id);
 
         warehouse.IsActive = false;
+        await warehouseRepository.UpdateAsync(warehouse, cancellationToken);
+    }
+
+    public async Task ActivateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var warehouse = await warehouseRepository.GetForUpdateAsync(id, cancellationToken) ?? throw new WarehouseNotFoundException(id);
+
+        warehouse.IsActive = true;
         await warehouseRepository.UpdateAsync(warehouse, cancellationToken);
     }
 }

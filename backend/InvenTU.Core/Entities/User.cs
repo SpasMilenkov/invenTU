@@ -10,6 +10,7 @@ public sealed class User : IdentityUser<Guid>
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     public ICollection<StockMovement> CreatedStockMovements { get; set; } = [];
+    public ICollection<StockMovement> ReviewedStockMovements { get; set; } = [];
     public ICollection<PurchaseOrder> CreatedPurchaseOrders { get; set; } = [];
     public ICollection<AlertUserState> AlertUserStates { get; set; } = [];
 }

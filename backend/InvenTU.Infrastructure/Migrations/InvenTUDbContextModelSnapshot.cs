@@ -38,6 +38,9 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Property<decimal?>("CurrentQuantity")
                         .HasColumnType("numeric");
 
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
+
                     b.Property<int?>("MinStockLevel")
                         .HasColumnType("integer");
 
@@ -330,11 +333,11 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Property<decimal>("QuantityReserved")
                         .HasColumnType("numeric");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<Guid>("StockLocationId")
                         .HasColumnType("uuid");
@@ -386,6 +389,9 @@ namespace InvenTU.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<decimal?>("CountedQuantity")
+                        .HasColumnType("numeric");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -411,6 +417,12 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Property<string>("ReferenceNumber")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("SourceWarehouseId")
                         .HasColumnType("uuid");
 
@@ -433,6 +445,8 @@ namespace InvenTU.Infrastructure.Migrations
                     b.HasIndex("DestinationWarehouseId");
 
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("ReviewedByUserId");
 
                     b.HasIndex("SourceWarehouseId");
 
@@ -885,6 +899,11 @@ namespace InvenTU.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("InvenTU.Core.Entities.User", "ReviewedByUser")
+                        .WithMany("ReviewedStockMovements")
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InvenTU.Core.Entities.Warehouse", "SourceWarehouse")
                         .WithMany("SourceMovements")
                         .HasForeignKey("SourceWarehouseId")
@@ -903,6 +922,8 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Navigation("DestinationWarehouse");
 
                     b.Navigation("Product");
+
+                    b.Navigation("ReviewedByUser");
 
                     b.Navigation("SourceWarehouse");
 
@@ -1009,6 +1030,8 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Navigation("CreatedStockMovements");
 
                     b.Navigation("RefreshTokens");
+
+                    b.Navigation("ReviewedStockMovements");
                 });
 
             modelBuilder.Entity("InvenTU.Core.Entities.Warehouse", b =>

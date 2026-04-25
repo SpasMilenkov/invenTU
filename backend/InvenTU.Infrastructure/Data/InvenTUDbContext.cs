@@ -83,7 +83,12 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
         builder.Entity<Warehouse>().HasIndex(w => w.Code).IsUnique();
 
         builder.Entity<StockItem>().Property(s => s.RowVersion).IsRowVersion();
-
+        
+        builder.Entity<StockItem>()
+            .Property(p => p.RowVersion)
+            .IsRowVersion()
+            .HasColumnName("xmin")
+            .HasColumnType("xid");
         builder.Entity<StockMovement>(entity =>
         {
             entity.HasOne(sm => sm.SourceWarehouse)
@@ -99,6 +104,11 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
             entity.HasOne(sm => sm.User)
                 .WithMany(u => u.CreatedStockMovements)
                 .HasForeignKey(sm => sm.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sm => sm.ReviewedByUser)
+                .WithMany(u => u.ReviewedStockMovements)
+                .HasForeignKey(sm => sm.ReviewedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
