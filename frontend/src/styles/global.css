@@ -1420,6 +1420,62 @@ button { font: inherit; color: inherit; }
       width: 3.5rem !important;
     }
   }
+
+  /* --- Capacity bar (CapacityBar.tsx) ----------------------------------- */
+  .capbar { display: flex; flex-direction: column; gap: 3px; min-width: 80px; }
+  .capbar-header { display: flex; align-items: center; gap: 6px; }
+  .capbar-track { flex: 1; border-radius: 2px; }
+  .capbar-pct {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--color-ok);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .capbar-pct-warn { color: var(--color-warn); }
+  .capbar-pct-crit { color: var(--color-crit); }
+  .capbar-ratio {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-ink-3);
+  }
+
+  /* --- Warehouse stats header (WarehouseStatsHeader.tsx) ---------------- */
+  .wh-stats-header {
+    border: 1px solid var(--color-rule);
+    border-radius: 2px;
+    padding: 12px;
+  }
+  .wh-stats-divider {
+    border-top: 1px solid var(--color-rule);
+  }
+  .wh-stat-label {
+    font-size: 12px;
+    color: var(--color-ink-3);
+  }
+  .wh-stat-value {
+    font-size: 12px;
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  .wh-stat-sep {
+    color: var(--color-ink-4);
+  }
+  .wh-stats-code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+  }
+  .wh-stats-code-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+    font-weight: 600;
+  }
 }
 
 /* ==========================================================================
