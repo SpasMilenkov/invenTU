@@ -2,18 +2,47 @@
 import '../styles/global.css';
 import NavSidebar from '../components/layout/NavSidebar';
 import UserMenu from '../components/layout/UserMenu';
+import PreferencesMenu from '../components/layout/PreferencesMenu';
 import RouteGuard from '../components/auth/RouteGuard';
+import CommandPaletteController from '../components/ui/CommandPalette';
 
 interface Props {
   title: string;
+  crumb?: string;
 }
 
-const { title } = Astro.props;
+const { title, crumb } = Astro.props;
 const currentPath = Astro.url.pathname;
+
+const NAV_LABELS: Record<string, string> = {
+  '/': 'Dashboard',
+  '/dashboard': 'Dashboard',
+  '/products': 'Products',
+  '/warehouses': 'Warehouses',
+  '/stock': 'Stock Operations',
+  '/stock/receive': 'Receive Stock',
+  '/stock/issue': 'Issue Stock',
+  '/stock/transfer': 'Transfer Stock',
+  '/stock/adjustments': 'Adjustments',
+  '/suppliers': 'Suppliers',
+  '/reports': 'Reports',
+  '/users': 'Users',
+  '/profile': 'Profile',
+};
+
+function deriveCrumb(path: string): string {
+  if (NAV_LABELS[path]) return NAV_LABELS[path];
+  for (const prefix of Object.keys(NAV_LABELS).sort((a, b) => b.length - a.length)) {
+    if (prefix !== '/' && path.startsWith(prefix)) return NAV_LABELS[prefix];
+  }
+  return title;
+}
+
+const crumbLabel = (crumb ?? deriveCrumb(currentPath)).toUpperCase();
 ---
 
 <!doctype html>
-<html lang="en" class="h-full bg-surface-alt">
+<html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,68 +50,125 @@ const currentPath = Astro.url.pathname;
     <link rel="icon" href="/favicon.ico" />
     <meta name="generator" content={Astro.generator} />
     <title>{title} | invenTU</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <script is:inline>
-      (function() {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        }
+      (function () {
+        try {
+          const root = document.documentElement;
+          // Theme
+          const storedTheme = localStorage.getItem('theme');
+          const dark =
+            storedTheme === 'dark' ||
+            (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          root.classList.toggle('dark', dark);
+          // Density
+          const density = localStorage.getItem('density') === 'compact' ? 'compact' : 'comfortable';
+          root.dataset.density = density;
+          // Sidebar
+          const sidebar = localStorage.getItem('sidebar') === 'collapsed' ? 'true' : 'false';
+          root.dataset.collapsed = sidebar;
+        } catch (_) {}
       })();
     </script>
   </head>
-  <body class="h-full">
+  <body class="h-full" style="background: var(--color-bg);">
     <div class="flex h-full">
-      <!-- Sidebar -->
+      <!-- Sidebar (dark, always; can collapse to 56px on desktop) -->
       <aside
         id="sidebar"
-        class="fixed inset-y-0 left-0 z-30 w-64 transform bg-sidebar text-sidebar-text transition-transform duration-200 ease-in-out -translate-x-full lg:translate-x-0 lg:static lg:inset-auto"
+        class="fixed inset-y-0 left-0 z-30 flex w-60 transform flex-col overflow-hidden border-r transition-[width,transform] duration-200 ease-in-out -translate-x-full lg:relative lg:translate-x-0 lg:flex"
+        style="background: var(--color-shell-bg); color: var(--color-shell-ink); border-color: var(--color-shell-rule);"
       >
         <NavSidebar currentPath={currentPath} client:only="react" />
       </aside>
 
-      <!-- Sidebar overlay for mobile -->
+      <!-- Sidebar overlay (mobile) -->
       <div
         id="sidebar-overlay"
-        class="fixed inset-0 z-20 bg-black/50 hidden lg:hidden"
+        class="fixed inset-0 z-20 hidden bg-black/50 lg:hidden"
       ></div>
 
-      <!-- Main content area -->
-      <div class="flex flex-1 flex-col lg:ml-0">
+      <!-- Main column -->
+      <div class="flex min-w-0 flex-1 flex-col">
         <!-- Topbar -->
-        <header class="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-surface-border bg-surface px-4 shadow-sm">
+        <header
+          class="sticky top-0 z-10 flex h-14 flex-shrink-0 items-center gap-2 border-b px-4"
+          style="background: var(--color-bg-elev); border-color: var(--color-rule);"
+        >
           <button
-            id="sidebar-toggle"
-            class="lg:hidden rounded-md p-2 text-text-subtle hover:bg-secondary-100 hover:text-text-primary"
+            id="sidebar-toggle-mobile"
+            class="icon-btn lg:hidden"
             type="button"
             aria-label="Toggle sidebar"
           >
-            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">
+              <path d="M4 6 H20 M4 12 H20 M4 18 H20" />
             </svg>
           </button>
-          <h1 class="text-lg font-semibold text-text-primary">{title}</h1>
-          <div class="ml-auto flex items-center gap-4">
-            <button
-              id="theme-toggle"
-              class="btn btn-ghost btn-icon"
-              type="button"
-              aria-label="Toggle dark mode"
-            >
-              <!-- Sun icon (visible in dark mode) -->
-              <svg class="hidden h-5 w-5 dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <!-- Moon icon (visible in light mode) -->
-              <svg class="block h-5 w-5 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            </button>
-            <UserMenu client:only="react" />
+
+          <button
+            id="sidebar-toggle-desktop"
+            class="icon-btn hidden lg:grid"
+            type="button"
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar (toggle)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">
+              <path d="M4 6 H20 M4 12 H20 M4 18 H20" />
+            </svg>
+          </button>
+
+          <div class="crumb">
+            <span>INVENTU</span>
+            <span class="crumb-sep">/</span>
+            <b>{crumbLabel}</b>
           </div>
+
+          <div class="flex-1"></div>
+
+          <button
+            id="cmd-palette-trigger"
+            class="cmd-trigger hidden md:flex"
+            type="button"
+            aria-label="Open command palette"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">
+              <circle cx="11" cy="11" r="6" />
+              <path d="M16 16 L21 21" />
+            </svg>
+            <span>Search pages, actions…</span>
+            <span class="cmd-kbd">⌘K</span>
+          </button>
+
+          <button
+            id="theme-toggle"
+            class="icon-btn"
+            type="button"
+            aria-label="Toggle theme"
+            title="Toggle theme"
+          >
+            <svg class="hidden dark:block" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 3 V5 M12 19 V21 M3 12 H5 M19 12 H21 M5.6 5.6 L7 7 M17 17 L18.4 18.4 M5.6 18.4 L7 17 M17 7 L18.4 5.6" />
+            </svg>
+            <svg class="block dark:hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square">
+              <path d="M20.5 14.5 A8 8 0 1 1 9.5 3.5 a6 6 0 0 0 11 11 z" />
+            </svg>
+          </button>
+
+          <PreferencesMenu client:only="react" />
+          <UserMenu client:only="react" />
         </header>
 
-        <!-- Page content -->
-        <main class="flex-1 overflow-y-auto p-6">
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto px-6 py-6 lg:px-8 lg:py-8">
           <RouteGuard currentPath={currentPath} client:only="react">
             <slot />
           </RouteGuard>
@@ -90,36 +176,52 @@ const currentPath = Astro.url.pathname;
       </div>
     </div>
 
+    <!-- Command palette mounts globally -->
+    <CommandPaletteController client:only="react" />
+
     <script>
+      const html = document.documentElement;
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('sidebar-overlay');
-      const toggle = document.getElementById('sidebar-toggle');
+      const mobileToggle = document.getElementById('sidebar-toggle-mobile');
+      const desktopToggle = document.getElementById('sidebar-toggle-desktop');
+      const themeToggle = document.getElementById('theme-toggle');
+      const cmdTrigger = document.getElementById('cmd-palette-trigger');
 
-      function openSidebar() {
+      // --- Mobile drawer ---
+      function openMobileSidebar() {
         sidebar?.classList.remove('-translate-x-full');
         sidebar?.classList.add('translate-x-0');
         overlay?.classList.remove('hidden');
       }
-
-      function closeSidebar() {
+      function closeMobileSidebar() {
         sidebar?.classList.add('-translate-x-full');
         sidebar?.classList.remove('translate-x-0');
         overlay?.classList.add('hidden');
       }
-
-      toggle?.addEventListener('click', () => {
+      mobileToggle?.addEventListener('click', () => {
         const isHidden = sidebar?.classList.contains('-translate-x-full');
-        if (isHidden) openSidebar();
-        else closeSidebar();
+        if (isHidden) openMobileSidebar();
+        else closeMobileSidebar();
+      });
+      overlay?.addEventListener('click', closeMobileSidebar);
+
+      // --- Desktop collapse: just flips [data-collapsed] on <html>; CSS does the rest. ---
+      desktopToggle?.addEventListener('click', () => {
+        const collapsed = html.dataset.collapsed !== 'true';
+        html.dataset.collapsed = collapsed ? 'true' : 'false';
+        localStorage.setItem('sidebar', collapsed ? 'collapsed' : 'expanded');
       });
 
-      overlay?.addEventListener('click', closeSidebar);
-
-      // Dark mode toggle
-      const themeToggle = document.getElementById('theme-toggle');
+      // --- Theme toggle ---
       themeToggle?.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
+        const isDark = html.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+
+      // --- Command palette trigger ---
+      cmdTrigger?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('inventu:open-command-palette'));
       });
     </script>
   </body>
