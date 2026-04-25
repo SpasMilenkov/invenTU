@@ -91,9 +91,9 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
           <span>OPERATIONAL</span>
         </div>
         {user && (
-          <a href="/profile" className="user-pill">
+          <a href="/profile" className="user-pill" title={`${user.firstName} ${user.lastName}`}>
             <div className="user-avatar">{getInitials(user.firstName, user.lastName)}</div>
-            <div className="flex flex-col leading-tight">
+            <div className="user-pill-text">
               <span className="user-name">
                 {user.firstName} {user.lastName}
               </span>
