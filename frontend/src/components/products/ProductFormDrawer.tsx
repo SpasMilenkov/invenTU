@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@tanstack/react-query';
-import apiClient from '../../lib/api';
 import { FormField } from '../ui/FormField';
+import { DrawerShell } from '../ui/DrawerShell';
 import {
   applyBackendFieldErrors,
   buildFieldMap,
@@ -15,23 +14,9 @@ import {
   type UpdateProductInput,
 } from '../../lib/schemas/products';
 import { useUpdateProduct } from '../../lib/hooks/useProducts';
+import { useWarehousesList } from '../../lib/hooks/useWarehouses';
 import type { ProductDto } from '../../lib/types/products';
-
-interface WarehouseOption {
-  id: string;
-  name: string;
-}
-
-function useWarehouses() {
-  return useQuery<WarehouseOption[]>({
-    queryKey: ['warehouses'],
-    queryFn: async () => {
-      const res = await apiClient.get<WarehouseOption[]>('/warehouses');
-      return res.data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
+import CategoryPicker from '../categories/CategoryPicker';
 
 const EDIT_FIELD_MAP = buildFieldMap<UpdateProductInput>([
   'name',
@@ -56,10 +41,11 @@ interface Props {
 
 export default function ProductFormDrawer({ product, onClose, onSuccess }: Props) {
   const mutation = useUpdateProduct(product.id);
-  const warehouses = useWarehouses();
+  const warehouses = useWarehousesList({ page: 1, pageSize: 200, status: 'All' });
 
   const {
     register,
+    control,
     handleSubmit,
     setError,
     formState: { errors },
@@ -83,19 +69,6 @@ export default function ProductFormDrawer({ product, onClose, onSuccess }: Props
 
   const [generalError, setGeneralError] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
-    window.addEventListener('keydown', handleKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [onClose]);
-
   async function onSubmit(values: UpdateProductInput) {
     setGeneralError(undefined);
     try {
@@ -108,156 +81,161 @@ export default function ProductFormDrawer({ product, onClose, onSuccess }: Props
   }
 
   return (
-    <div className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label={`Edit ${product.name}`}>
-      <div
-        role="presentation"
-        className="absolute inset-0 bg-secondary-950/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-l border-surface-border bg-surface shadow-2xl dark:border-secondary-700 dark:bg-secondary-800">
-        <header className="flex items-start justify-between gap-4 border-b border-surface-border px-6 py-5 dark:border-secondary-700">
-          <div>
-            <h2 className="text-lg font-semibold text-text-primary">Edit {product.name}</h2>
-            <p className="mt-1 text-sm text-text-muted">
-              Update pricing, stock thresholds, and availability.
-            </p>
-          </div>
+    <DrawerShell
+      title={`Edit ${product.name}`}
+      subtitle="Update pricing, stock thresholds, and availability."
+      onClose={onClose}
+      footer={
+        <>
           <button
             type="button"
-            aria-label="Close drawer"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost"
             onClick={onClose}
+            disabled={mutation.isPending}
           >
-            <svg aria-hidden className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M6 18L18 6" />
-            </svg>
+            Cancel
           </button>
-        </header>
+          <button
+            type="submit"
+            form="product-edit-form"
+            className="btn btn-primary"
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending ? 'Saving…' : 'Save changes'}
+          </button>
+        </>
+      }
+    >
+      <form
+        id="product-edit-form"
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+        className="flex flex-col gap-4"
+      >
+        <div>
+          <span className="input-label">SKU</span>
+          <p
+            className="input mono"
+            style={{ background: 'var(--color-bg-sunk)', cursor: 'default' }}
+          >
+            {product.sku}
+          </p>
+          <p className="input-help">SKU is fixed once a product is created.</p>
+        </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-6">
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-            <div>
-              <span className="input-label">SKU</span>
-              <p className="input flex items-center bg-secondary-50 font-mono text-xs dark:bg-secondary-900">
-                {product.sku}
-              </p>
-              <p className="input-help">SKU is fixed once a product is created.</p>
-            </div>
+        <FormField label="Name" registration={register('name')} error={errors.name} />
 
-            <FormField label="Name" registration={register('name')} error={errors.name} />
+        <div>
+          <span className="input-label">Category</span>
+          <Controller
+            control={control}
+            name="categoryId"
+            render={({ field, fieldState }) => (
+              <CategoryPicker
+                value={field.value || null}
+                onChange={(id) => field.onChange(id ?? '')}
+                error={fieldState.error}
+              />
+            )}
+          />
+        </div>
 
-            <div>
-              <span className="input-label">Category</span>
-              <p className="input flex items-center bg-secondary-50 dark:bg-secondary-900">
-                {product.categoryName}
-              </p>
-              <p className="input-help">
-                Category cannot be changed from the UI yet — coming once the categories endpoint is available.
-              </p>
-              <input type="hidden" {...register('categoryId')} />
-            </div>
-
-            <div>
-              <label className="input-label" htmlFor="primaryWarehouseId">
-                Primary warehouse
-              </label>
+        <div>
+          <label className="input-label" htmlFor="primaryWarehouseId">
+            Primary warehouse
+          </label>
+          <Controller
+            control={control}
+            name="primaryWarehouseId"
+            render={({ field, fieldState }) => (
               <select
                 id="primaryWarehouseId"
-                className={`select${errors.primaryWarehouseId ? ' input-error' : ''}`}
-                {...register('primaryWarehouseId')}
+                className={`select${fieldState.error ? ' input-error' : ''}`}
+                value={field.value ?? ''}
+                onChange={(e) => field.onChange(e.target.value)}
+                onBlur={field.onBlur}
                 disabled={warehouses.isLoading}
               >
                 <option value="">— None —</option>
-                {warehouses.data?.map((w) => (
+                {warehouses.data?.items.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.name}
                   </option>
                 ))}
               </select>
-              {errors.primaryWarehouseId && (
-                <p className="input-error-msg">{errors.primaryWarehouseId.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                label="Unit price"
-                type="number"
-                registration={register('unitPrice')}
-                error={errors.unitPrice}
-              />
-              <FormField
-                label="Cost price"
-                type="number"
-                registration={register('costPrice')}
-                error={errors.costPrice}
-              />
-            </div>
-
-            <FormField
-              label="Unit of measure"
-              registration={register('unitOfMeasure')}
-              error={errors.unitOfMeasure}
-              placeholder="units, kg, liters…"
-            />
-
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                label="Min stock"
-                type="number"
-                registration={register('minStockLevel')}
-                error={errors.minStockLevel}
-              />
-              <FormField
-                label="Max stock"
-                type="number"
-                registration={register('maxStockLevel')}
-                error={errors.maxStockLevel}
-              />
-              <FormField
-                label="Reorder point"
-                type="number"
-                registration={register('reorderPoint')}
-                error={errors.reorderPoint}
-              />
-            </div>
-
-            <FormField
-              label="Barcode"
-              registration={register('barcode')}
-              error={errors.barcode}
-            />
-
-            <div>
-              <label className="input-label" htmlFor="description">Description</label>
-              <textarea
-                id="description"
-                className={`input min-h-[4.5rem]${errors.description ? ' input-error' : ''}`}
-                {...register('description')}
-              />
-              {errors.description && (
-                <p className="input-error-msg">{errors.description.message}</p>
-              )}
-            </div>
-
-            <label className="flex items-center gap-2 text-sm text-text-secondary">
-              <input type="checkbox" {...register('isActive')} className="h-4 w-4 rounded border-surface-border-strong" />
-              Active
-            </label>
-
-            {generalError && <p className="input-error-msg">{generalError}</p>}
-
-            <div className="mt-2 flex items-center justify-end gap-2 border-t border-surface-border pt-4 dark:border-secondary-700">
-              <button type="button" className="btn btn-ghost" onClick={onClose} disabled={mutation.isPending}>
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary" disabled={mutation.isPending}>
-                {mutation.isPending ? 'Saving…' : 'Save changes'}
-              </button>
-            </div>
-          </form>
+            )}
+          />
+          {errors.primaryWarehouseId && (
+            <p className="input-error-msg">{errors.primaryWarehouseId.message}</p>
+          )}
         </div>
-      </aside>
-    </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label="Unit price"
+            type="number"
+            registration={register('unitPrice', { valueAsNumber: true })}
+            error={errors.unitPrice}
+          />
+          <FormField
+            label="Cost price"
+            type="number"
+            registration={register('costPrice', { valueAsNumber: true })}
+            error={errors.costPrice}
+          />
+        </div>
+
+        <FormField
+          label="Unit of measure"
+          registration={register('unitOfMeasure')}
+          error={errors.unitOfMeasure}
+          placeholder="units, kg, liters…"
+        />
+
+        <div className="grid grid-cols-3 gap-4">
+          <FormField
+            label="Min stock"
+            type="number"
+            registration={register('minStockLevel', { valueAsNumber: true })}
+            error={errors.minStockLevel}
+          />
+          <FormField
+            label="Max stock"
+            type="number"
+            registration={register('maxStockLevel', { valueAsNumber: true })}
+            error={errors.maxStockLevel}
+          />
+          <FormField
+            label="Reorder point"
+            type="number"
+            registration={register('reorderPoint', { valueAsNumber: true })}
+            error={errors.reorderPoint}
+          />
+        </div>
+
+        <FormField label="Barcode" registration={register('barcode')} error={errors.barcode} />
+
+        <div>
+          <label className="input-label" htmlFor="description">
+            Description
+          </label>
+          <textarea
+            id="description"
+            className={`textarea${errors.description ? ' input-error' : ''}`}
+            {...register('description')}
+          />
+          {errors.description && (
+            <p className="input-error-msg">{errors.description.message}</p>
+          )}
+        </div>
+
+        <label className="check">
+          <input type="checkbox" {...register('isActive')} />
+          <span>Active</span>
+        </label>
+
+        {generalError && <p className="input-error-msg">{generalError}</p>}
+      </form>
+    </DrawerShell>
   );
 }
