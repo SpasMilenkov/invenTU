@@ -8,6 +8,7 @@ import { useCurrentUser } from '../../lib/auth/useCurrentUser';
 import { extractAuthErrorMessage } from '../../lib/auth/errors';
 import { FormField } from '../ui/FormField';
 import QueryProvider from '../providers/QueryProvider';
+import { Icon } from '../ui/Icon';
 
 function LoginFormInner() {
   const [registered, setRegistered] = useState(false);
@@ -23,22 +24,16 @@ function LoginFormInner() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('registered') === '1') {
-      setRegistered(true);
-    }
+    if (params.get('registered') === '1') setRegistered(true);
   }, []);
 
   useEffect(() => {
-    if (existingUser) {
-      window.location.assign('/dashboard');
-    }
+    if (existingUser) window.location.assign('/dashboard');
   }, [existingUser]);
 
   const mutation = useMutation({
     mutationFn: login,
-    onSuccess: () => {
-      window.location.assign('/dashboard');
-    },
+    onSuccess: () => window.location.assign('/dashboard'),
   });
 
   const onSubmit = (data: LoginFormData) => mutation.mutate(data);
@@ -46,9 +41,16 @@ function LoginFormInner() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       {registered && (
-        <p className="rounded-md bg-green-50 px-4 py-2 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
+        <div
+          className="px-3 py-2 font-mono text-[11px] uppercase tracking-wider"
+          style={{
+            background: 'var(--color-ok-soft)',
+            color: 'var(--color-ok)',
+            border: '1px solid color-mix(in oklab, var(--color-ok) 30%, transparent)',
+          }}
+        >
           Account created — please sign in.
-        </p>
+        </div>
       )}
 
       <FormField
@@ -57,6 +59,8 @@ function LoginFormInner() {
         registration={register('email')}
         error={errors.email}
         placeholder="you@example.com"
+        mono
+        required
       />
       <FormField
         label="Password"
@@ -64,6 +68,8 @@ function LoginFormInner() {
         registration={register('password')}
         error={errors.password}
         placeholder="••••••••"
+        mono
+        required
       />
 
       {mutation.isError && (
@@ -74,16 +80,25 @@ function LoginFormInner() {
 
       <button
         type="submit"
-        className="btn btn-primary w-full mt-2"
+        className="btn btn-primary"
+        style={{ height: 42, justifyContent: 'center' }}
         disabled={mutation.isPending}
       >
-        {mutation.isPending ? 'Signing in…' : 'Sign in'}
+        {mutation.isPending ? 'Signing in…' : (
+          <>
+            Sign in <Icon name="arrow" size={14} />
+          </>
+        )}
       </button>
 
-      <p className="text-center text-sm text-text-muted">
-        Don&apos;t have an account?{' '}
-        <a href="/register" className="text-primary-600 hover:underline dark:text-primary-400">
-          Register
+      <p className="mt-2 text-center text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
+        New operator?{' '}
+        <a
+          href="/register"
+          className="font-medium"
+          style={{ color: 'var(--color-accent-deep)' }}
+        >
+          Request access →
         </a>
       </p>
     </form>
