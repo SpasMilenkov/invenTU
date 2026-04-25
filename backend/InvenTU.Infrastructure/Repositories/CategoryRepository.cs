@@ -17,17 +17,22 @@ public sealed class CategoryRepository(InvenTUDbContext dbContext) : ICategoryRe
     public async Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await _dbContext.Categories
-                        .Where(c => c.Id == id)
+                        .Where(c => c.Id == id && c.Products.Count == 0)
                         .ExecuteDeleteAsync(cancellationToken);
     }
     public async Task<IReadOnlyList<CategoryDTO>> GetAllCategoriesAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Categories
-                        .Include(c => c.SubCategories)
-                        .Include(c => c.Products)
-                        .Select(CategoryProjections.ToDTO())
-                        .AsNoTracking()
-                        .ToListAsync(cancellationToken);
+        var allCategories = await _dbContext.Categories
+                                .Select(CategoryProjections.ToDTO)
+                                .AsNoTracking()
+                                .ToDictionaryAsync(c=>c.Id, cancellationToken);
+
+        foreach (var category in allCategories.Where(c => c.Value.ParentCategoryId is not null))
+        {
+            var parent = allCategories[category.Value.ParentCategoryId ?? Guid.Empty];
+            ((List<CategoryDTO>)parent.SubCategories).Add(category.Value);
+        }
+        return allCategories.Values.AsQueryable().Where(c => c.ParentCategoryId == null).ToList();
     }
 
     public async Task<CategoryDTO> CreateCategoryAsync(Category category, CancellationToken cancellationToken = default)
@@ -54,5 +59,12 @@ public sealed class CategoryRepository(InvenTUDbContext dbContext) : ICategoryRe
         return await _dbContext.Categories
                                 .Where(c => c.Id == id)
                                 .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<bool> ProductsExistForCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Products.AnyAsync(p => p.CategoryId == categoryId
+                                                    && p.IsActive
+                                                    && p.DeletedAt != null);
     }
 }

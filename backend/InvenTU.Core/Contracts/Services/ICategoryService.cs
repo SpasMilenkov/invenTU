@@ -10,5 +10,5 @@ public interface ICategoryService
     Task<CategoryDTO> CreateCategoryAsync(CreateCategoryRequest createCategoryRequest, CancellationToken cancellationToken);
     Task DeleteCategoryAsync(Guid id, CancellationToken cancellationToken);
     Task UpdateCategoryAsync(Guid id, UpdateCategoryRequest updateCategoryRequest, CancellationToken cancellationToken);
-    Task<CategoryDTO> GetAllCategoriesAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<CategoryDTO>> GetAllCategoriesAsync(CancellationToken cancellationToken);
 }

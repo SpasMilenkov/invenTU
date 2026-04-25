@@ -13,4 +13,5 @@ public interface ICategoryRepository
     Task UpdateCategoryAsync(Category category, CancellationToken cancellationToken = default);
     Task<Category?> GetCategoryForUpdateAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<CategoryDTO>> GetAllCategoriesAsync(CancellationToken cancellationToken = default);
+    Task<bool> ProductsExistForCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default);
 }

@@ -6,13 +6,12 @@ namespace InvenTU.Infrastructure.Projections;
 
 internal static class CategoryProjections
 {
-    internal static Expression<Func<Category, CategoryDTO>> ToDTO() => c => new CategoryDTO
+    internal static Expression<Func<Category, CategoryDTO>> ToDTO => c => new CategoryDTO
     {
         Id = c.Id,
         Name = c.Name,
         Description = c.Description,
         ParentCategoryId = c.ParentCategoryId,
-        SubCategories = c.SubCategories.AsQueryable().Select(ToDTO()).ToList(),
-        Products = c.Products.AsQueryable().Select(ProductProjections.ToDto).ToList()
+        SubCategories = new List<CategoryDTO>(),
     };
 }

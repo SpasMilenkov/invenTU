@@ -42,8 +42,8 @@ public sealed class CategoriesController(ICategoryService categoryService) : Con
     /// <summary>
     /// Modifies an existing product category
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="updateCategoryRequest"></param>
+    /// <param name="id">Id of category to update</param>
+    /// <param name="updateCategoryRequest">DTO of property values to update</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     [HttpPut("{id:guid}")]
@@ -55,10 +55,10 @@ public sealed class CategoriesController(ICategoryService categoryService) : Con
         return Ok();
     }
     /// <summary>
-    /// Soft delete on an existing category
+    /// Deletes an existing category without any products attached to it
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="id">Id of category to delete</param>
+    /// <param name="cancellationToken">Cancellation Token</param>
     /// <returns></returns>
     [HttpDelete("{id:guid}")]
     [Authorize(Roles = "Manager,Admin")]
