@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { transferStockSchema } from "../../lib/schemas/stock";
 import { extractAuthErrorMessage } from "../../lib/auth/errors";
 import {
   useTransferStock,
@@ -10,19 +14,9 @@ import LocationCascade from "./shared/LocationCascade";
 import ProductSelector from "./shared/ProductSelector";
 import LiveStockDisplay from "./shared/LiveStockDisplay";
 
-interface FormState {
-  srcWarehouseId: string;
-  srcZone: string;
-  srcLocationId: string;
-  dstWarehouseId: string;
-  dstZone: string;
-  dstLocationId: string;
-  productId: string;
-  quantity: string;
-  notes: string;
-}
+type FormValues = z.infer<typeof transferStockSchema>;
 
-const INITIAL: FormState = {
+const INITIAL: FormValues = {
   srcWarehouseId: "",
   srcZone: "",
   srcLocationId: "",
@@ -34,8 +28,6 @@ const INITIAL: FormState = {
   notes: "",
 };
 
-type FormErrors = Partial<Record<keyof FormState, string>>;
-
 interface SuccessInfo {
   result: StockTransferResult;
   srcLocationCode: string;
@@ -43,125 +35,86 @@ interface SuccessInfo {
 }
 
 function StockTransferForm() {
-  const [form, setFormState] = useState<FormState>(INITIAL);
-  const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState<string | undefined>();
   const [success, setSuccess] = useState<SuccessInfo | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const srcLocations = useStockLocations(form.srcWarehouseId || null);
-  const dstLocations = useStockLocations(form.dstWarehouseId || null);
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<FormValues>({
+    resolver: zodResolver(transferStockSchema),
+    defaultValues: INITIAL,
+    mode: "onTouched",
+  });
+
+  const srcWarehouseId = watch("srcWarehouseId");
+  const srcLocationId = watch("srcLocationId");
+  const dstWarehouseId = watch("dstWarehouseId");
+  const dstLocationId = watch("dstLocationId");
+  const productId = watch("productId");
+  const quantity = watch("quantity");
+
+  const srcLocations = useStockLocations(srcWarehouseId || null);
+  const dstLocations = useStockLocations(dstWarehouseId || null);
   const transfer = useTransferStock();
 
-  function setField(field: keyof FormState, value: string) {
-    setFormState((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  }
-
   function setSrcWarehouse(id: string) {
-    setFormState((prev) => ({
-      ...prev,
-      srcWarehouseId: id,
-      srcZone: "",
-      srcLocationId: "",
-    }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.srcWarehouseId;
-      return next;
-    });
+    setValue("srcWarehouseId", id, { shouldValidate: true });
+    setValue("srcZone", "");
+    setValue("srcLocationId", "");
   }
 
-  function setSrcZone(zone: string) {
-    setFormState((prev) => ({ ...prev, srcZone: zone, srcLocationId: "" }));
+  function setSrcZone(z: string) {
+    setValue("srcZone", z);
+    setValue("srcLocationId", "");
   }
 
   function setSrcLocation(id: string) {
-    setField("srcLocationId", id);
+    setValue("srcLocationId", id, { shouldValidate: true });
   }
 
   function setDstWarehouse(id: string) {
-    setFormState((prev) => ({
-      ...prev,
-      dstWarehouseId: id,
-      dstZone: "",
-      dstLocationId: "",
-    }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next.dstWarehouseId;
-      return next;
-    });
+    setValue("dstWarehouseId", id, { shouldValidate: true });
+    setValue("dstZone", "");
+    setValue("dstLocationId", "");
   }
 
-  function setDstZone(zone: string) {
-    setFormState((prev) => ({ ...prev, dstZone: zone, dstLocationId: "" }));
+  function setDstZone(z: string) {
+    setValue("dstZone", z);
+    setValue("dstLocationId", "");
   }
 
   function setDstLocation(id: string) {
-    setField("dstLocationId", id);
+    setValue("dstLocationId", id, { shouldValidate: true });
   }
 
-  function validate(): FormErrors {
-    const e: FormErrors = {};
-    if (!form.srcWarehouseId)
-      e.srcWarehouseId = "Source warehouse is required.";
-    if (!form.srcLocationId) e.srcLocationId = "Source location is required.";
-    if (!form.dstWarehouseId)
-      e.dstWarehouseId = "Destination warehouse is required.";
-    if (!form.dstLocationId)
-      e.dstLocationId = "Destination location is required.";
-    if (!form.productId) e.productId = "Product is required.";
-    const qty = parseFloat(form.quantity);
-    if (!form.quantity || isNaN(qty) || qty <= 0)
-      e.quantity = "Quantity must be greater than 0.";
-    return e;
-  }
-
-  const isFormValid =
-    !!form.srcWarehouseId &&
-    !!form.srcLocationId &&
-    !!form.dstWarehouseId &&
-    !!form.dstLocationId &&
-    !!form.productId &&
-    parseFloat(form.quantity) > 0;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    setIsSubmitting(true);
+  const onSubmit = async (data: FormValues) => {
     setServerError(undefined);
     try {
       const result = await transfer.mutateAsync({
-        sourceWarehouseId: form.srcWarehouseId,
-        sourceStockLocationId: form.srcLocationId,
-        destinationWarehouseId: form.dstWarehouseId,
-        destinationStockLocationId: form.dstLocationId,
-        productId: form.productId,
-        quantity: parseFloat(form.quantity),
-        notes: form.notes || undefined,
+        sourceWarehouseId: data.srcWarehouseId,
+        sourceStockLocationId: data.srcLocationId,
+        destinationWarehouseId: data.dstWarehouseId,
+        destinationStockLocationId: data.dstLocationId,
+        productId: data.productId,
+        quantity: parseFloat(data.quantity),
+        notes: data.notes || undefined,
       });
       const srcLocationCode =
-        srcLocations.data?.find((l) => l.id === form.srcLocationId)
-          ?.fullLocationCode ?? form.srcLocationId;
+        srcLocations.data?.find((l) => l.id === data.srcLocationId)
+          ?.fullLocationCode ?? data.srcLocationId;
       const dstLocationCode =
-        dstLocations.data?.find((l) => l.id === form.dstLocationId)
-          ?.fullLocationCode ?? form.dstLocationId;
+        dstLocations.data?.find((l) => l.id === data.dstLocationId)
+          ?.fullLocationCode ?? data.dstLocationId;
       setSuccess({ result, srcLocationCode, dstLocationCode });
     } catch (err) {
       setServerError(extractAuthErrorMessage(err));
-    } finally {
-      setIsSubmitting(false);
     }
-  }
+  };
 
   if (success) {
     const { result, srcLocationCode, dstLocationCode } = success;
@@ -207,7 +160,7 @@ function StockTransferForm() {
             className="btn btn-secondary mt-2 self-start"
             onClick={() => {
               setSuccess(null);
-              setFormState(INITIAL);
+              reset(INITIAL);
             }}
           >
             Transfer another
@@ -222,54 +175,71 @@ function StockTransferForm() {
       <h2 className="mb-5 text-base font-semibold text-text-primary">
         Transfer stock
       </h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col gap-6"
+        noValidate
+      >
         {/* Source */}
         <div className="flex flex-col gap-4 rounded-lg border border-surface-border p-4">
           <LocationCascade
             heading="Source"
             prefix="src-"
-            warehouseId={form.srcWarehouseId}
+            warehouseId={srcWarehouseId}
             onWarehouseChange={setSrcWarehouse}
-            zone={form.srcZone}
+            zone={watch("srcZone")}
             onZoneChange={setSrcZone}
-            locationId={form.srcLocationId}
+            locationId={srcLocationId}
             onLocationChange={setSrcLocation}
-            warehouseError={errors.srcWarehouseId}
-            locationError={errors.srcLocationId}
+            warehouseError={errors.srcWarehouseId?.message}
+            locationError={errors.srcLocationId?.message}
           />
         </div>
 
         {/* Product + quantity */}
         <div className="flex flex-col gap-4">
-          <ProductSelector
-            value={form.productId}
-            onChange={(id) => setField("productId", id)}
-            error={errors.productId}
+          <Controller
+            control={control}
+            name="productId"
+            render={({ field }) => (
+              <ProductSelector
+                value={field.value}
+                onChange={(id) =>
+                  setValue("productId", id, { shouldValidate: true })
+                }
+                error={errors.productId?.message}
+              />
+            )}
           />
 
           <div>
             <label className="input-label" htmlFor="xfer-quantity">
               Quantity
             </label>
-            <input
-              id="xfer-quantity"
-              type="number"
-              min="0"
-              step="any"
-              className={`input${errors.quantity ? " input-error" : ""}`}
-              placeholder="0"
-              value={form.quantity}
-              onChange={(e) => setField("quantity", e.target.value)}
+            <Controller
+              control={control}
+              name="quantity"
+              render={({ field }) => (
+                <input
+                  {...field}
+                  id="xfer-quantity"
+                  type="number"
+                  min="0"
+                  step="any"
+                  className={`input${errors.quantity ? " input-error" : ""}`}
+                  placeholder="0"
+                />
+              )}
             />
             {errors.quantity && (
-              <p className="input-error-msg">{errors.quantity}</p>
+              <p className="input-error-msg">{errors.quantity.message}</p>
             )}
             <div className="mt-1">
               <LiveStockDisplay
-                productId={form.productId}
-                warehouseId={form.srcWarehouseId}
-                locationId={form.srcLocationId}
-                enteredQuantity={parseFloat(form.quantity) || 0}
+                productId={productId}
+                warehouseId={srcWarehouseId}
+                locationId={srcLocationId}
+                enteredQuantity={parseFloat(quantity) || 0}
               />
             </div>
           </div>
@@ -280,14 +250,14 @@ function StockTransferForm() {
           <LocationCascade
             heading="Destination"
             prefix="dst-"
-            warehouseId={form.dstWarehouseId}
+            warehouseId={dstWarehouseId}
             onWarehouseChange={setDstWarehouse}
-            zone={form.dstZone}
+            zone={watch("dstZone")}
             onZoneChange={setDstZone}
-            locationId={form.dstLocationId}
+            locationId={dstLocationId}
             onLocationChange={setDstLocation}
-            warehouseError={errors.dstWarehouseId}
-            locationError={errors.dstLocationId}
+            warehouseError={errors.dstWarehouseId?.message}
+            locationError={errors.dstLocationId?.message}
           />
         </div>
 
@@ -296,13 +266,18 @@ function StockTransferForm() {
             Notes{" "}
             <span className="font-normal text-text-muted">(optional)</span>
           </label>
-          <input
-            id="xfer-notes"
-            type="text"
-            className="input"
-            placeholder="Any additional information…"
-            value={form.notes}
-            onChange={(e) => setField("notes", e.target.value)}
+          <Controller
+            control={control}
+            name="notes"
+            render={({ field }) => (
+              <input
+                {...field}
+                id="xfer-notes"
+                type="text"
+                className="input"
+                placeholder="Any additional information…"
+              />
+            )}
           />
         </div>
 
@@ -316,7 +291,7 @@ function StockTransferForm() {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={!isFormValid || isSubmitting}
+            disabled={!isValid || isSubmitting}
           >
             {isSubmitting ? "Transferring…" : "Transfer stock"}
           </button>

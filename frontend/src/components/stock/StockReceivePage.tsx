@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { receiveStockSchema } from "../../lib/schemas/stock";
 import { extractAuthErrorMessage } from "../../lib/auth/errors";
 import {
   useReceiveStock,
@@ -9,17 +13,9 @@ import QueryProvider from "../providers/QueryProvider";
 import LocationCascade from "./shared/LocationCascade";
 import ProductSelector from "./shared/ProductSelector";
 
-interface FormState {
-  warehouseId: string;
-  zone: string;
-  stockLocationId: string;
-  productId: string;
-  quantity: string;
-  referenceNumber: string;
-  notes: string;
-}
+type FormValues = z.infer<typeof receiveStockSchema>;
 
-const INITIAL: FormState = {
+const INITIAL: FormValues = {
   warehouseId: "",
   zone: "",
   stockLocationId: "",
@@ -29,88 +25,64 @@ const INITIAL: FormState = {
   notes: "",
 };
 
-type FormErrors = Partial<Record<keyof FormState, string>>;
-
 interface SuccessInfo {
   result: StockReceiptResult;
   locationCode: string;
 }
 
 function StockReceiveForm() {
-  const [form, setFormState] = useState<FormState>(INITIAL);
-  const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState<string | undefined>();
   const [success, setSuccess] = useState<SuccessInfo | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const locations = useStockLocations(form.warehouseId || null);
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<FormValues>({
+    resolver: zodResolver(receiveStockSchema),
+    defaultValues: INITIAL,
+    mode: "onTouched",
+  });
+
+  const warehouseId = watch("warehouseId");
+  const stockLocationId = watch("stockLocationId");
+
+  const locations = useStockLocations(warehouseId || null);
   const receive = useReceiveStock();
 
-  function setField(field: keyof FormState, value: string) {
-    if (field === "warehouseId") {
-      setFormState((prev) => ({
-        ...prev,
-        warehouseId: value,
-        zone: "",
-        stockLocationId: "",
-      }));
-    } else if (field === "zone") {
-      setFormState((prev) => ({ ...prev, zone: value, stockLocationId: "" }));
-    } else {
-      setFormState((prev) => ({ ...prev, [field]: value }));
-    }
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
+  function handleWarehouseChange(id: string) {
+    setValue("warehouseId", id, { shouldValidate: true });
+    setValue("zone", "");
+    setValue("stockLocationId", "");
   }
 
-  function validate(): FormErrors {
-    const e: FormErrors = {};
-    if (!form.warehouseId) e.warehouseId = "Warehouse is required.";
-    if (!form.stockLocationId) e.stockLocationId = "Location is required.";
-    if (!form.productId) e.productId = "Product is required.";
-    const qty = parseFloat(form.quantity);
-    if (!form.quantity || isNaN(qty) || qty <= 0)
-      e.quantity = "Quantity must be greater than 0.";
-    return e;
+  function handleZoneChange(z: string) {
+    setValue("zone", z);
+    setValue("stockLocationId", "");
   }
 
-  const isFormValid =
-    !!form.warehouseId &&
-    !!form.stockLocationId &&
-    !!form.productId &&
-    parseFloat(form.quantity) > 0;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      return;
-    }
-    setIsSubmitting(true);
+  const onSubmit = async (data: FormValues) => {
     setServerError(undefined);
     try {
       const result = await receive.mutateAsync({
-        warehouseId: form.warehouseId,
-        stockLocationId: form.stockLocationId,
-        productId: form.productId,
-        quantity: parseFloat(form.quantity),
-        referenceNumber: form.referenceNumber || undefined,
-        notes: form.notes || undefined,
+        warehouseId: data.warehouseId,
+        stockLocationId: data.stockLocationId,
+        productId: data.productId,
+        quantity: parseFloat(data.quantity),
+        referenceNumber: data.referenceNumber || undefined,
+        notes: data.notes || undefined,
       });
       const locationCode =
-        locations.data?.find((l) => l.id === form.stockLocationId)
-          ?.fullLocationCode ?? form.stockLocationId;
+        locations.data?.find((l) => l.id === data.stockLocationId)
+          ?.fullLocationCode ?? data.stockLocationId;
       setSuccess({ result, locationCode });
     } catch (err) {
       setServerError(extractAuthErrorMessage(err));
-    } finally {
-      setIsSubmitting(false);
     }
-  }
+  };
 
   if (success) {
     const { result, locationCode } = success;
@@ -166,7 +138,7 @@ function StockReceiveForm() {
             className="btn btn-secondary mt-2 self-start"
             onClick={() => {
               setSuccess(null);
-              setFormState(INITIAL);
+              reset(INITIAL);
             }}
           >
             Receive another
@@ -181,40 +153,65 @@ function StockReceiveForm() {
       <h2 className="mb-5 text-base font-semibold text-text-primary">
         Receive stock
       </h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-        <LocationCascade
-          warehouseId={form.warehouseId}
-          onWarehouseChange={(id) => setField("warehouseId", id)}
-          zone={form.zone}
-          onZoneChange={(z) => setField("zone", z)}
-          locationId={form.stockLocationId}
-          onLocationChange={(id) => setField("stockLocationId", id)}
-          warehouseError={errors.warehouseId}
-          locationError={errors.stockLocationId}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        <Controller
+          control={control}
+          name="warehouseId"
+          render={({ field }) => (
+            <LocationCascade
+              warehouseId={field.value}
+              onWarehouseChange={handleWarehouseChange}
+              zone={watch("zone")}
+              onZoneChange={handleZoneChange}
+              locationId={stockLocationId}
+              onLocationChange={(id) =>
+                setValue("stockLocationId", id, { shouldValidate: true })
+              }
+              warehouseError={errors.warehouseId?.message}
+              locationError={errors.stockLocationId?.message}
+            />
+          )}
         />
 
-        <ProductSelector
-          value={form.productId}
-          onChange={(id) => setField("productId", id)}
-          error={errors.productId}
+        <Controller
+          control={control}
+          name="productId"
+          render={({ field }) => (
+            <ProductSelector
+              value={field.value}
+              onChange={(id) =>
+                setValue("productId", id, { shouldValidate: true })
+              }
+              error={errors.productId?.message}
+            />
+          )}
         />
 
         <div>
           <label className="input-label" htmlFor="recv-quantity">
             Quantity
           </label>
-          <input
-            id="recv-quantity"
-            type="number"
-            min="0"
-            step="any"
-            className={`input${errors.quantity ? " input-error" : ""}`}
-            placeholder="0"
-            value={form.quantity}
-            onChange={(e) => setField("quantity", e.target.value)}
+          <Controller
+            control={control}
+            name="quantity"
+            render={({ field }) => (
+              <input
+                {...field}
+                id="recv-quantity"
+                type="number"
+                min="0"
+                step="any"
+                className={`input${errors.quantity ? " input-error" : ""}`}
+                placeholder="0"
+              />
+            )}
           />
           {errors.quantity && (
-            <p className="input-error-msg">{errors.quantity}</p>
+            <p className="input-error-msg">{errors.quantity.message}</p>
           )}
         </div>
 
@@ -223,13 +220,18 @@ function StockReceiveForm() {
             Reference number{" "}
             <span className="font-normal text-text-muted">(optional)</span>
           </label>
-          <input
-            id="recv-ref"
-            type="text"
-            className="input"
-            placeholder="e.g. PO-2026-001"
-            value={form.referenceNumber}
-            onChange={(e) => setField("referenceNumber", e.target.value)}
+          <Controller
+            control={control}
+            name="referenceNumber"
+            render={({ field }) => (
+              <input
+                {...field}
+                id="recv-ref"
+                type="text"
+                className="input"
+                placeholder="e.g. PO-2026-001"
+              />
+            )}
           />
         </div>
 
@@ -238,13 +240,18 @@ function StockReceiveForm() {
             Notes{" "}
             <span className="font-normal text-text-muted">(optional)</span>
           </label>
-          <input
-            id="recv-notes"
-            type="text"
-            className="input"
-            placeholder="Any additional information…"
-            value={form.notes}
-            onChange={(e) => setField("notes", e.target.value)}
+          <Controller
+            control={control}
+            name="notes"
+            render={({ field }) => (
+              <input
+                {...field}
+                id="recv-notes"
+                type="text"
+                className="input"
+                placeholder="Any additional information…"
+              />
+            )}
           />
         </div>
 
@@ -258,7 +265,7 @@ function StockReceiveForm() {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={!isFormValid || isSubmitting}
+            disabled={!isValid || isSubmitting}
           >
             {isSubmitting ? "Receiving…" : "Receive stock"}
           </button>
