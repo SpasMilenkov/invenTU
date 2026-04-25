@@ -1,5 +1,7 @@
 using FluentValidation;
 using InvenTU.Application.Auth;
+using InvenTU.Application.Categories;
+using InvenTU.Application.Categories.Validators;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
 using InvenTU.Application.Stock;
@@ -10,6 +12,7 @@ using InvenTU.Application.Users;
 using InvenTU.Application.Warehouses;
 using InvenTU.Application.Warehouses.Validators;
 using InvenTU.Core.Contracts.Services;
+using InvenTU.Core.DTOs.Categories;
 using InvenTU.Core.DTOs.Products;
 using InvenTU.Core.DTOs.Stock;
 using InvenTU.Core.DTOs.StockLocations;
@@ -48,6 +51,10 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IStockAdjustmentService, StockAdjustmentService>();
         services.AddScoped<IValidator<AdjustStockRequest>, AdjustStockRequestValidator>();
+
+        services.AddScoped<ICategoryService, CategoryService>();
+        services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
+        services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
 
         return services;
     }

@@ -122,6 +122,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IAlertService, AlertService>();
 
