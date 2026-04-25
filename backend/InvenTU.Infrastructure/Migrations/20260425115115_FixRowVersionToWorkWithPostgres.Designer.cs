@@ -3,6 +3,7 @@ using System;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace InvenTU.Infrastructure.Migrations
 {
     [DbContext(typeof(InvenTUDbContext))]
-    partial class InvenTUDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425115115_FixRowVersionToWorkWithPostgres")]
+    partial class FixRowVersionToWorkWithPostgres
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -389,9 +392,6 @@ namespace InvenTU.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<decimal?>("CountedQuantity")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -417,12 +417,6 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Property<string>("ReferenceNumber")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ReviewedByUserId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("SourceWarehouseId")
                         .HasColumnType("uuid");
 
@@ -445,8 +439,6 @@ namespace InvenTU.Infrastructure.Migrations
                     b.HasIndex("DestinationWarehouseId");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ReviewedByUserId");
 
                     b.HasIndex("SourceWarehouseId");
 
@@ -899,11 +891,6 @@ namespace InvenTU.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("InvenTU.Core.Entities.User", "ReviewedByUser")
-                        .WithMany("ReviewedStockMovements")
-                        .HasForeignKey("ReviewedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("InvenTU.Core.Entities.Warehouse", "SourceWarehouse")
                         .WithMany("SourceMovements")
                         .HasForeignKey("SourceWarehouseId")
@@ -922,8 +909,6 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Navigation("DestinationWarehouse");
 
                     b.Navigation("Product");
-
-                    b.Navigation("ReviewedByUser");
 
                     b.Navigation("SourceWarehouse");
 
@@ -1030,8 +1015,6 @@ namespace InvenTU.Infrastructure.Migrations
                     b.Navigation("CreatedStockMovements");
 
                     b.Navigation("RefreshTokens");
-
-                    b.Navigation("ReviewedStockMovements");
                 });
 
             modelBuilder.Entity("InvenTU.Core.Entities.Warehouse", b =>

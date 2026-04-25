@@ -4,6 +4,7 @@ using FluentValidation;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Auth;
 using InvenTU.Infrastructure.Data;
+using InvenTU.Infrastructure.DataSeeders;
 using InvenTU.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -28,7 +29,21 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddDbContext<InvenTUDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            options
+                .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                // Synchronous seeding — called by EF tooling (dotnet ef database update)
+                // and by EnsureCreated. Both sync and async must mirror each other.
+                .UseSeeding((context, _) =>
+                {
+                    if (context is InvenTUDbContext dbContext)
+                        SeedOrchestrator.Seed(dbContext);
+                })
+                // Asynchronous seeding — called at runtime during MigrateAsync().
+                .UseAsyncSeeding(async (context, _, ct) =>
+                {
+                    if (context is InvenTUDbContext dbContext)
+                        await SeedOrchestrator.SeedAsync(dbContext, ct);
+                }));
 
         services
             .AddIdentity<User, IdentityRole<Guid>>(options =>

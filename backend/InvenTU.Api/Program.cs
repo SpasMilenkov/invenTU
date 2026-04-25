@@ -21,7 +21,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
 {
-    options.AddDocumentTransformer(async (document, context, cancellationToken) =>
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
         document.Info = new()
         {
@@ -52,6 +52,7 @@ builder.Services.AddOpenApi(options =>
 
         // Set host document with security scheme for all elements
         document.SetReferenceHostDocument();
+        return Task.CompletedTask;
     });
 });
 
@@ -100,16 +101,27 @@ app.UseSerilogRequestLogging(options =>
 });
 
 using (var scope = app.Services.CreateScope())
-  {
-      var db = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
-      await db.Database.MigrateAsync();
-      await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
+{
+    var db = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
 
-      if (app.Environment.IsDevelopment())
-      {
-          await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
-      }
-  }
+    // 1. Apply migrations — this also triggers UseAsyncSeeding → SeedOrchestrator
+    //    (Warehouses, Categories, Suppliers, StockLocations, Products,
+    //     ProductSuppliers, StockItems, Alerts)
+    await db.Database.MigrateAsync();
+
+    // 2. Seed Identity roles (uses RoleManager — must run after migration)
+    await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
+
+    if (app.Environment.IsDevelopment())
+    {
+        // 3. Seed dev users with fixed IDs matching SeedIds.DevAdminUserId / DevStaffUserId
+        await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
+
+        // 4. Seed data that requires users to exist (StockMovements, PurchaseOrders,
+        //    AlertUserStates). DevDataSeeder guards against the user not existing.
+        await DevDataSeeder.SeedAsync(scope.ServiceProvider);
+    }
+}
 
 app.UseCors("Frontend");
 

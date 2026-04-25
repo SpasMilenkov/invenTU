@@ -9,7 +9,7 @@ public sealed class StockItem
     public Guid StockLocationId { get; set; }
     public decimal Quantity { get; set; }
     public decimal QuantityReserved { get; set; }
-    public byte[] RowVersion { get; set; } = null!;
+    public uint RowVersion { get; set; }
 
     public Product Product { get; set; } = null!;
     public StockLocation StockLocation { get; set; } = null!;
