@@ -102,6 +102,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockTransferRepository, StockTransferRepository>();
         services.AddScoped<IStockReceiptRepository, StockReceiptRepository>();
         services.AddScoped<IStockIssueRepository, StockIssueRepository>();
+        services.AddScoped<IStockAdjustmentRepository, StockAdjustmentRepository>();
         services.AddScoped<IDashboardRepository, DashboardRepository>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ITokenService, TokenService>();
