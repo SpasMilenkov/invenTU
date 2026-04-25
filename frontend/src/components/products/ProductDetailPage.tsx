@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import QueryProvider from '../providers/QueryProvider';
 import { useCurrentUser } from '../../lib/auth/useCurrentUser';
 import { extractAuthErrorMessage } from '../../lib/auth/errors';
@@ -7,9 +7,13 @@ import {
   useProduct,
   useStockSummary,
 } from '../../lib/hooks/useProducts';
+import { useWarehousesList } from '../../lib/hooks/useWarehouses';
 import { deriveStockStatus, type ProductDto } from '../../lib/types/products';
+import { PageHeader } from '../ui/PageHeader';
+import { Panel } from '../ui/Panel';
+import { Tag } from '../ui/Tag';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import ProductFormDrawer from './ProductFormDrawer';
-import ArchiveConfirm from './ArchiveConfirm';
 
 const CAN_MANAGE_ROLES = ['Admin', 'Manager'];
 
@@ -25,19 +29,28 @@ function formatDate(iso: string | null | undefined): string {
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-text-muted">{label}</span>
-      <span className="text-sm text-text-primary">{value}</span>
+    <div className="flex flex-col gap-1">
+      <span className="input-label">{label}</span>
+      <span style={{ fontSize: 13, color: 'var(--color-ink)' }}>{value}</span>
     </div>
   );
 }
 
 function DetailSkeleton() {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-      <div className="h-8 w-64 animate-pulse rounded bg-surface-alt" />
-      <div className="h-32 w-full animate-pulse rounded-[1.25rem] bg-surface-alt" />
-      <div className="h-48 w-full animate-pulse rounded-[1.25rem] bg-surface-alt" />
+    <div className="flex w-full flex-col gap-5">
+      <div
+        className="h-8 w-64 animate-pulse"
+        style={{ background: 'var(--color-bg-sunk)' }}
+      />
+      <div
+        className="h-32 w-full animate-pulse"
+        style={{ background: 'var(--color-bg-sunk)' }}
+      />
+      <div
+        className="h-48 w-full animate-pulse"
+        style={{ background: 'var(--color-bg-sunk)' }}
+      />
     </div>
   );
 }
@@ -45,62 +58,84 @@ function DetailSkeleton() {
 function StockStatusPill({ product }: { product: ProductDto }) {
   const stock = useStockSummary(product.id);
   if (stock.isLoading) {
-    return <div className="h-4 w-24 animate-pulse rounded bg-surface-alt" />;
+    return (
+      <div
+        className="h-3 w-16 animate-pulse"
+        style={{ background: 'var(--color-bg-sunk)' }}
+      />
+    );
   }
   if (stock.isError || !stock.data) {
-    return <span className="text-text-muted">Stock unavailable</span>;
+    return <span style={{ color: 'var(--color-ink-3)' }}>Stock unavailable</span>;
   }
   const status = deriveStockStatus(stock.data.totalQuantityAvailable, product.minStockLevel);
-  const cls =
-    status === 'OutOfStock'
-      ? 'badge badge-danger'
-      : status === 'LowStock'
-      ? 'badge badge-warning'
-      : 'badge badge-success';
-  const label =
-    status === 'OutOfStock' ? 'Out of stock' : status === 'LowStock' ? 'Low stock' : 'In stock';
-  return <span className={cls}>{label}</span>;
+  if (status === 'OutOfStock') return <Tag kind="crit">OUT OF STOCK</Tag>;
+  if (status === 'LowStock') return <Tag kind="warn">LOW STOCK</Tag>;
+  return <Tag kind="ok">IN STOCK</Tag>;
 }
 
 function StockBreakdown({ productId }: { productId: string }) {
   const stock = useStockSummary(productId);
   if (stock.isLoading) {
-    return <div className="h-24 w-full animate-pulse rounded-[1.25rem] bg-surface-alt" />;
+    return (
+      <div
+        className="h-24 w-full animate-pulse"
+        style={{ background: 'var(--color-bg-sunk)' }}
+      />
+    );
   }
   if (stock.isError || !stock.data) {
     return (
-      <div className="rounded-[1.25rem] border border-surface-border bg-surface p-6 text-sm text-text-muted dark:border-secondary-700 dark:bg-secondary-800">
+      <p style={{ padding: '24px', color: 'var(--color-ink-3)', fontSize: 13 }}>
         Stock information is not available right now.
-      </div>
+      </p>
     );
   }
   const s = stock.data;
   return (
-    <div className="rounded-[1.25rem] border border-surface-border bg-surface shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-      <div className="grid grid-cols-3 gap-6 border-b border-surface-border px-6 py-4 dark:border-secondary-700">
-        <InfoRow label="Available" value={<span className="text-lg font-semibold">{s.totalQuantityAvailable}</span>} />
-        <InfoRow label="Reserved" value={<span className="text-lg font-semibold">{s.totalQuantityReserved}</span>} />
-        <InfoRow label="On hand" value={<span className="text-lg font-semibold">{s.totalQuantity}</span>} />
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          gap: 24,
+          padding: '16px 24px',
+          borderBottom: '1px solid var(--color-rule)',
+        }}
+      >
+        <InfoRow
+          label="Available"
+          value={<span style={{ fontSize: 18, fontWeight: 600 }}>{s.totalQuantityAvailable}</span>}
+        />
+        <InfoRow
+          label="Reserved"
+          value={<span style={{ fontSize: 18, fontWeight: 600 }}>{s.totalQuantityReserved}</span>}
+        />
+        <InfoRow
+          label="On hand"
+          value={<span style={{ fontSize: 18, fontWeight: 600 }}>{s.totalQuantity}</span>}
+        />
       </div>
       {s.byWarehouse.length === 0 ? (
-        <p className="px-6 py-6 text-sm text-text-muted">No stock recorded in any warehouse yet.</p>
+        <p style={{ padding: '24px', color: 'var(--color-ink-3)', fontSize: 13 }}>
+          No stock recorded in any warehouse yet.
+        </p>
       ) : (
-        <table className="min-w-full text-sm">
-          <thead className="bg-surface-alt text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-text-muted dark:bg-secondary-900/60">
+        <table className="tbl">
+          <thead>
             <tr>
-              <th className="px-6 py-3 text-left">Warehouse</th>
-              <th className="px-6 py-3 text-right">Available</th>
-              <th className="px-6 py-3 text-right">Reserved</th>
-              <th className="px-6 py-3 text-right">On hand</th>
+              <th>Warehouse</th>
+              <th className="num">Available</th>
+              <th className="num">Reserved</th>
+              <th className="num">On hand</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-surface-border dark:divide-secondary-700">
+          <tbody>
             {s.byWarehouse.map((w) => (
               <tr key={w.warehouseId}>
-                <td className="px-6 py-3 text-text-primary">{w.warehouseName}</td>
-                <td className="px-6 py-3 text-right">{w.totalQuantityAvailable}</td>
-                <td className="px-6 py-3 text-right">{w.totalQuantityReserved}</td>
-                <td className="px-6 py-3 text-right">{w.totalQuantity}</td>
+                <td className="strong">{w.warehouseName}</td>
+                <td className="num">{w.totalQuantityAvailable}</td>
+                <td className="num">{w.totalQuantityReserved}</td>
+                <td className="num">{w.totalQuantity}</td>
               </tr>
             ))}
           </tbody>
@@ -116,10 +151,13 @@ function ProductDetailInner({ productId }: { productId: string }) {
 
   const { data: product, isLoading, isError, refetch } = useProduct(productId);
   const archive = useArchiveProduct();
+  const warehouses = useWarehousesList({ page: 1, pageSize: 200, status: 'All' });
 
   const [editOpen, setEditOpen] = useState(false);
   const [archivingOpen, setArchivingOpen] = useState(false);
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
+
+  const closeEdit = useCallback(() => setEditOpen(false), []);
 
   async function confirmArchive() {
     if (!product) return;
@@ -137,10 +175,12 @@ function ProductDetailInner({ productId }: { productId: string }) {
 
   if (isError || !product) {
     return (
-      <div className="mx-auto max-w-xl rounded-md border border-danger-200 bg-danger-50 p-6 text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+      <div className="info-card">
         <p>Could not load the product. It may have been archived or the link is broken.</p>
         <div className="mt-3 flex gap-2">
-          <a href="/products" className="btn btn-outline btn-sm">Back to products</a>
+          <a href="/products" className="btn btn-outline btn-sm">
+            Back to products
+          </a>
           <button type="button" className="btn btn-outline btn-sm" onClick={() => refetch()}>
             Retry
           </button>
@@ -150,51 +190,73 @@ function ProductDetailInner({ productId }: { productId: string }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-5">
       <div>
-        <a href="/products" className="text-sm text-text-muted hover:text-text-primary">
+        <a href="/products" style={{ fontSize: 12, color: 'var(--color-ink-3)' }}>
           ← Back to products
         </a>
       </div>
 
-      <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p className="font-mono text-xs text-text-muted">{product.sku}</p>
-          <h1 className="mt-1 flex items-center gap-3 text-2xl font-semibold text-text-primary">
+      <PageHeader
+        sub="OPERATE / PRODUCTS"
+        title={
+          <>
             {product.name}
-            {!product.isActive && <span className="badge badge-neutral">Archived</span>}
-          </h1>
-          <div className="mt-2 flex items-center gap-3 text-sm text-text-muted">
-            <span>{product.categoryName}</span>
-            <span aria-hidden>·</span>
+            {!product.isActive && (
+              <Tag kind="neutral" className="ml-3">
+                ARCHIVED
+              </Tag>
+            )}
+          </>
+        }
+        description={
+          <>
+            <span>SKU {product.sku}</span> <span aria-hidden>·</span>{' '}
+            <span>{product.categoryName}</span> <span aria-hidden>·</span>{' '}
             <StockStatusPill product={product} />
-          </div>
-        </div>
-        {canManage && product.isActive && (
-          <div className="flex items-center gap-2">
-            <button type="button" className="btn btn-outline" onClick={() => setEditOpen(true)}>
-              Edit
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/40"
-              onClick={() => {
-                setArchiveError(undefined);
-                setArchivingOpen(true);
-              }}
-            >
-              Archive
-            </button>
-          </div>
-        )}
-      </header>
+          </>
+        }
+        actions={
+          canManage && product.isActive ? (
+            <>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setEditOpen(true)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ color: 'var(--color-crit)' }}
+                onClick={() => {
+                  setArchiveError(undefined);
+                  setArchivingOpen(true);
+                }}
+              >
+                Archive
+              </button>
+            </>
+          ) : null
+        }
+      />
 
-      <section className="rounded-[1.25rem] border border-surface-border bg-surface p-6 shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-text-muted">Details</h2>
+      <Panel title="Details">
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-3">
           <InfoRow label="Unit price" value={formatCurrency(product.unitPrice)} />
           <InfoRow label="Cost price" value={formatCurrency(product.costPrice)} />
           <InfoRow label="Unit of measure" value={product.unitOfMeasure} />
+          <InfoRow
+            label="Primary warehouse"
+            value={
+              !product.primaryWarehouseId
+                ? '—'
+                : warehouses.isLoading
+                ? '…'
+                : warehouses.data?.items.find((w) => w.id === product.primaryWarehouseId)?.name ?? '—'
+            }
+          />
           <InfoRow label="Min stock" value={product.minStockLevel} />
           <InfoRow label="Max stock" value={product.maxStockLevel ?? '—'} />
           <InfoRow label="Reorder point" value={product.reorderPoint} />
@@ -203,31 +265,46 @@ function ProductDetailInner({ productId }: { productId: string }) {
           <InfoRow label="Updated" value={formatDate(product.updatedAt)} />
         </div>
         {product.description && (
-          <div className="mt-6 border-t border-surface-border pt-4 dark:border-secondary-700">
-            <p className="text-xs font-medium uppercase tracking-wide text-text-muted">Description</p>
-            <p className="mt-1 whitespace-pre-line text-sm text-text-primary">{product.description}</p>
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 16,
+              borderTop: '1px solid var(--color-rule)',
+            }}
+          >
+            <p className="input-label">Description</p>
+            <p
+              className="mt-1 whitespace-pre-line"
+              style={{ fontSize: 13, color: 'var(--color-ink)' }}
+            >
+              {product.description}
+            </p>
           </div>
         )}
-      </section>
+      </Panel>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">Stock by warehouse</h2>
+      <Panel title="Stock by warehouse" flush>
         <StockBreakdown productId={product.id} />
-      </section>
+      </Panel>
 
       {editOpen && (
-        <ProductFormDrawer
-          product={product}
-          onClose={() => setEditOpen(false)}
-          onSuccess={() => setEditOpen(false)}
-        />
+        <ProductFormDrawer product={product} onClose={closeEdit} onSuccess={closeEdit} />
       )}
 
       {archivingOpen && (
-        <ArchiveConfirm
-          product={product}
+        <ConfirmModal
+          title={`Archive ${product.name}?`}
+          body={
+            <>
+              The product will be hidden from most views. Archiving is blocked if any stock is
+              still on hand — issue or transfer stock first.
+            </>
+          }
+          confirmLabel="Archive"
+          pendingLabel="Archiving…"
           isPending={archive.isPending}
           errorMessage={archiveError}
+          variant="danger"
           onConfirm={confirmArchive}
           onClose={() => {
             if (!archive.isPending) setArchivingOpen(false);
@@ -245,9 +322,7 @@ interface Props {
 export default function ProductDetailPage({ productId }: Props) {
   if (!productId) {
     return (
-      <div className="mx-auto max-w-xl rounded-md border border-danger-200 bg-danger-50 p-6 text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
-        Missing product id in URL.
-      </div>
+      <div className="info-card">Missing product id in URL.</div>
     );
   }
   return (
