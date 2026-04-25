@@ -8,6 +8,7 @@ import { useCurrentUser } from '../../lib/auth/useCurrentUser';
 import { extractAuthErrorMessage } from '../../lib/auth/errors';
 import { FormField } from '../ui/FormField';
 import QueryProvider from '../providers/QueryProvider';
+import { Icon } from '../ui/Icon';
 
 function RegisterFormInner() {
   const { data: existingUser } = useCurrentUser();
@@ -20,42 +21,42 @@ function RegisterFormInner() {
   });
 
   useEffect(() => {
-    if (existingUser) {
-      window.location.assign('/dashboard');
-    }
+    if (existingUser) window.location.assign('/dashboard');
   }, [existingUser]);
 
   const mutation = useMutation<void, Error, RegisterFormData>({
     mutationFn: registerUser,
-    onSuccess: () => {
-      window.location.assign('/login?registered=1');
-    },
+    onSuccess: () => window.location.assign('/login?registered=1'),
   });
 
   const onSubmit = (data: RegisterFormData) => mutation.mutate(data);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3.5">
+      <div className="grid grid-cols-2 gap-2.5">
         <FormField
           label="First name"
           registration={register('firstName')}
           error={errors.firstName}
-          placeholder="Jane"
+          placeholder="Mira"
+          required
         />
         <FormField
           label="Last name"
           registration={register('lastName')}
           error={errors.lastName}
-          placeholder="Doe"
+          placeholder="Koch"
+          required
         />
       </div>
       <FormField
-        label="Email"
+        label="Work email"
         type="email"
         registration={register('email')}
         error={errors.email}
-        placeholder="you@example.com"
+        placeholder="you@inventu.io"
+        mono
+        required
       />
       <FormField
         label="Password"
@@ -63,6 +64,8 @@ function RegisterFormInner() {
         registration={register('password')}
         error={errors.password}
         placeholder="••••••••"
+        mono
+        required
       />
       <FormField
         label="Confirm password"
@@ -70,6 +73,8 @@ function RegisterFormInner() {
         registration={register('confirmPassword')}
         error={errors.confirmPassword}
         placeholder="••••••••"
+        mono
+        required
       />
 
       {mutation.isError && (
@@ -80,16 +85,25 @@ function RegisterFormInner() {
 
       <button
         type="submit"
-        className="btn btn-primary w-full mt-2"
+        className="btn btn-primary"
+        style={{ height: 42, justifyContent: 'center' }}
         disabled={mutation.isPending}
       >
-        {mutation.isPending ? 'Creating account…' : 'Create account'}
+        {mutation.isPending ? 'Creating account…' : (
+          <>
+            Submit request <Icon name="arrow" size={14} />
+          </>
+        )}
       </button>
 
-      <p className="text-center text-sm text-text-muted">
-        Already have an account?{' '}
-        <a href="/login" className="text-primary-600 hover:underline dark:text-primary-400">
-          Sign in
+      <p className="mt-1 text-center text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
+        Already have access?{' '}
+        <a
+          href="/login"
+          className="font-medium"
+          style={{ color: 'var(--color-accent-deep)' }}
+        >
+          Sign in →
         </a>
       </p>
     </form>
