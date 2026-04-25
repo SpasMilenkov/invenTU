@@ -24,16 +24,16 @@ interface FormValues {
 
 function StatusBadge({ status }: { status: StockAdjustment["status"] }) {
   const map: Record<StockAdjustment["status"], string> = {
-    Active: "badge badge-success",
-    PendingApproval: "badge badge-warning",
-    Approved: "badge badge-success",
-    Rejected: "badge badge-danger",
+    Active: "tag tag-ok",
+    PendingApproval: "tag tag-warn",
+    Approved: "tag tag-ok",
+    Rejected: "tag tag-crit",
   };
   const label: Record<StockAdjustment["status"], string> = {
-    Active: "Auto-approved",
-    PendingApproval: "Pending approval",
-    Approved: "Approved",
-    Rejected: "Rejected",
+    Active: "AUTO-APPROVED",
+    PendingApproval: "PENDING APPROVAL",
+    Approved: "APPROVED",
+    Rejected: "REJECTED",
   };
   return <span className={map[status]}>{label[status]}</span>;
 }
@@ -89,48 +89,34 @@ export default function StockAdjustmentForm() {
 
   if (submitted) {
     return (
-      <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-semibold text-text-primary">
-              Adjustment submitted
-            </span>
-            <StatusBadge status={submitted.status} />
-          </div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <span className="text-text-muted">Product</span>
-            <span className="font-medium text-text-primary">
-              {submitted.productName}
-            </span>
-            <span className="text-text-muted">Location</span>
-            <span className="font-medium text-text-primary">
-              {submitted.fullLocationCode}
-            </span>
-            <span className="text-text-muted">Previous qty</span>
-            <span className="font-medium text-text-primary">
-              {submitted.previousQuantity}
-            </span>
-            <span className="text-text-muted">Counted qty</span>
-            <span className="font-medium text-text-primary">
-              {submitted.countedQuantity}
-            </span>
-            <span className="text-text-muted">Delta</span>
-            <span
-              className={`font-medium ${submitted.delta >= 0 ? "text-success-600" : "text-danger-600"}`}
-            >
-              {submitted.delta >= 0 ? "+" : ""}
-              {submitted.delta}
+      <div className="panel">
+        <div className="panel-head">
+          <span className="panel-title">ADJUSTMENT SUBMITTED</span>
+          <StatusBadge status={submitted.status} />
+        </div>
+        <div className="panel-body">
+          <div className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[12.5px]">
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Product</span>
+            <span className="strong">{submitted.productName}</span>
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Location</span>
+            <span className="sku">{submitted.fullLocationCode}</span>
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Previous qty</span>
+            <span className="tnum strong">{submitted.previousQuantity}</span>
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Counted qty</span>
+            <span className="tnum strong">{submitted.countedQuantity}</span>
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Delta</span>
+            <span className="tnum strong" style={{ color: submitted.delta >= 0 ? 'var(--color-ok)' : 'var(--color-crit)' }}>
+              {submitted.delta >= 0 ? '+' : ''}{submitted.delta}
             </span>
           </div>
           {submitted.status === "PendingApproval" && (
-            <p className="rounded-md bg-warning-50 px-4 py-3 text-sm text-warning-700 dark:bg-warning-900/20 dark:text-warning-400">
-              This adjustment exceeds the 10&nbsp;% threshold and has been sent
-              for manager approval.
+            <p className="info-card mt-4" style={{ borderLeftColor: 'var(--color-warn)', background: 'var(--color-warn-soft)', color: 'var(--color-warn)' }}>
+              This adjustment exceeds the 10&nbsp;% threshold and has been sent for manager approval.
             </p>
           )}
           <button
             type="button"
-            className="btn btn-secondary mt-2 self-start"
+            className="btn btn-secondary mt-5"
             onClick={() => setSubmitted(null)}
           >
             Submit another
@@ -141,10 +127,11 @@ export default function StockAdjustmentForm() {
   }
 
   return (
-    <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-      <h2 className="mb-5 text-base font-semibold text-text-primary">
-        Submit stock count correction
-      </h2>
+    <div className="panel">
+      <div className="panel-head">
+        <span className="panel-title">SUBMIT STOCK COUNT CORRECTION</span>
+      </div>
+      <div className="panel-body">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-4"
@@ -250,7 +237,7 @@ export default function StockAdjustmentForm() {
         />
 
         {serverError && (
-          <p className="rounded-md bg-danger-50 px-4 py-3 text-sm text-danger-700 dark:bg-danger-900/20 dark:text-danger-400">
+          <p className="info-card" style={{ borderLeftColor: 'var(--color-crit)', background: 'var(--color-crit-soft)', color: 'var(--color-crit)' }}>
             {serverError}
           </p>
         )}
@@ -265,6 +252,7 @@ export default function StockAdjustmentForm() {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }
