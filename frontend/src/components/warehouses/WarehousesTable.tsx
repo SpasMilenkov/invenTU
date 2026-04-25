@@ -5,6 +5,8 @@ import type { StockLocationSummary } from '../../lib/hooks/useStockLocations';
 import LocationTree from './LocationTree';
 import { Tag } from '../ui/Tag';
 import { Icon } from '../ui/Icon';
+import CapacityBar from './CapacityBar';
+import { formatCompactNumber } from '../../lib/format';
 
 interface Props {
   data?: PagedResult<WarehouseSummary>;
@@ -61,7 +63,7 @@ export default function WarehousesTable({
   const showSkeleton = isLoading && !data;
   const items = data?.items ?? [];
   const showEmpty = !showSkeleton && items.length === 0;
-  const totalCols = canManage ? 7 : 6;
+  const totalCols = canManage ? 10 : 9;
 
   return (
     <div className="panel" style={{ overflow: 'hidden' }}>
@@ -72,8 +74,11 @@ export default function WarehousesTable({
               <th style={{ width: 36 }}></th>
               <th>Name</th>
               <th>Code</th>
-              <th className="num">Capacity</th>
+              <th>Location</th>
+              <th className="num">Locations</th>
               <th className="num">SKUs</th>
+              <th className="num">Quantity</th>
+              <th>Capacity</th>
               <th>Status</th>
               {canManage && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
@@ -97,7 +102,13 @@ export default function WarehousesTable({
                   </td>
                   <td>
                     <div
-                      className="ml-auto h-3 w-12 animate-pulse"
+                      className="h-3 w-24 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="ml-auto h-3 w-8 animate-pulse"
                       style={{ background: 'var(--color-bg-sunk)' }}
                     />
                   </td>
@@ -106,6 +117,16 @@ export default function WarehousesTable({
                       className="ml-auto h-3 w-10 animate-pulse"
                       style={{ background: 'var(--color-bg-sunk)' }}
                     />
+                  </td>
+                  <td>
+                    <div
+                      className="ml-auto h-3 w-10 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div className="h-3 w-full animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} />
+                    <div className="mt-1 h-2 w-16 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} />
                   </td>
                   <td>
                     <div
@@ -135,8 +156,13 @@ export default function WarehousesTable({
                     </td>
                     <td className="strong">{w.name}</td>
                     <td className="sku">{w.code}</td>
-                    <td className="num">{w.maxStockLevel ?? '—'}</td>
-                    <td className="num">{w.totalStockItems}</td>
+                    <td>{w.location ?? '—'}</td>
+                    <td className="num">{w.totalLocations.toLocaleString()}</td>
+                    <td className="num">{w.totalStockItems.toLocaleString()}</td>
+                    <td className="num">{formatCompactNumber(w.totalQuantity)}</td>
+                    <td>
+                      <CapacityBar used={w.totalStockItems} max={w.maxStockLevel} />
+                    </td>
                     <td>
                       <Tag kind={w.isActive ? 'ok' : 'neutral'}>
                         {w.isActive ? 'ACTIVE' : 'INACTIVE'}
