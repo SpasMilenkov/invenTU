@@ -1,30 +1,13 @@
 ---
-import '../styles/global.css';
+import AuthLayout from '../layouts/AuthLayout.astro';
 import RegisterForm from '../components/auth/RegisterForm';
 ---
 
-<!doctype html>
-<html lang="en" class="h-full bg-surface-alt">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <title>Register | invenTU</title>
-    <script is:inline>
-      (function() {
-        const stored = localStorage.getItem('theme');
-        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-        }
-      })();
-    </script>
-  </head>
-  <body class="flex h-full items-center justify-center">
-    <div class="w-full max-w-md rounded-lg bg-surface p-8 shadow-card">
-      <h1 class="mb-2 text-center text-2xl font-bold text-text-primary">invenTU</h1>
-      <p class="mb-6 text-center text-sm text-text-muted">Create your account</p>
-      <RegisterForm client:only="react" />
-    </div>
-  </body>
-</html>
+<AuthLayout
+  title="Register"
+  eyebrow="REQUEST ACCESS"
+  heading="Create your account."
+  lede="YOUR ADMIN WILL REVIEW AND ASSIGN ROLES"
+>
+  <RegisterForm client:only="react" />
+</AuthLayout>

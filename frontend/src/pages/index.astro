@@ -1,10 +1,23 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import WelcomeCard from '../components/dashboard/WelcomeCard';
 ---
 
-<Layout title="Dashboard">
-  <div class="rounded-lg border border-dashed border-surface-border-strong bg-surface p-8 text-center">
-    <h2 class="text-xl font-semibold text-text-secondary">Dashboard</h2>
-    <p class="mt-2 text-text-muted">This page is under construction.</p>
+<Layout title="Dashboard" crumb="Dashboard">
+  <div class="page-head">
+    <div>
+      <div class="page-sub">OPERATE / DASHBOARD</div>
+      <h1 class="page-title">Operations overview</h1>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1.7fr_1fr]">
+    <WelcomeCard client:only="react" />
+    <div class="empty">
+      <div class="micro" style="margin-bottom: 8px;">COMING SOON</div>
+      <p class="text-[13px]" style="color: var(--color-ink-3);">
+        KPI tiles, sparklines and live activity tape will appear here once telemetry is wired up.
+      </p>
+    </div>
   </div>
 </Layout>

@@ -1,5 +1,5 @@
 import type { PagedResult, UserSummary } from '../../lib/hooks/useUsers';
-import { roleBadgeClasses } from '../../lib/users/roleBadge';
+import { Tag } from '../ui/Tag';
 
 interface Props {
   data?: PagedResult<UserSummary>;
@@ -14,8 +14,6 @@ interface Props {
   onEdit: (user: UserSummary) => void;
   onDeactivate: (user: UserSummary) => void;
 }
-
-const PILL_SHAPE = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold';
 
 export default function UsersTable({
   data,
@@ -32,7 +30,7 @@ export default function UsersTable({
 }: Props) {
   if (isError) {
     return (
-      <div className="rounded-md border border-danger-200 bg-danger-50 p-6 text-center text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+      <div className="info-card" style={{ borderLeftColor: 'var(--color-crit)', background: 'var(--color-crit-soft)', color: 'var(--color-crit)' }}>
         <p>Could not load users.</p>
         <button type="button" className="btn btn-outline btn-sm mt-3" onClick={onRetry}>
           Retry
@@ -44,55 +42,51 @@ export default function UsersTable({
   const showSkeleton = isLoading && !data;
   const items = data?.items ?? [];
   const showEmpty = !showSkeleton && items.length === 0;
+  const totalCols = isAdmin ? 5 : 4;
 
   return (
-    <div className="overflow-hidden rounded-[1.25rem] border border-surface-border bg-surface shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-surface-border text-left text-sm dark:divide-secondary-700">
-          <thead className="bg-surface-alt text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-text-muted dark:bg-secondary-900/60">
+    <div className="panel" style={{ overflow: 'hidden' }}>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="tbl">
+          <thead>
             <tr>
-              <th scope="col" className="px-6 py-3">Name</th>
-              <th scope="col" className="px-6 py-3">Email</th>
-              <th scope="col" className="px-6 py-3">Role</th>
-              <th scope="col" className="px-6 py-3">Status</th>
-              {isAdmin && <th scope="col" className="px-6 py-3 text-right">Actions</th>}
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              {isAdmin && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-surface-border dark:divide-secondary-700">
+          <tbody>
             {showSkeleton &&
               Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
                 <tr key={`s-${i}`}>
-                  <td className="px-6 py-4"><div className="h-3 w-40 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-56 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-16 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-16 animate-pulse rounded bg-surface-alt" /></td>
-                  {isAdmin && <td className="px-6 py-4" />}
+                  <td><div className="h-3 w-40 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} /></td>
+                  <td><div className="h-3 w-56 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} /></td>
+                  <td><div className="h-3 w-16 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} /></td>
+                  <td><div className="h-3 w-16 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} /></td>
+                  {isAdmin && <td />}
                 </tr>
               ))}
             {items.map((u) => {
               const role = u.roles[0] ?? '—';
               return (
-                <tr
-                  key={u.id}
-                  className={`transition-colors hover:bg-surface-alt dark:hover:bg-secondary-900/40 ${
-                    u.isActive ? '' : 'opacity-60'
-                  }`}
-                >
-                  <td className="px-6 py-4 font-medium text-text-primary">
+                <tr key={u.id} style={{ opacity: u.isActive ? 1 : 0.6 }}>
+                  <td className="strong">
                     {u.firstName} {u.lastName}
                   </td>
-                  <td className="px-6 py-4 text-text-secondary">{u.email}</td>
-                  <td className="px-6 py-4">
-                    <span className={`${PILL_SHAPE} ${roleBadgeClasses(role)}`}>{role}</span>
+                  <td className="sku">{u.email}</td>
+                  <td>
+                    <Tag kind="accent">{role}</Tag>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`badge ${u.isActive ? 'badge-success' : 'badge-neutral'}`}>
-                      {u.isActive ? 'Active' : 'Inactive'}
-                    </span>
+                  <td>
+                    <Tag kind={u.isActive ? 'ok' : 'neutral'}>
+                      {u.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </Tag>
                   </td>
                   {isAdmin && (
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td style={{ textAlign: 'right' }}>
+                      <div className="flex items-center justify-end gap-1">
                         {u.isActive && (
                           <>
                             <button
@@ -104,7 +98,8 @@ export default function UsersTable({
                             </button>
                             <button
                               type="button"
-                              className="btn btn-ghost btn-sm text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/40"
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: 'var(--color-crit)' }}
                               onClick={() => onDeactivate(u)}
                             >
                               Deactivate
@@ -120,8 +115,8 @@ export default function UsersTable({
             {showEmpty && (
               <tr>
                 <td
-                  colSpan={isAdmin ? 5 : 4}
-                  className="px-6 py-12 text-center text-sm text-text-muted"
+                  colSpan={totalCols}
+                  style={{ padding: '40px', textAlign: 'center', color: 'var(--color-ink-3)' }}
                 >
                   No users yet.
                 </td>
@@ -132,9 +127,16 @@ export default function UsersTable({
       </div>
 
       {data && data.totalCount > 0 && (
-        <div className="flex items-center justify-between border-t border-surface-border px-6 py-3 text-xs text-text-muted dark:border-secondary-700">
+        <div
+          className="flex items-center justify-between px-4 py-3 font-mono text-[11px]"
+          style={{
+            borderTop: '1px solid var(--color-rule)',
+            background: 'var(--color-bg-elev)',
+            color: 'var(--color-ink-3)',
+          }}
+        >
           <span>
-            Page {data.page} of {data.totalPages} · {data.totalCount} total
+            PAGE {data.page} / {data.totalPages} · {data.totalCount} TOTAL
           </span>
           <div className="flex items-center gap-2">
             <button

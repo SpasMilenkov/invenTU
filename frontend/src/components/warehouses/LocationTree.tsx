@@ -142,14 +142,18 @@ function TreeRow({ node, depth, canManage, onEdit, onDelete }: TreeRowProps) {
   return (
     <li>
       <div
-        className={`flex flex-wrap items-center gap-3 rounded-md px-2 py-1.5 text-sm hover:bg-surface-alt dark:hover:bg-secondary-900/40 ${indentClass}`}
+        className={`flex flex-wrap items-center gap-3 px-2 py-1.5 text-[12.5px] hover:bg-[color:var(--color-bg-elev)] ${indentClass}`}
       >
-        <span className="font-medium text-text-primary">{node.label}</span>
+        <span className="strong">{node.label}</span>
         {loc && (
           <>
-            <span className="font-mono text-xs text-text-muted">{loc.fullLocationCode}</span>
-            <span className="text-xs text-text-muted">capacity: {loc.maxCapacity}</span>
-            <span className="text-xs text-text-muted">items: {loc.stockItemCount}</span>
+            <span className="sku">{loc.fullLocationCode}</span>
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>
+              CAP {loc.maxCapacity}
+            </span>
+            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>
+              ITEMS {loc.stockItemCount}
+            </span>
             {canManage && (
               <span className="ml-auto flex items-center gap-1">
                 <button
@@ -162,7 +166,8 @@ function TreeRow({ node, depth, canManage, onEdit, onDelete }: TreeRowProps) {
                 {loc.stockItemCount === 0 && (
                   <button
                     type="button"
-                    className="btn btn-ghost btn-sm text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/40"
+                    className="btn btn-ghost btn-sm"
+                    style={{ color: 'var(--color-crit)' }}
                     onClick={() => onDelete(loc)}
                   >
                     Delete
@@ -210,7 +215,7 @@ export default function LocationTree({
   const hasFilter = zoneInput.trim().length > 0;
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border border-surface-border bg-surface-alt/40 p-4 dark:border-secondary-700 dark:bg-secondary-900/30">
+    <div className="flex flex-col gap-3 p-3" style={{ background: 'var(--color-paper)', border: '1px solid var(--color-rule)' }}>
       <div className="flex flex-wrap items-center gap-3">
         <input
           type="text"
@@ -232,7 +237,7 @@ export default function LocationTree({
       </div>
 
       {isError ? (
-        <div className="rounded-md border border-danger-200 bg-danger-50 p-4 text-center text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+        <div className="info-card">
           <p>Failed to load locations.</p>
           <button
             type="button"
@@ -246,12 +251,15 @@ export default function LocationTree({
         <ul className="flex flex-col gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
             <li key={`skeleton-${i}`} className="px-2 py-1.5">
-              <div className="h-3 w-64 animate-pulse rounded bg-surface-alt dark:bg-secondary-800" />
+              <div
+                className="h-3 w-64 animate-pulse"
+                style={{ background: 'var(--color-bg-sunk)' }}
+              />
             </li>
           ))}
         </ul>
       ) : tree.length === 0 ? (
-        <p className="px-2 py-6 text-center text-sm text-text-muted">
+        <p className="px-2 py-6 text-center text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
           {hasFilter
             ? 'No locations match this filter.'
             : canManage

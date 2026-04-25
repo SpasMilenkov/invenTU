@@ -2,9 +2,17 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout title="Products">
-  <div class="rounded-lg border border-dashed border-surface-border-strong bg-surface p-8 text-center">
-    <h2 class="text-xl font-semibold text-text-secondary">Products</h2>
-    <p class="mt-2 text-text-muted">This page is under construction.</p>
+<Layout title="Products" crumb="Products">
+  <div class="page-head">
+    <div>
+      <div class="page-sub">OPERATE / PRODUCTS</div>
+      <h1 class="page-title">Products</h1>
+    </div>
+  </div>
+  <div class="empty">
+    <div class="micro" style="margin-bottom: 8px;">UNDER CONSTRUCTION</div>
+    <p class="text-[13px]" style="color: var(--color-ink-3);">
+      The product catalog UI will live here. Use Stock Operations for now.
+    </p>
   </div>
 </Layout>

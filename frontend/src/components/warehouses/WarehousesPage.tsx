@@ -153,14 +153,12 @@ function WarehousesPageInner() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex w-full flex-col gap-5">
+      <div className="page-head">
         <div>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-            Inventory
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-text-primary">Warehouses</h1>
-          <p className="mt-1 text-sm text-text-muted">
+          <div className="page-sub">OPERATE / WAREHOUSES</div>
+          <h1 className="page-title">Warehouses</h1>
+          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
             {canManage
               ? 'Create warehouses, organise locations, and keep capacity records current.'
               : 'Read-only view. Ask a manager to make changes.'}
@@ -175,7 +173,7 @@ function WarehousesPageInner() {
             + New warehouse
           </button>
         )}
-      </header>
+      </div>
 
       <WarehousesToolbar
         search={search}

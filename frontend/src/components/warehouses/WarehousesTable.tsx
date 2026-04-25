@@ -3,6 +3,8 @@ import type { PagedResult } from '../../lib/hooks/useUsers';
 import type { WarehouseSummary } from '../../lib/hooks/useWarehouses';
 import type { StockLocationSummary } from '../../lib/hooks/useStockLocations';
 import LocationTree from './LocationTree';
+import { Tag } from '../ui/Tag';
+import { Icon } from '../ui/Icon';
 
 interface Props {
   data?: PagedResult<WarehouseSummary>;
@@ -47,7 +49,7 @@ export default function WarehousesTable({
 }: Props) {
   if (isError) {
     return (
-      <div className="rounded-md border border-danger-200 bg-danger-50 p-6 text-center text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+      <div className="info-card">
         <p>Could not load warehouses.</p>
         <button type="button" className="btn btn-outline btn-sm mt-3" onClick={onRetry}>
           Retry
@@ -62,67 +64,87 @@ export default function WarehousesTable({
   const totalCols = canManage ? 7 : 6;
 
   return (
-    <div className="overflow-hidden rounded-[1.25rem] border border-surface-border bg-surface shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-surface-border text-left text-sm dark:divide-secondary-700">
-          <thead className="bg-surface-alt text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-text-muted dark:bg-secondary-900/60">
+    <div className="panel" style={{ overflow: 'hidden' }}>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="tbl">
+          <thead>
             <tr>
-              <th scope="col" className="w-10 px-4"></th>
-              <th scope="col" className="px-6 py-3">Name</th>
-              <th scope="col" className="px-6 py-3">Code</th>
-              <th scope="col" className="px-6 py-3">Capacity</th>
-              <th scope="col" className="px-6 py-3">SKUs</th>
-              <th scope="col" className="px-6 py-3">Status</th>
-              {canManage && <th scope="col" className="px-6 py-3 text-right">Actions</th>}
+              <th style={{ width: 36 }}></th>
+              <th>Name</th>
+              <th>Code</th>
+              <th className="num">Capacity</th>
+              <th className="num">SKUs</th>
+              <th>Status</th>
+              {canManage && <th style={{ textAlign: 'right' }}>Actions</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-surface-border dark:divide-secondary-700">
+          <tbody>
             {showSkeleton &&
               Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
                 <tr key={`s-${i}`}>
-                  <td className="px-4 py-4"><div className="h-3 w-3 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-40 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-20 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-16 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-12 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-16 animate-pulse rounded bg-surface-alt" /></td>
-                  {canManage && <td className="px-6 py-4" />}
+                  <td></td>
+                  <td>
+                    <div
+                      className="h-3 w-40 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="h-3 w-20 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="ml-auto h-3 w-12 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="ml-auto h-3 w-10 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="h-3 w-16 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  {canManage && <td />}
                 </tr>
               ))}
             {items.map((w) => {
               const isExpanded = expandedIds.has(w.id);
               return (
                 <Fragment key={w.id}>
-                  <tr
-                    className={`transition-colors hover:bg-surface-alt dark:hover:bg-secondary-900/40 ${
-                      w.isActive ? '' : 'opacity-60'
-                    }`}
-                  >
-                    <td className="px-4 py-4">
+                  <tr style={{ opacity: w.isActive ? 1 : 0.6 }}>
+                    <td>
                       <button
                         type="button"
-                        className="btn btn-ghost btn-sm"
+                        className="icon-btn"
+                        style={{ width: 24, height: 24 }}
                         aria-label={isExpanded ? 'Collapse row' : 'Expand row'}
                         aria-expanded={isExpanded}
                         onClick={() => onToggleExpand(w.id)}
                       >
-                        <span aria-hidden>{isExpanded ? '▼' : '▶'}</span>
+                        <Icon name={isExpanded ? 'chev_down' : 'chev'} size={12} />
                       </button>
                     </td>
-                    <td className="px-6 py-4 font-medium text-text-primary">{w.name}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-text-secondary">{w.code}</td>
-                    <td className="px-6 py-4 text-text-secondary">
-                      {w.maxStockLevel ?? '—'}
-                    </td>
-                    <td className="px-6 py-4 text-text-secondary">{w.totalStockItems}</td>
-                    <td className="px-6 py-4">
-                      <span className={`badge ${w.isActive ? 'badge-success' : 'badge-neutral'}`}>
-                        {w.isActive ? 'Active' : 'Inactive'}
-                      </span>
+                    <td className="strong">{w.name}</td>
+                    <td className="sku">{w.code}</td>
+                    <td className="num">{w.maxStockLevel ?? '—'}</td>
+                    <td className="num">{w.totalStockItems}</td>
+                    <td>
+                      <Tag kind={w.isActive ? 'ok' : 'neutral'}>
+                        {w.isActive ? 'ACTIVE' : 'INACTIVE'}
+                      </Tag>
                     </td>
                     {canManage && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td style={{ textAlign: 'right' }}>
+                        <div className="flex items-center justify-end gap-1">
                           {w.isActive ? (
                             <>
                               <button
@@ -134,7 +156,8 @@ export default function WarehousesTable({
                               </button>
                               <button
                                 type="button"
-                                className="btn btn-ghost btn-sm text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/40"
+                                className="btn btn-ghost btn-sm"
+                                style={{ color: 'var(--color-crit)' }}
                                 onClick={() => onDeactivate(w)}
                               >
                                 Deactivate
@@ -152,7 +175,8 @@ export default function WarehousesTable({
                               {w.totalLocations === 0 && (
                                 <button
                                   type="button"
-                                  className="btn btn-ghost btn-sm text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-950/40"
+                                  className="btn btn-ghost btn-sm"
+                                  style={{ color: 'var(--color-crit)' }}
                                   onClick={() => onDelete(w)}
                                 >
                                   Delete
@@ -165,8 +189,8 @@ export default function WarehousesTable({
                     )}
                   </tr>
                   {isExpanded && (
-                    <tr className="bg-surface-alt/30 dark:bg-secondary-900/30">
-                      <td colSpan={totalCols} className="px-6 py-4">
+                    <tr style={{ background: 'var(--color-bg-sunk)' }}>
+                      <td colSpan={totalCols} style={{ padding: '12px 16px' }}>
                         <LocationTree
                           warehouseId={w.id}
                           canManage={canManage}
@@ -184,7 +208,11 @@ export default function WarehousesTable({
               <tr>
                 <td
                   colSpan={totalCols}
-                  className="px-6 py-12 text-center text-sm text-text-muted"
+                  style={{
+                    padding: '40px',
+                    textAlign: 'center',
+                    color: 'var(--color-ink-3)',
+                  }}
                 >
                   No warehouses yet.
                 </td>
@@ -195,9 +223,16 @@ export default function WarehousesTable({
       </div>
 
       {data && data.totalCount > 0 && (
-        <div className="flex items-center justify-between border-t border-surface-border px-6 py-3 text-xs text-text-muted dark:border-secondary-700">
+        <div
+          className="flex items-center justify-between px-4 py-3 font-mono text-[11px]"
+          style={{
+            borderTop: '1px solid var(--color-rule)',
+            background: 'var(--color-bg-elev)',
+            color: 'var(--color-ink-3)',
+          }}
+        >
           <span>
-            Page {data.page} of {data.totalPages} · {data.totalCount} total
+            PAGE {data.page} / {data.totalPages} · {data.totalCount} TOTAL
           </span>
           <div className="flex items-center gap-2">
             <button
