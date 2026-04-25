@@ -1,4 +1,5 @@
 using InvenTU.Core.Contracts.Repositories;
+using InvenTU.Core.DTOs.Common;
 using InvenTU.Core.DTOs.Warehouses;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Data;
@@ -9,11 +10,57 @@ namespace InvenTU.Infrastructure.Repositories;
 
 public sealed class WarehouseRepository(InvenTUDbContext dbContext) : IWarehouseRepository
 {
-    public async Task<IReadOnlyList<WarehouseDto>> GetAllAsync(CancellationToken cancellationToken = default)
-        => await dbContext.Warehouses
+    public async Task<PagedResult<WarehouseDto>> GetPagedAsync(
+        int page,
+        int pageSize,
+        string? search,
+        WarehouseStatusFilter status,
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        if (pageSize < 1)
+        {
+            pageSize = 1;
+        }
+        else if (pageSize > 100)
+        {
+            pageSize = 100;
+        }
+
+        var query = dbContext.Warehouses.AsNoTracking();
+
+        if (status == WarehouseStatusFilter.Active)
+        {
+            query = query.Where(w => w.IsActive);
+        }
+        else if (status == WarehouseStatusFilter.Inactive)
+        {
+            query = query.Where(w => !w.IsActive);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{EscapeLikePattern(search.Trim())}%";
+            query = query.Where(w =>
+                EF.Functions.ILike(w.Code, pattern, @"\") ||
+                EF.Functions.ILike(w.Name, pattern, @"\"));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderBy(w => w.Code)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(WarehouseProjections.ToDto)
             .ToListAsync(cancellationToken);
+
+        return PagedResult<WarehouseDto>.Create(items, totalCount, page, pageSize);
+    }
 
     public Task<WarehouseDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Warehouses
@@ -60,4 +107,10 @@ public sealed class WarehouseRepository(InvenTUDbContext dbContext) : IWarehouse
             .Where(w => w.Id == id)
             .ExecuteDeleteAsync(cancellationToken);
     }
+
+    private static string EscapeLikePattern(string input)
+        => input
+            .Replace(@"\", @"\\")
+            .Replace("%", @"\%")
+            .Replace("_", @"\_");
 }

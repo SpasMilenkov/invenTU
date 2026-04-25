@@ -44,6 +44,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockItemService, StockItemService>();
         services.AddScoped<IStockTransferService, StockTransferService>();
         services.AddScoped<IValidator<TransferStockRequest>, TransferStockRequestValidator>();
+        services.AddScoped<IStockReceiptService, StockReceiptService>();
+        services.AddScoped<IValidator<ReceiveStockRequest>, ReceiveStockRequestValidator>();
+        services.AddScoped<IStockIssueService, StockIssueService>();
+        services.AddScoped<IValidator<IssueStockRequest>, IssueStockRequestValidator>();
+
+        services.AddScoped<IStockAdjustmentService, StockAdjustmentService>();
+        services.AddScoped<IValidator<AdjustStockRequest>, AdjustStockRequestValidator>();
 
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();

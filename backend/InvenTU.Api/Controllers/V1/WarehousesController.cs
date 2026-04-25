@@ -14,12 +14,17 @@ namespace InvenTU.Api.Controllers.V1;
 [Authorize]
 public sealed class WarehousesController(IWarehouseService warehouseService) : ControllerBase
 {
-    /// <summary>Returns all warehouses with stock summary counts.</summary>
+    /// <summary>Returns a paged list of warehouses with stock summary counts. Supports search and status filtering.</summary>
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] WarehouseStatusFilter status = WarehouseStatusFilter.All,
+        CancellationToken cancellationToken = default)
     {
-        var warehouses = await warehouseService.GetAllAsync(cancellationToken);
-        return Ok(warehouses);
+        var result = await warehouseService.GetAllAsync(page, pageSize, search, status, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>Returns a single warehouse by id.</summary>
@@ -73,6 +78,18 @@ public sealed class WarehousesController(IWarehouseService warehouseService) : C
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
         await warehouseService.DeactivateAsync(id, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Reactivates a previously deactivated warehouse.
+    /// Requires Manager or Admin role.
+    /// </summary>
+    [HttpPatch("{id:guid}/activate")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
+    {
+        await warehouseService.ActivateAsync(id, cancellationToken);
         return NoContent();
     }
 }

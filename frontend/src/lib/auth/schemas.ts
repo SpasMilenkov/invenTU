@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+export const PASSWORD_HELP_TEXT =
+  'At least 8 characters, with an uppercase letter, a lowercase letter, a digit, and a special character.';
+
+export const passwordRules = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Must contain an uppercase letter')
+  .regex(/[a-z]/, 'Must contain a lowercase letter')
+  .regex(/[0-9]/, 'Must contain a digit')
+  .regex(/[^A-Za-z0-9]/, 'Must contain a special character');
+
 export const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
@@ -10,13 +21,7 @@ export const registerSchema = z
     firstName: z.string().min(1, 'First name is required').max(50),
     lastName: z.string().min(1, 'Last name is required').max(50),
     email: z.string().min(1, 'Email is required').email('Invalid email address'),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[a-z]/, 'Must contain a lowercase letter')
-      .regex(/[0-9]/, 'Must contain a digit')
-      .regex(/[^A-Za-z0-9]/, 'Must contain a special character'),
+    password: passwordRules,
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.password === data.confirmPassword, {

@@ -18,8 +18,13 @@ public sealed class StockMovement
     public string? ReferenceNumber { get; set; }
     public string? Notes { get; set; }
 
+    public decimal? CountedQuantity { get; set; }
+    public Guid? ReviewedByUserId { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+
     public Product Product { get; set; } = null!;
     public User User { get; set; } = null!;
+    public User? ReviewedByUser { get; set; }
     public Warehouse? SourceWarehouse { get; set; }
     public Warehouse? DestinationWarehouse { get; set; }
     public StockLocation? StockLocation { get; set; }
