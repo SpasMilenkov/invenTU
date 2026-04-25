@@ -5,7 +5,7 @@ const UUID_PATTERN = /^[0-9a-fA-F-]{36}$/;
 
 const baseObject = z.object({
   name: z.string().min(1, 'Name is required').max(200, 'Max 200 characters'),
-  categoryId: z.string().min(1, 'Category is required').uuid('Invalid category'),
+  categoryId: z.string().min(1, 'Category is required').regex(UUID_PATTERN, 'Invalid category'),
   primaryWarehouseId: z
     .string()
     .optional()
