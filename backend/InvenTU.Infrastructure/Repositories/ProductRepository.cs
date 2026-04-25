@@ -12,7 +12,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
 {
     public Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Products
-            .Where(p => p.Id == id)
+            .Where(p => p.Id == id && p.DeletedAt == null)
             .Select(ProductProjections.ToDto)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -60,8 +60,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(p => p.DeletedAt, deletedAt)
-                    .SetProperty(p => p.UpdatedAt, deletedAt)
-                    .SetProperty(p => p.IsActive, false),
+                    .SetProperty(p => p.UpdatedAt, deletedAt),
                 cancellationToken);
     }
 
@@ -76,20 +75,48 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
             : SearchPagedAsync(query, cancellationToken);
     }
 
+    private async Task<HashSet<Guid>> GetDescendantCategoryIdsAsync(
+        Guid categoryId,
+        CancellationToken cancellationToken)
+    {
+        var ids = await dbContext.Database
+            .SqlQuery<Guid>($"""
+                WITH RECURSIVE category_tree AS (
+                    SELECT "Id"
+                    FROM   "Categories"
+                    WHERE  "Id" = {categoryId}
+
+                    UNION ALL
+
+                    SELECT c."Id"
+                    FROM   "Categories"      c
+                    INNER JOIN category_tree ct ON ct."Id" = c."ParentCategoryId"
+                )
+                SELECT "Id" AS "Value"
+                FROM   category_tree
+                """)
+            .ToListAsync(cancellationToken);
+
+        return [.. ids];
+    }
+
     private async Task<PagedResult<ProductDto>> BrowsePagedAsync(
         ProductQueryParams query,
         CancellationToken cancellationToken)
     {
-        var q = dbContext.Products.AsQueryable();
+        var q = dbContext.Products
+            .Where(p => p.DeletedAt == null);
 
         if (query.CategoryId.HasValue)
-            q = q.Where(p => p.CategoryId == query.CategoryId.Value);
+        {
+            var categoryIds = await GetDescendantCategoryIdsAsync(query.CategoryId.Value, cancellationToken);
+            q = q.Where(p => categoryIds.Contains(p.CategoryId));
+        }
 
         if (query.IsActive.HasValue)
             q = q.Where(p => p.IsActive == query.IsActive.Value);
 
         var totalCount = await q.CountAsync(cancellationToken);
-
         var pageSize = Math.Clamp(query.PageSize, 1, 100);
         var page = Math.Max(1, query.Page);
 
@@ -138,42 +165,48 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
         ProductQueryParams query,
         CancellationToken cancellationToken)
     {
-        var rawTerm  = query.Search!.Trim();
+        var rawTerm = query.Search!.Trim();
         var pageSize = Math.Clamp(query.PageSize, 1, 100);
-        var page     = Math.Clamp(query.Page, 1, 1000);
-        var offset   = (page - 1) * pageSize;
-    
+        var page = Math.Clamp(query.Page, 1, 1000);
+        var offset = (page - 1) * pageSize;
+
         var searchTerm = rawTerm.Length > 100 ? rawTerm[..100] : rawTerm;
-    
-        // escape ILIKE metacharacters so % and _ in user input are treated
-        // as literals. The backslash must be escaped first to avoid double-escaping.
-        // searchTerm (unescaped) is still used for similarity() and lower() calls
-        // where metacharacters have no special meaning.
         var escapedTerm = searchTerm
             .Replace(@"\", @"\\")
-            .Replace("%",  @"\%")
-            .Replace("_",  @"\_");
-    
-        var categoryIdParam = (object?)query.CategoryId ?? DBNull.Value;
-        var isActiveParam   = (object?)query.IsActive   ?? DBNull.Value;
-    
+            .Replace("%", @"\%")
+            .Replace("_", @"\_");
+
+        // Resolve the full category subtree once, reused in both COUNT and data queries
+        HashSet<Guid>? categoryIds = query.CategoryId.HasValue
+            ? await GetDescendantCategoryIdsAsync(query.CategoryId.Value, cancellationToken)
+            : null;
+
+        // EF Core translates Contains() on a local collection to = ANY(@p),
+        // but raw SQL needs a different approach — we pass the resolved IDs
+        // as an array parameter using the ANY(array) PostgreSQL syntax.
+        var categoryIdsParam = categoryIds?.ToArray();
+        var hasCategoryFilter = categoryIdsParam is { Length: > 0 };
+
+        var isActiveParam = (object?)query.IsActive ?? DBNull.Value;
+
         var totalCount = await dbContext.Database
             .SqlQuery<int>($"""
                 SELECT COUNT(*)::int AS "Value"
                 FROM   "Products" p
-                WHERE  (
+                WHERE  p."DeletedAt" IS NULL
+                  AND  (
                            p."SKU"     ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                         OR p."Name"    ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                         OR p."Barcode" ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                        )
-                  AND  ({categoryIdParam}::uuid    IS NULL OR p."CategoryId" = {categoryIdParam}::uuid)
-                  AND  ({isActiveParam}::boolean   IS NULL OR p."IsActive"   = {isActiveParam}::boolean)
+                  AND  (NOT {hasCategoryFilter} OR p."CategoryId" = ANY({categoryIdsParam}))
+                  AND  ({isActiveParam}::boolean IS NULL OR p."IsActive" = {isActiveParam}::boolean)
                 """)
             .SingleAsync(cancellationToken);
-    
+
         if (totalCount == 0)
             return PagedResult<ProductDto>.Create([], 0, page, pageSize);
-    
+
         var rows = await dbContext.Database
             .SqlQuery<ProductSearchResultRow>($"""
                 SELECT
@@ -181,7 +214,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
                     p."SKU",
                     p."Name",
                     p."CategoryId",
-                    c."Name"                   AS "CategoryName",
+                    c."Name"        AS "CategoryName",
                     p."PrimaryWarehouseId",
                     p."UnitPrice",
                     p."CostPrice",
@@ -197,28 +230,29 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
                          FROM   "StockItems" si
                          WHERE  si."ProductId" = p."Id"),
                         0
-                    )                          AS "TotalStock",
+                    )               AS "TotalStock",
                     p."CreatedAt",
                     p."UpdatedAt",
                     p."DeletedAt",
                     CASE
-                        WHEN lower(p."SKU")     = lower({searchTerm})                       THEN 0
+                        WHEN lower(p."SKU")     = lower({searchTerm})                THEN 0
                         WHEN p."Barcode" IS NOT NULL
-                         AND lower(p."Barcode") = lower({searchTerm})                       THEN 0
-                        WHEN lower(p."Name")    = lower({searchTerm})                       THEN 1
-                        WHEN p."SKU"  ILIKE {escapedTerm} || '%' ESCAPE '\'                THEN 2
-                        WHEN p."Name" ILIKE {escapedTerm} || '%' ESCAPE '\'                THEN 3
+                         AND lower(p."Barcode") = lower({searchTerm})                THEN 0
+                        WHEN lower(p."Name")    = lower({searchTerm})                THEN 1
+                        WHEN p."SKU"  ILIKE {escapedTerm} || '%' ESCAPE '\'         THEN 2
+                        WHEN p."Name" ILIKE {escapedTerm} || '%' ESCAPE '\'         THEN 3
                         ELSE 4
-                    END                        AS "MatchPriority"
+                    END             AS "MatchPriority"
                 FROM  "Products"   p
                 INNER JOIN "Categories" c ON c."Id" = p."CategoryId"
-                WHERE (
+                WHERE p."DeletedAt" IS NULL
+                  AND (
                           p."SKU"     ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                        OR p."Name"    ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                        OR p."Barcode" ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                       )
-                  AND ({categoryIdParam}::uuid    IS NULL OR p."CategoryId" = {categoryIdParam}::uuid)
-                  AND ({isActiveParam}::boolean   IS NULL OR p."IsActive"   = {isActiveParam}::boolean)
+                  AND (NOT {hasCategoryFilter} OR p."CategoryId" = ANY({categoryIdsParam}))
+                  AND ({isActiveParam}::boolean IS NULL OR p."IsActive" = {isActiveParam}::boolean)
                 ORDER BY
                     "MatchPriority" ASC,
                     GREATEST(
@@ -231,9 +265,9 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
                 OFFSET {offset}
                 """)
             .ToListAsync(cancellationToken);
-    
+
         var dtos = rows.ConvertAll(r => r.ToDto());
         return PagedResult<ProductDto>.Create(dtos, totalCount, page, pageSize);
     }
-    
+
 }
