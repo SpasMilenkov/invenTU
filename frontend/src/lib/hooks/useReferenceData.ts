@@ -26,6 +26,16 @@ interface PagedResult<T> {
   totalCount: number;
 }
 
+export interface StockItemSummary {
+  id: string;
+  productId: string;
+  stockLocationId: string;
+  warehouseId: string;
+  quantity: number;
+  quantityReserved: number;
+  quantityAvailable: number;
+}
+
 export function useActiveWarehouses() {
   return useQuery<WarehouseSummary[]>({
     queryKey: ["warehouses", "active"],
@@ -64,5 +74,22 @@ export function useProducts(search: string) {
       return res.data;
     },
     staleTime: 30 * 1000,
+  });
+}
+
+export function useStockItemsForLocation(
+  productId: string | null,
+  warehouseId: string | null,
+) {
+  return useQuery<StockItemSummary[]>({
+    queryKey: ["stock", "items", { productId, warehouseId }],
+    queryFn: async () => {
+      const res = await apiClient.get<StockItemSummary[]>("/stock", {
+        params: { productId, warehouseId },
+      });
+      return res.data;
+    },
+    enabled: !!productId && !!warehouseId,
+    staleTime: 10 * 1000,
   });
 }
