@@ -46,6 +46,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStockIssueService, StockIssueService>();
         services.AddScoped<IValidator<IssueStockRequest>, IssueStockRequestValidator>();
 
+        services.AddScoped<IStockAdjustmentService, StockAdjustmentService>();
+        services.AddScoped<IValidator<AdjustStockRequest>, AdjustStockRequestValidator>();
+
         return services;
     }
 }

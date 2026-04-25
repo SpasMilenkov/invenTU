@@ -100,6 +100,11 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
                 .WithMany(u => u.CreatedStockMovements)
                 .HasForeignKey(sm => sm.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sm => sm.ReviewedByUser)
+                .WithMany(u => u.ReviewedStockMovements)
+                .HasForeignKey(sm => sm.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<PurchaseOrder>()
