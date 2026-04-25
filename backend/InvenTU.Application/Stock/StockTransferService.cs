@@ -9,6 +9,13 @@ using CoreValidationException = InvenTU.Core.Exceptions.ValidationException;
 
 namespace InvenTU.Application.Stock;
 
+/// <summary>
+/// Application service that orchestrates a stock transfer operation between
+/// two warehouse locations: validates the request, verifies both warehouses
+/// and their locations are active and valid, enforces destination capacity
+/// limits, resolves the current user, and delegates the transactional write
+/// to <see cref="IStockTransferRepository"/>.
+/// </summary>
 public sealed class StockTransferService(
     IWarehouseRepository warehouseRepository,
     IStockLocationRepository stockLocationRepository,
@@ -17,6 +24,39 @@ public sealed class StockTransferService(
     IAlertService alertService,
     IValidator<TransferStockRequest> validator) : IStockTransferService
 {
+    /// <summary>
+    /// Validates <paramref name="request"/>, enforces warehouse and location
+    /// business rules (active state, capacity), then moves stock from the
+    /// source to the destination location and writes a <c>StockMovement</c>
+    /// audit record.
+    /// </summary>
+    /// <param name="request">The transfer request submitted by the caller.</param>
+    /// <param name="cancellationToken">Token used to propagate cancellation.</param>
+    /// <returns>
+    /// A <see cref="StockTransferDto"/> confirming the movement identifier
+    /// and echoing warehouse names and quantity.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="request"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="CoreValidationException">
+    /// Thrown when <paramref name="request"/> fails FluentValidation rules.
+    /// </exception>
+    /// <exception cref="WarehouseNotFoundException">
+    /// Thrown when either the source or destination warehouse does not exist.
+    /// </exception>
+    /// <exception cref="WarehouseNotActiveException">
+    /// Thrown when either warehouse is inactive. A system alert is also raised
+    /// for the Admin role before the exception propagates.
+    /// </exception>
+    /// <exception cref="WarehouseCapacityExceededException">
+    /// Thrown when transferring the requested quantity would exceed the
+    /// destination warehouse's <c>MaxStockLevel</c>.
+    /// </exception>
+    /// <exception cref="StockLocationNotFoundException">
+    /// Thrown when either stock location does not exist or does not belong
+    /// to its expected warehouse.
+    /// </exception>
     public async Task<StockTransferDto> TransferAsync(
         TransferStockRequest request,
         CancellationToken cancellationToken = default)
@@ -89,6 +129,8 @@ public sealed class StockTransferService(
             destWarehouse.Id,
             request.Quantity,
             currentUser.UserId,
+            request.ReasonCode,
+            request.ReferenceNumber,
             request.Notes,
             cancellationToken);
 

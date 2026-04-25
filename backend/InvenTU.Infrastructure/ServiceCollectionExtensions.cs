@@ -124,6 +124,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<IStockMovementRepository, StockMovementRepository>();
 
         return services;
     }
