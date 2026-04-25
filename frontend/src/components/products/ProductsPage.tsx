@@ -9,11 +9,13 @@ import {
 import type { ProductQueryParams, StockSummary } from '../../lib/types/products';
 import ProductsFilterBar from './ProductsFilterBar';
 import ProductsTable from './ProductsTable';
+import { PageHeader } from '../ui/PageHeader';
 
 const DEFAULT_PAGE_SIZE = 20;
 
 type UrlState = {
   search: string;
+  categoryId: string;
   isActive: string;
   page: number;
   pageSize: number;
@@ -21,6 +23,7 @@ type UrlState = {
 
 const DEFAULTS: UrlState = {
   search: '',
+  categoryId: '',
   isActive: 'true',
   page: 1,
   pageSize: DEFAULT_PAGE_SIZE,
@@ -55,6 +58,7 @@ function ProductsPageInner() {
   const queryParams: ProductQueryParams = useMemo(
     () => ({
       search: urlState.search || undefined,
+      categoryId: urlState.categoryId || undefined,
       isActive: parseIsActive(urlState.isActive),
       page: urlState.page,
       pageSize: urlState.pageSize,
@@ -84,13 +88,20 @@ function ProductsPageInner() {
 
   const hasActiveFilters =
     urlState.search !== DEFAULTS.search ||
+    urlState.categoryId !== DEFAULTS.categoryId ||
     urlState.isActive !== DEFAULTS.isActive ||
     urlState.page !== DEFAULTS.page;
 
   function clearFilters() {
     setSearchInput('');
     setUrlState(
-      { search: '', isActive: DEFAULTS.isActive, page: 1, pageSize: DEFAULTS.pageSize },
+      {
+        search: '',
+        categoryId: '',
+        isActive: DEFAULTS.isActive,
+        page: 1,
+        pageSize: DEFAULTS.pageSize,
+      },
       { historyMode: 'push' },
     );
   }
@@ -104,25 +115,27 @@ function ProductsPageInner() {
     setUrlState({ isActive: stringifyIsActive(value), page: 1 }, { historyMode: 'push' });
   }
 
+  function changeCategory(id: string | null) {
+    setUrlState({ categoryId: id ?? '', page: 1 }, { historyMode: 'push' });
+  }
+
   function rowClick(id: string) {
     window.location.assign(`/products/${id}`);
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-          Inventory
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-text-primary">Products</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Browse the catalogue, filter by status, and open a product to see stock-on-hand and act on it.
-        </p>
-      </header>
+    <div className="flex w-full flex-col gap-5">
+      <PageHeader
+        sub="OPERATE / PRODUCTS"
+        title="Products"
+        description="Browse the catalogue, filter by status, and open a product to see stock-on-hand and act on it."
+      />
 
       <ProductsFilterBar
         searchValue={searchInput}
         onSearchChange={setSearchInput}
+        categoryId={urlState.categoryId || null}
+        onCategoryChange={changeCategory}
         isActiveFilter={parseIsActive(urlState.isActive)}
         onIsActiveChange={changeIsActive}
         onClear={clearFilters}
