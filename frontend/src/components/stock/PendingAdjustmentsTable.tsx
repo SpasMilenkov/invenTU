@@ -142,7 +142,7 @@ export default function PendingAdjustmentsTable() {
                       <DeltaCell delta={adj.delta} />
                     </td>
                     <td>{new Date(adj.createdAt).toLocaleDateString()}</td>
-                    <td className="max-w-[180px] truncate text-text-muted">
+                    <td className="max-w-45 truncate text-text-muted">
                       {adj.notes ?? "—"}
                     </td>
                     <td>
