@@ -21,7 +21,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
 {
-    options.AddDocumentTransformer(async (document, context, cancellationToken) =>
+    options.AddDocumentTransformer( (document, context, cancellationToken) =>
     {
         document.Info = new()
         {
@@ -52,6 +52,7 @@ builder.Services.AddOpenApi(options =>
 
         // Set host document with security scheme for all elements
         document.SetReferenceHostDocument();
+        return Task.CompletedTask;
     });
 });
 

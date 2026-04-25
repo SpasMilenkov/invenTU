@@ -83,7 +83,12 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
         builder.Entity<Warehouse>().HasIndex(w => w.Code).IsUnique();
 
         builder.Entity<StockItem>().Property(s => s.RowVersion).IsRowVersion();
-
+        
+        builder.Entity<StockItem>()
+            .Property(p => p.RowVersion)
+            .IsRowVersion()
+            .HasColumnName("xmin")
+            .HasColumnType("xid");
         builder.Entity<StockMovement>(entity =>
         {
             entity.HasOne(sm => sm.SourceWarehouse)
