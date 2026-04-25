@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import type { PagedResult, ProductDto, StockSummary } from '../../lib/types/products';
+import { useCategoriesFlat } from '../../lib/hooks/useCategories';
 import StockStatusBadge from './StockStatusBadge';
 import EmptyState from './EmptyState';
+import { Tag } from '../ui/Tag';
 
 interface StockLookup {
   byProductId: Map<string, StockSummary>;
@@ -44,9 +47,16 @@ export default function ProductsTable({
   hasActiveFilters,
   onClearFilters,
 }: Props) {
+  const categories = useCategoriesFlat();
+  const pathById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of categories.data ?? []) map.set(c.id, c.path);
+    return map;
+  }, [categories.data]);
+
   if (isError) {
     return (
-      <div className="rounded-md border border-danger-200 bg-danger-50 p-6 text-center text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+      <div className="info-card">
         <p>Could not load products.</p>
         <button type="button" className="btn btn-outline btn-sm mt-3" onClick={onRetry}>
           Retry
@@ -76,31 +86,69 @@ export default function ProductsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-[1.25rem] border border-surface-border bg-surface shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-surface-border text-left text-sm dark:divide-secondary-700">
-          <thead className="bg-surface-alt text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-text-muted dark:bg-secondary-900/60">
+    <div className="panel" style={{ overflow: 'hidden' }}>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="tbl">
+          <thead>
             <tr>
-              <th scope="col" className="px-6 py-3">SKU</th>
-              <th scope="col" className="px-6 py-3">Name</th>
-              <th scope="col" className="px-6 py-3">Category</th>
-              <th scope="col" className="px-6 py-3 text-right">Unit price</th>
-              <th scope="col" className="px-6 py-3">Stock status</th>
+              <th>SKU</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th className="num">Unit price</th>
+              <th>Stock status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-surface-border dark:divide-secondary-700">
+          <tbody>
             {showSkeleton &&
               Array.from({ length: 8 }).map((_, i) => (
                 <tr key={`s-${i}`}>
-                  <td className="px-6 py-4"><div className="h-3 w-24 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-48 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-3 w-32 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4 text-right"><div className="ml-auto h-3 w-16 animate-pulse rounded bg-surface-alt" /></td>
-                  <td className="px-6 py-4"><div className="h-4 w-20 animate-pulse rounded bg-surface-alt" /></td>
+                  <td>
+                    <div
+                      className="h-3 w-24 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="h-3 w-48 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="h-3 w-32 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="ml-auto h-3 w-16 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
+                  <td>
+                    <div
+                      className="h-3 w-20 animate-pulse"
+                      style={{ background: 'var(--color-bg-sunk)' }}
+                    />
+                  </td>
                 </tr>
               ))}
             {items.map((p) => {
               const handleClick = () => onRowClick(p.id);
+              const categoryPath = pathById.get(p.categoryId);
+              let categoryCell: React.ReactNode;
+              if (categoryPath) {
+                categoryCell = categoryPath;
+              } else if (categories.isSuccess) {
+                // Tree is loaded, but this id isn't in it (deleted/legacy/race) — degraded state.
+                categoryCell = (
+                  <span style={{ color: 'var(--color-ink-3)' }}>{p.categoryName}</span>
+                );
+              } else {
+                // Tree still loading — render the leaf name without muting to avoid a flicker.
+                categoryCell = p.categoryName;
+              }
               return (
                 <tr
                   key={p.id}
@@ -108,23 +156,26 @@ export default function ProductsTable({
                   tabIndex={0}
                   onClick={handleClick}
                   onKeyDown={(e) => rowKeyHandler(e, handleClick)}
-                  className={`cursor-pointer transition-colors hover:bg-surface-alt focus:bg-surface-alt focus:outline-none dark:hover:bg-secondary-900/40 dark:focus:bg-secondary-900/40 ${
-                    p.isActive ? '' : 'opacity-60'
-                  }`}
+                  className="cursor-pointer"
+                  style={{ opacity: p.isActive ? 1 : 0.6 }}
                 >
-                  <td className="whitespace-nowrap px-6 py-4 font-mono text-xs text-text-secondary">{p.sku}</td>
-                  <td className="px-6 py-4">
+                  <td className="sku">{p.sku}</td>
+                  <td className="strong">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-text-primary">{p.name}</span>
-                      {!p.isActive && <span className="badge badge-neutral">Archived</span>}
+                      <span>{p.name}</span>
+                      {!p.isActive && <Tag kind="neutral">ARCHIVED</Tag>}
                     </div>
-                    {p.barcode && <div className="mt-0.5 text-xs text-text-muted">{p.barcode}</div>}
+                    {p.barcode && (
+                      <div
+                        style={{ marginTop: 2, fontSize: 11, color: 'var(--color-ink-3)' }}
+                      >
+                        {p.barcode}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-6 py-4 text-text-secondary">{p.categoryName}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right font-medium text-text-primary">
-                    {formatPrice(p.unitPrice)}
-                  </td>
-                  <td className="px-6 py-4">
+                  <td style={{ wordBreak: 'break-word' }}>{categoryCell}</td>
+                  <td className="num">{formatPrice(p.unitPrice)}</td>
+                  <td>
                     <StockStatusBadge
                       minStockLevel={p.minStockLevel}
                       stock={stock.byProductId.get(p.id)}
@@ -140,9 +191,16 @@ export default function ProductsTable({
       </div>
 
       {data && data.totalCount > 0 && (
-        <div className="flex items-center justify-between border-t border-surface-border px-6 py-3 text-xs text-text-muted dark:border-secondary-700">
+        <div
+          className="flex items-center justify-between px-4 py-3 font-mono text-[11px]"
+          style={{
+            borderTop: '1px solid var(--color-rule)',
+            background: 'var(--color-bg-elev)',
+            color: 'var(--color-ink-3)',
+          }}
+        >
           <span>
-            Page {data.page} of {data.totalPages} · {data.totalCount} total
+            PAGE {data.page} / {data.totalPages} · {data.totalCount} TOTAL
           </span>
           <div className="flex items-center gap-2">
             <button
