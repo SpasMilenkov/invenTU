@@ -90,51 +90,32 @@ function StockIssueForm() {
   if (success) {
     const { result, locationCode } = success;
     return (
-      <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <svg
-              className="h-5 w-5 shrink-0 text-success-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="text-base font-semibold text-text-primary">
-              Stock issued successfully
-            </span>
-          </div>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt className="text-text-muted">Product</dt>
-            <dd className="font-medium text-text-primary">
-              {result.productName}
-            </dd>
-            <dt className="text-text-muted">Warehouse</dt>
-            <dd className="font-medium text-text-primary">
-              {result.warehouseName}
-            </dd>
-            <dt className="text-text-muted">Location</dt>
-            <dd className="font-medium text-text-primary">{locationCode}</dd>
-            <dt className="text-text-muted">Quantity issued</dt>
-            <dd className="font-medium text-danger-600">−{result.quantity}</dd>
-            <dt className="text-text-muted">Remaining stock</dt>
-            <dd className="font-medium text-text-primary">
-              {result.updatedStockLevel}
-            </dd>
-            <dt className="text-text-muted">Reason</dt>
-            <dd className="font-medium text-text-primary">
-              {result.reasonCode}
-            </dd>
+      <div className="panel">
+        <div className="panel-head">
+          <span className="panel-title">ISSUE CONFIRMED</span>
+          <span className="tag tag-ok">SUCCESS</span>
+        </div>
+        <div className="panel-body">
+          <h2 className="text-[15px] font-semibold" style={{ color: 'var(--color-ink)' }}>
+            Stock issued successfully
+          </h2>
+          <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[12.5px]">
+            <dt className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Product</dt>
+            <dd className="strong">{result.productName}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Warehouse</dt>
+            <dd className="strong">{result.warehouseName}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Location</dt>
+            <dd className="sku">{locationCode}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Quantity issued</dt>
+            <dd className="tnum strong" style={{ color: 'var(--color-crit)' }}>−{result.quantity}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Remaining stock</dt>
+            <dd className="tnum strong">{result.updatedStockLevel}</dd>
+            <dt className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>Reason</dt>
+            <dd className="strong">{result.reasonCode}</dd>
           </dl>
           <button
             type="button"
-            className="btn btn-secondary mt-2 self-start"
+            className="btn btn-secondary mt-5"
             onClick={() => {
               setSuccess(null);
               reset(INITIAL);
@@ -148,10 +129,11 @@ function StockIssueForm() {
   }
 
   return (
-    <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-      <h2 className="mb-5 text-base font-semibold text-text-primary">
-        Issue / pick stock
-      </h2>
+    <div className="panel">
+      <div className="panel-head">
+        <span className="panel-title">ISSUE / PICK STOCK</span>
+      </div>
+      <div className="panel-body">
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col gap-4"
@@ -266,7 +248,7 @@ function StockIssueForm() {
         </div>
 
         {serverError && (
-          <p className="rounded-md bg-danger-50 px-4 py-3 text-sm text-danger-700 dark:bg-danger-900/20 dark:text-danger-400">
+          <p className="info-card" style={{ borderLeftColor: 'var(--color-crit)', background: 'var(--color-crit-soft)', color: 'var(--color-crit)' }}>
             {serverError}
           </p>
         )}
@@ -281,24 +263,23 @@ function StockIssueForm() {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }
 
 function StockIssuePageInner() {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-          Stock Operations
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-text-primary">
-          Issue / Pick Stock
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Remove stock from a location for an order, transfer, or other use.
-        </p>
-      </header>
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+      <div className="page-head">
+        <div>
+          <div className="page-sub">OPERATE / STOCK / ISSUE</div>
+          <h1 className="page-title">Issue / pick stock</h1>
+          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
+            Remove stock from a location for an order, transfer, or other use.
+          </p>
+        </div>
+      </div>
       <StockIssueForm />
     </div>
   );
