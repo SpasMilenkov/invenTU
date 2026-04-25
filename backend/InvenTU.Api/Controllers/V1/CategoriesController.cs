@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace InvenTU.Api.Controllers.V1;
 
 /// <summary>
-/// 
+/// Controller for fetching and modifying categories with hierarchical structure
 /// </summary>
 [Route("api/v1/[controller]")]
 [ApiController]
