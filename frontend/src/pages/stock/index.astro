@@ -2,50 +2,63 @@
 import Layout from '../../layouts/Layout.astro';
 ---
 
-<Layout title="Stock Operations">
-  <div class="mx-auto max-w-5xl">
-    <header class="mb-6">
-      <p class="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">Inventory</p>
-      <h1 class="mt-1 text-2xl font-semibold text-text-primary">Stock Operations</h1>
-      <p class="mt-1 text-sm text-text-muted">Choose an operation below.</p>
-    </header>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <a
-        href="/stock/receive"
-        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
-      >
-        <h2 class="font-semibold text-text-primary">Receive Stock</h2>
-        <p class="mt-1 text-sm text-text-muted">
+<Layout title="Stock Operations" crumb="Stock Operations">
+  <div class="page-head">
+    <div>
+      <div class="page-sub">OPERATE / STOCK</div>
+      <h1 class="page-title">Stock Operations</h1>
+      <p class="mt-1 text-[12.5px]" style="color: var(--color-ink-3);">Choose an operation below.</p>
+    </div>
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <a href="/stock/receive" class="panel" style="text-decoration: none; transition: border-color .15s;">
+      <div class="panel-head">
+        <span class="panel-title">RECEIVE</span>
+        <span class="micro" style="color: var(--color-ok);">IN</span>
+      </div>
+      <div class="panel-body">
+        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Receive stock</h2>
+        <p class="text-[12px]" style="color: var(--color-ink-3);">
           Record inbound goods from a purchase order or direct delivery.
         </p>
-      </a>
-      <a
-        href="/stock/issue"
-        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
-      >
-        <h2 class="font-semibold text-text-primary">Issue / Pick Stock</h2>
-        <p class="mt-1 text-sm text-text-muted">
+      </div>
+    </a>
+    <a href="/stock/issue" class="panel" style="text-decoration: none;">
+      <div class="panel-head">
+        <span class="panel-title">ISSUE</span>
+        <span class="micro" style="color: var(--color-crit);">OUT</span>
+      </div>
+      <div class="panel-body">
+        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Issue / pick stock</h2>
+        <p class="text-[12px]" style="color: var(--color-ink-3);">
           Remove stock from a location for an order or other outbound use.
         </p>
-      </a>
-      <a
-        href="/stock/transfer"
-        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
-      >
-        <h2 class="font-semibold text-text-primary">Transfer Stock</h2>
-        <p class="mt-1 text-sm text-text-muted">
+      </div>
+    </a>
+    <a href="/stock/transfer" class="panel" style="text-decoration: none;">
+      <div class="panel-head">
+        <span class="panel-title">TRANSFER</span>
+        <span class="micro" style="color: var(--color-info);">XFER</span>
+      </div>
+      <div class="panel-body">
+        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Transfer stock</h2>
+        <p class="text-[12px]" style="color: var(--color-ink-3);">
           Move stock between locations or warehouses within the system.
         </p>
-      </a>
-      <a
-        href="/stock/adjustments"
-        class="rounded-card border border-surface-border bg-surface p-5 shadow-card transition-shadow hover:shadow-md"
-      >
-        <h2 class="font-semibold text-text-primary">Stock Adjustments</h2>
-        <p class="mt-1 text-sm text-text-muted">
+      </div>
+    </a>
+    <a href="/stock/adjustments" class="panel" style="text-decoration: none;">
+      <div class="panel-head">
+        <span class="panel-title">ADJUST</span>
+        <span class="micro" style="color: var(--color-warn);">ADJ</span>
+      </div>
+      <div class="panel-body">
+        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Stock adjustments</h2>
+        <p class="text-[12px]" style="color: var(--color-ink-3);">
           Submit count corrections. Large discrepancies are sent for manager approval.
         </p>
-      </a>
-    </div>
+      </div>
+    </a>
   </div>
 </Layout>
