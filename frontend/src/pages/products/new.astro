@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProductCreatePage from '../../components/products/ProductCreatePage';
+---
+
+<Layout title="New product">
+  <ProductCreatePage client:only="react" />
+</Layout>
