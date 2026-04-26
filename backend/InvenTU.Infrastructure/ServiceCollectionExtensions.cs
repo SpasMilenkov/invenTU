@@ -1,10 +1,17 @@
 using System.Text;
-using InvenTU.Application.Validators;
 using FluentValidation;
+using InvenTU.Application.Alerts;
+using InvenTU.Application.Auth;
+using InvenTU.Application.Services;
+using InvenTU.Application.Suppliers;
+using InvenTU.Application.Validators;
+using InvenTU.Core.Contracts.Repositories;
+using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Auth;
 using InvenTU.Infrastructure.Data;
 using InvenTU.Infrastructure.DataSeeders;
+using InvenTU.Infrastructure.Repositories;
 using InvenTU.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -12,12 +19,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using InvenTU.Core.Contracts.Repositories;
-using InvenTU.Infrastructure.Repositories;
-using InvenTU.Core.Contracts.Services;
-using InvenTU.Application.Auth;
-using InvenTU.Application.Services;
-using InvenTU.Application.Alerts;
 
 namespace InvenTU.Infrastructure;
 
@@ -126,6 +127,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
 
         return services;
     }

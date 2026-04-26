@@ -8,6 +8,7 @@ using InvenTU.Application.Stock;
 using InvenTU.Application.Stock.Validators;
 using InvenTU.Application.StockLocations;
 using InvenTU.Application.StockLocations.Validators;
+using InvenTU.Application.Suppliers;
 using InvenTU.Application.Users;
 using InvenTU.Application.Warehouses;
 using InvenTU.Application.Warehouses.Validators;
@@ -56,6 +57,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
         services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
+
+        services.AddScoped<ISupplierService, SupplierService>();
 
         return services;
     }
