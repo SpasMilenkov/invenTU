@@ -48,7 +48,7 @@ public sealed class StockMovementLiveDto
 
     public DateTimeOffset OccurredAt { get; init; }
 
-    // ─── helpers ────────────────────────────────────────────────────────────
+    // helpers
 
     /// <summary>
     /// Builds a human-readable location code directly from the entity.

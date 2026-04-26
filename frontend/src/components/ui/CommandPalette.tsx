@@ -18,7 +18,7 @@ const COMMANDS: CommandGroup[] = [
   {
     group: 'Navigation',
     items: [
-      { id: 'go-dashboard', label: 'Go to Dashboard', glyph: 'grid', href: '/dashboard', meta: 'G D' },
+      { id: 'go-dashboard', label: 'Go to Dashboard', glyph: 'grid', href: '/', meta: 'G D' },
       { id: 'go-products', label: 'Go to Products', glyph: 'box', href: '/products', meta: 'G P' },
       { id: 'go-warehouses', label: 'Go to Warehouses', glyph: 'warehouse', href: '/warehouses', meta: 'G W' },
       { id: 'go-stock', label: 'Go to Stock Operations', glyph: 'scan', href: '/stock', meta: 'G S' },

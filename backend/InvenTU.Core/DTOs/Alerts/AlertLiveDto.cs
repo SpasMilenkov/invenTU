@@ -15,7 +15,7 @@ public sealed class AlertLiveDto
     public DateTimeOffset CreatedAt { get; init; }
     public DateTime? ResolvedAt { get; init; }
 
-    // ── NEW: stock context ───────────────────────────────────────────────
+    // NEW: stock context
     public Guid? ProductId { get; init; }
     public string? ProductName { get; init; }      // from Alert.Product.Name
     public string? SKU { get; init; }              // from Alert.Product.SKU

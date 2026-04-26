@@ -17,7 +17,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", glyph: "grid", group: "OPERATE" },
+  { label: "Dashboard", href: "/", glyph: "grid", group: "OPERATE" },
   { label: "Products", href: "/products", glyph: "box", group: "OPERATE" },
   {
     label: "Warehouses",
@@ -94,7 +94,7 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
 
   return (
     <>
-      <a href="/dashboard" className="brand">
+      <a href="/" className="brand">
         <span className="brand-mark" />
         <span className="brand-name">InvenTU</span>
         <span className="brand-tag">v0.1</span>
@@ -138,17 +138,9 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
       <div className="side-foot">
         <SystemStatus />
         {user && (
-<<<<<<< HEAD
           <a href="/profile" className="user-pill" title={`${user.firstName} ${user.lastName}`}>
             <div className="user-avatar">{getInitials(user.firstName, user.lastName)}</div>
             <div className="user-pill-text">
-=======
-          <a href="/profile" className="user-pill">
-            <div className="user-avatar">
-              {getInitials(user.firstName, user.lastName)}
-            </div>
-            <div className="flex flex-col leading-tight">
->>>>>>> 1563885 (feat: wire up the auth layout stats with the backend. Fix wrong redirect)
               <span className="user-name">
                 {user.firstName} {user.lastName}
               </span>
