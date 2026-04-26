@@ -39,7 +39,7 @@ public sealed class StockItemRepository(InvenTUDbContext dbContext) : IStockItem
     public async Task<StockSummaryDto?> GetSummaryByProductAsync(Guid productId, CancellationToken cancellationToken = default)
     {
         var product = await dbContext.Products
-            .Where(p => p.Id == productId && p.DeletedAt == null)
+            .Where(p => p.Id == productId)
             .Select(p => new { p.Id, p.Name, p.SKU })
             .FirstOrDefaultAsync(cancellationToken);
 
