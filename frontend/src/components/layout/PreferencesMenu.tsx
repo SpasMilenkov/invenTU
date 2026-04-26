@@ -76,6 +76,16 @@ export default function PreferencesMenu() {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [open]);
 
+  // Escape to close.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open]);
+
   function handleTheme(next: ThemeMode) {
     setThemeState(next);
     setTheme(next);

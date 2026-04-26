@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormField } from '../ui/FormField';
 import { DrawerShell } from '../ui/DrawerShell';
+import WarehouseStatsHeader from './WarehouseStatsHeader';
 import {
   applyBackendFieldErrors,
   buildFieldMap,
@@ -156,6 +157,7 @@ function EditWarehouseForm({ warehouse, onClose, onSuccess }: EditFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+      <WarehouseStatsHeader warehouse={warehouse} />
       <FormField label="Name" registration={register('name')} error={errors.name} />
       <FormField label="Location" registration={register('location')} error={errors.location} placeholder="Building A" />
       <FormField

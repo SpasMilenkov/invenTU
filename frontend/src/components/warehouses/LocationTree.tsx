@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Icon } from '../ui/Icon';
+import { Tag, type TagKind } from '../ui/Tag';
+import CapacityBar from './CapacityBar';
 import {
   useLocationsList,
   type StockLocationSummary,
@@ -12,14 +15,13 @@ interface Props {
   onDelete: (location: StockLocationSummary) => void;
 }
 
-interface TreeNode {
+interface ZoneGroup {
   key: string;
   label: string;
-  location?: StockLocationSummary;
-  children: TreeNode[];
+  locations: StockLocationSummary[];
+  totalItems: number;
+  totalMax: number;
 }
-
-const UNSPECIFIED_KEY = 'unspecified';
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -50,149 +52,131 @@ function sortLocations(items: readonly StockLocationSummary[]): StockLocationSum
   });
 }
 
-function capitalizeFirst(value: string): string {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
-function findOrCreateChild(parent: TreeNode, key: string, label: string): TreeNode {
-  const existing = parent.children.find((c) => c.key === key && !c.location);
-  if (existing) return existing;
-  const node: TreeNode = { key, label, children: [] };
-  parent.children.push(node);
-  return node;
-}
-
-function buildTree(items: readonly StockLocationSummary[]): TreeNode[] {
+function groupByZone(items: readonly StockLocationSummary[]): ZoneGroup[] {
   const sorted = sortLocations(items);
-  const roots: TreeNode[] = [];
-
+  const map = new Map<string, ZoneGroup>();
   for (const loc of sorted) {
-    const zoneLabel = `Zone ${capitalizeFirst(loc.zone)}`;
-    const zoneKey = `zone:${loc.zone.toLowerCase()}`;
-
-    let zoneNode = roots.find((n) => n.key === zoneKey && !n.location);
-    if (!zoneNode) {
-      zoneNode = { key: zoneKey, label: zoneLabel, children: [] };
-      roots.push(zoneNode);
+    const key = loc.zone.toLowerCase();
+    let g = map.get(key);
+    if (!g) {
+      g = {
+        key,
+        label: `Zone ${loc.zone.toUpperCase()}`,
+        locations: [],
+        totalItems: 0,
+        totalMax: 0,
+      };
+      map.set(key, g);
     }
-
-    if (loc.aisle === null && loc.shelf === null && loc.bin === null) {
-      zoneNode.children.push({
-        key: `leaf:${loc.id}`,
-        label: zoneLabel,
-        location: loc,
-        children: [],
-      });
-      continue;
-    }
-
-    const aisleLabel = loc.aisle ? `Aisle ${capitalizeFirst(loc.aisle)}` : 'Aisle —';
-    const aisleKey = `aisle:${(loc.aisle ?? UNSPECIFIED_KEY).toLowerCase()}`;
-    const aisleNode = findOrCreateChild(zoneNode, aisleKey, aisleLabel);
-
-    if (loc.shelf === null && loc.bin === null) {
-      aisleNode.children.push({
-        key: `leaf:${loc.id}`,
-        label: aisleLabel,
-        location: loc,
-        children: [],
-      });
-      continue;
-    }
-
-    const shelfLabel = loc.shelf ? `Shelf ${capitalizeFirst(loc.shelf)}` : 'Shelf —';
-    const shelfKey = `shelf:${(loc.shelf ?? UNSPECIFIED_KEY).toLowerCase()}`;
-    const shelfNode = findOrCreateChild(aisleNode, shelfKey, shelfLabel);
-
-    if (loc.bin === null) {
-      shelfNode.children.push({
-        key: `leaf:${loc.id}`,
-        label: shelfLabel,
-        location: loc,
-        children: [],
-      });
-      continue;
-    }
-
-    shelfNode.children.push({
-      key: `leaf:${loc.id}`,
-      label: `Bin ${capitalizeFirst(loc.bin)}`,
-      location: loc,
-      children: [],
-    });
+    g.locations.push(loc);
+    g.totalItems += loc.stockItemCount;
+    g.totalMax += loc.maxCapacity;
   }
-
-  return roots;
+  return [...map.values()];
 }
 
-interface TreeRowProps {
-  node: TreeNode;
-  depth: number;
+function statusForLocation(loc: StockLocationSummary): { kind: TagKind; label: string } {
+  if (loc.stockItemCount === 0) return { kind: 'neutral', label: 'EMPTY' };
+  if (!loc.maxCapacity) return { kind: 'ok', label: 'IN USE' };
+  const pct = (loc.stockItemCount / loc.maxCapacity) * 100;
+  if (pct >= 100) return { kind: 'crit', label: 'FULL' };
+  if (pct >= 75) return { kind: 'warn', label: 'NEAR FULL' };
+  return { kind: 'ok', label: 'IN USE' };
+}
+
+interface ZoneCardProps {
+  group: ZoneGroup;
   canManage: boolean;
   onEdit: (location: StockLocationSummary) => void;
   onDelete: (location: StockLocationSummary) => void;
 }
 
-function TreeRow({ node, depth, canManage, onEdit, onDelete }: TreeRowProps) {
-  const indentClass =
-    depth === 0 ? '' : depth === 1 ? 'pl-4' : depth === 2 ? 'pl-8' : depth === 3 ? 'pl-12' : 'pl-16';
-  const loc = node.location;
-
+function ZoneCard({ group, canManage, onEdit, onDelete }: ZoneCardProps) {
   return (
-    <li>
-      <div
-        className={`flex flex-wrap items-center gap-3 px-2 py-1.5 text-[12.5px] hover:bg-[color:var(--color-bg-elev)] ${indentClass}`}
-      >
-        <span className="strong">{node.label}</span>
-        {loc && (
-          <>
-            <span className="sku">{loc.fullLocationCode}</span>
-            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>
-              CAP {loc.maxCapacity}
-            </span>
-            <span className="font-mono text-[10.5px] uppercase tracking-wider" style={{ color: 'var(--color-ink-3)' }}>
-              ITEMS {loc.stockItemCount}
-            </span>
-            {canManage && (
-              <span className="ml-auto flex items-center gap-1">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => onEdit(loc)}
-                >
-                  Edit
-                </button>
-                {loc.stockItemCount === 0 && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--color-crit)' }}
-                    onClick={() => onDelete(loc)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </span>
-            )}
-          </>
-        )}
+    <div className="panel" style={{ overflow: 'hidden' }}>
+      <div className="panel-head">
+        <div className="panel-title flex items-center gap-2">
+          <Icon name="layers" size={14} />
+          <span>{group.label}</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <span
+            className="font-mono uppercase tracking-wider"
+            style={{ fontSize: 10.5, color: 'var(--color-ink-3)' }}
+          >
+            LOCATIONS {group.locations.length}
+          </span>
+          <span
+            className="font-mono uppercase tracking-wider"
+            style={{ fontSize: 10.5, color: 'var(--color-ink-3)' }}
+          >
+            ITEMS {group.totalItems.toLocaleString()}
+          </span>
+          <div style={{ minWidth: 160 }}>
+            <CapacityBar used={group.totalItems} max={group.totalMax || null} />
+          </div>
+        </div>
       </div>
-      {node.children.length > 0 && (
-        <ul className="mt-1 flex flex-col gap-1">
-          {node.children.map((child) => (
-            <TreeRow
-              key={child.key}
-              node={child}
-              depth={depth + 1}
-              canManage={canManage}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </ul>
-      )}
-    </li>
+      <div style={{ overflowX: 'auto' }}>
+        <table className="tbl">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Aisle</th>
+              <th>Shelf</th>
+              <th>Bin</th>
+              <th>Capacity</th>
+              <th className="num">Items</th>
+              <th>Status</th>
+              {canManage && <th style={{ textAlign: 'right' }}>Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {group.locations.map((loc) => {
+              const status = statusForLocation(loc);
+              return (
+                <tr key={loc.id}>
+                  <td className="sku">{loc.fullLocationCode}</td>
+                  <td>{loc.aisle ?? '—'}</td>
+                  <td>{loc.shelf ?? '—'}</td>
+                  <td>{loc.bin ?? '—'}</td>
+                  <td>
+                    <CapacityBar used={loc.stockItemCount} max={loc.maxCapacity} />
+                  </td>
+                  <td className="num">{loc.stockItemCount.toLocaleString()}</td>
+                  <td>
+                    <Tag kind={status.kind}>{status.label}</Tag>
+                  </td>
+                  {canManage && (
+                    <td style={{ textAlign: 'right' }}>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => onEdit(loc)}
+                        >
+                          Edit
+                        </button>
+                        {loc.stockItemCount === 0 && (
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: 'var(--color-crit)' }}
+                            onClick={() => onDelete(loc)}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
@@ -211,24 +195,30 @@ export default function LocationTree({
     enabled: true,
   });
 
-  const tree = useMemo(() => (data ? buildTree(data) : []), [data]);
+  const groups = useMemo(() => (data ? groupByZone(data) : []), [data]);
   const hasFilter = zoneInput.trim().length > 0;
 
   return (
-    <div className="flex flex-col gap-3 p-3" style={{ background: 'var(--color-paper)', border: '1px solid var(--color-rule)' }}>
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="text"
-          value={zoneInput}
-          onChange={(e) => setZoneInput(e.target.value)}
-          placeholder="Filter by zone…"
-          className="input max-w-xs"
-          aria-label="Filter locations by zone"
-        />
+    <div className="flex flex-col gap-3">
+      <div
+        className="toolbar"
+        style={{ border: '1px solid var(--color-rule)', borderRadius: 2 }}
+      >
+        <div className="search">
+          <Icon name="search" size={14} style={{ color: 'var(--color-ink-3)' }} />
+          <input
+            type="text"
+            value={zoneInput}
+            onChange={(e) => setZoneInput(e.target.value)}
+            placeholder="Filter by zone…"
+            aria-label="Filter locations by zone"
+          />
+        </div>
         {canManage && (
           <button
             type="button"
-            className="btn btn-primary ml-auto"
+            className="btn btn-primary btn-sm"
+            style={{ marginLeft: 'auto' }}
             onClick={onAdd}
           >
             + Add location
@@ -248,37 +238,37 @@ export default function LocationTree({
           </button>
         </div>
       ) : isLoading && !data ? (
-        <ul className="flex flex-col gap-2">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <li key={`skeleton-${i}`} className="px-2 py-1.5">
+        <div className="panel">
+          <div className="panel-body flex flex-col gap-2">
+            {Array.from({ length: 3 }).map((_, i) => (
               <div
+                key={`s-${i}`}
                 className="h-3 w-64 animate-pulse"
                 style={{ background: 'var(--color-bg-sunk)' }}
               />
-            </li>
-          ))}
-        </ul>
-      ) : tree.length === 0 ? (
-        <p className="px-2 py-6 text-center text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
-          {hasFilter
-            ? 'No locations match this filter.'
-            : canManage
-              ? 'No locations yet — add the first one.'
-              : 'No locations yet.'}
-        </p>
+            ))}
+          </div>
+        </div>
+      ) : groups.length === 0 ? (
+        <div className="info-card">
+          <p>
+            {hasFilter
+              ? 'No locations match this filter.'
+              : canManage
+                ? 'No locations yet — add the first one.'
+                : 'No locations yet.'}
+          </p>
+        </div>
       ) : (
-        <ul className="flex flex-col gap-1">
-          {tree.map((node) => (
-            <TreeRow
-              key={node.key}
-              node={node}
-              depth={0}
-              canManage={canManage}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
-        </ul>
+        groups.map((g) => (
+          <ZoneCard
+            key={g.key}
+            group={g}
+            canManage={canManage}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))
       )}
     </div>
   );
