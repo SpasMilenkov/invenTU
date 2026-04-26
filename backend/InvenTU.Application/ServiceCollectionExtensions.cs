@@ -51,6 +51,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IStockAdjustmentService, StockAdjustmentService>();
         services.AddScoped<IValidator<AdjustStockRequest>, AdjustStockRequestValidator>();
+        services.AddScoped<IStockMovementService, StockMovementService>();
 
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();

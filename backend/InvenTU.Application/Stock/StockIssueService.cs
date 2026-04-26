@@ -8,6 +8,12 @@ using CoreValidationException = InvenTU.Core.Exceptions.ValidationException;
 
 namespace InvenTU.Application.Stock;
 
+/// <summary>
+/// Application service that orchestrates a stock issue operation:
+/// validates the request, verifies warehouse and location state, resolves
+/// the current user, and delegates the transactional write to
+/// <see cref="IStockIssueRepository"/>.
+/// </summary>
 public sealed class StockIssueService(
     IWarehouseRepository warehouseRepository,
     IStockLocationRepository stockLocationRepository,
@@ -15,6 +21,32 @@ public sealed class StockIssueService(
     ICurrentUserService currentUserService,
     IValidator<IssueStockRequest> validator) : IStockIssueService
 {
+    /// <summary>
+    /// Validates <paramref name="request"/>, confirms the target warehouse and
+    /// location are active and valid, then deducts the requested quantity from
+    /// available stock and writes a <c>StockMovement</c> audit record.
+    /// </summary>
+    /// <param name="request">The issue request submitted by the caller.</param>
+    /// <param name="cancellationToken">Token used to propagate cancellation.</param>
+    /// <returns>
+    /// A <see cref="StockIssueDto"/> confirming the movement identifier,
+    /// updated stock level, and echoed request metadata.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="request"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="CoreValidationException">
+    /// Thrown when <paramref name="request"/> fails FluentValidation rules.
+    /// </exception>
+    /// <exception cref="WarehouseNotFoundException">
+    /// Thrown when the specified warehouse does not exist.
+    /// </exception>
+    /// <exception cref="WarehouseNotActiveException">
+    /// Thrown when the specified warehouse is inactive.
+    /// </exception>
+    /// <exception cref="StockLocationInvalidException">
+    /// Thrown when the stock location does not exist or does not belong to the warehouse.
+    /// </exception>
     public async Task<StockIssueDto> IssueAsync(IssueStockRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -52,6 +84,7 @@ public sealed class StockIssueService(
             request.Quantity,
             currentUser.UserId,
             request.ReasonCode,
+            request.ReferenceNumber,
             request.Notes,
             cancellationToken);
 
@@ -66,6 +99,7 @@ public sealed class StockIssueService(
             Quantity = request.Quantity,
             UpdatedStockLevel = updatedStockLevel,
             ReasonCode = request.ReasonCode,
+            ReferenceNumber = request.ReferenceNumber,
             Notes = request.Notes,
             CreatedAt = DateTime.UtcNow,
         };

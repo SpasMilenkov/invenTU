@@ -9,4 +9,6 @@ public sealed class TransferStockRequest
     public Guid ProductId { get; init; }
     public decimal Quantity { get; init; }
     public string? Notes { get; init; }
+    public string? ReferenceNumber { get; init; }
+    public string? ReasonCode { get; init; }
 }

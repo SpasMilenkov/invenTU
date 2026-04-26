@@ -10,7 +10,7 @@ internal static class CategorySeeder
     // satisfied within the same SaveChanges call if neither row exists yet.
     private static readonly IReadOnlyList<Category> Seed =
     [
-        // ── Root categories ───────────────────────────────────────────────────
+        // Root categories
         new Category
         {
             Id               = SeedIds.CatElectronics,
@@ -26,7 +26,7 @@ internal static class CategorySeeder
             ParentCategoryId = null,
         },
 
-        // ── Electronics sub-categories ────────────────────────────────────────
+        // Electronics sub-categories
         new Category
         {
             Id               = SeedIds.CatPhones,
@@ -42,7 +42,7 @@ internal static class CategorySeeder
             ParentCategoryId = SeedIds.CatElectronics,
         },
 
-        // ── Office Supplies sub-categories ────────────────────────────────────
+        // Office Supplies sub-categories
         new Category
         {
             Id               = SeedIds.CatPaperStationery,

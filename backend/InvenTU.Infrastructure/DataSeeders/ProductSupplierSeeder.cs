@@ -8,7 +8,7 @@ internal static class ProductSupplierSeeder
 {
     private static readonly IReadOnlyList<ProductSupplier> Seed =
     [
-        // ── PHN-001: Smartphone X12 ───────────────────────────────────────────
+        // PHN-001: Smartphone X12
         new ProductSupplier
         {
             ProductId    = SeedIds.ProductPhone1,
@@ -28,7 +28,7 @@ internal static class ProductSupplierSeeder
             LeadTimeDays = 14,
         },
 
-        // ── PHN-002: Smartphone X13 Pro ───────────────────────────────────────
+        // PHN-002: Smartphone X13 Pro
         new ProductSupplier
         {
             ProductId    = SeedIds.ProductPhone2,
@@ -39,7 +39,7 @@ internal static class ProductSupplierSeeder
             LeadTimeDays = 7,
         },
 
-        // ── LPT-001: Laptop UltraBook 14 ─────────────────────────────────────
+        // LPT-001: Laptop UltraBook 14
         new ProductSupplier
         {
             ProductId    = SeedIds.ProductLaptop1,
@@ -59,7 +59,7 @@ internal static class ProductSupplierSeeder
             LeadTimeDays = 21,
         },
 
-        // ── LPT-002: Laptop WorkStation 15 ───────────────────────────────────
+        // LPT-002: Laptop WorkStation 15
         new ProductSupplier
         {
             ProductId    = SeedIds.ProductLaptop2,
@@ -70,7 +70,7 @@ internal static class ProductSupplierSeeder
             LeadTimeDays = 10,
         },
 
-        // ── OFF-001: A4 Paper Ream ────────────────────────────────────────────
+        // OFF-001: A4 Paper Ream
         new ProductSupplier
         {
             ProductId    = SeedIds.ProductPaper1,
@@ -81,7 +81,7 @@ internal static class ProductSupplierSeeder
             LeadTimeDays = 3,
         },
 
-        // ── OFF-002: Lever Arch File ──────────────────────────────────────────
+        // OFF-002: Lever Arch File
         new ProductSupplier
         {
             ProductId    = SeedIds.ProductFile1,

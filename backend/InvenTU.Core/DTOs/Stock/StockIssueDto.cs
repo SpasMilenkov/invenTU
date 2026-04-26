@@ -13,4 +13,5 @@ public sealed class StockIssueDto
     public string ReasonCode { get; init; } = string.Empty;
     public string? Notes { get; init; }
     public DateTime CreatedAt { get; init; }
+    public string? ReferenceNumber { get; init; }
 }

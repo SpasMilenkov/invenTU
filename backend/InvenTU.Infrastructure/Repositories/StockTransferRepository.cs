@@ -6,9 +6,16 @@ using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvenTU.Infrastructure.Repositories;
-
+/// <summary>
+/// EF Core implementation of <see cref="IStockTransferRepository"/>.
+/// Executes the transfer operation — deducting from the source, crediting the
+/// destination, and writing the audit record — inside a single database
+/// transaction with optimistic-concurrency protection on both
+/// <c>StockItem</c> rows.
+/// </summary>
 public sealed class StockTransferRepository(InvenTUDbContext dbContext) : IStockTransferRepository
 {
+    /// <inheritdoc/>
     public async Task<Guid> ExecuteAsync(
         Guid productId,
         Guid sourceLocationId,
@@ -17,6 +24,8 @@ public sealed class StockTransferRepository(InvenTUDbContext dbContext) : IStock
         Guid destinationWarehouseId,
         decimal quantity,
         Guid userId,
+        string? reasonCode,
+        string? referenceNumber,
         string? notes,
         CancellationToken cancellationToken = default)
     {
@@ -67,6 +76,8 @@ public sealed class StockTransferRepository(InvenTUDbContext dbContext) : IStock
             Status = MovementStatus.Active,
             CreatedAt = DateTime.UtcNow,
             UserId = userId,
+            ReasonCode = reasonCode,
+            ReferenceNumber = referenceNumber,
             Notes = notes,
         };
         dbContext.StockMovements.Add(movement);

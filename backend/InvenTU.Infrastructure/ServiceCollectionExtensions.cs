@@ -125,6 +125,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<IStockMovementRepository, StockMovementRepository>();
 
         return services;
     }
