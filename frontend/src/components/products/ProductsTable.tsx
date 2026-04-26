@@ -157,13 +157,13 @@ export default function ProductsTable({
                   onClick={handleClick}
                   onKeyDown={(e) => rowKeyHandler(e, handleClick)}
                   className="cursor-pointer"
-                  style={{ opacity: p.isActive ? 1 : 0.6 }}
+                  style={{ opacity: p.deletedAt ? 0.6 : 1 }}
                 >
                   <td className="sku">{p.sku}</td>
                   <td className="strong">
                     <div className="flex items-center gap-2">
                       <span>{p.name}</span>
-                      {!p.isActive && <Tag kind="neutral">ARCHIVED</Tag>}
+                      {p.deletedAt && <Tag kind="neutral">ARCHIVED</Tag>}
                     </div>
                     {p.barcode && (
                       <div
