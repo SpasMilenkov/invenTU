@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { CategoryDto } from '../../lib/schemas/categories';
 import { Icon } from '../ui/Icon';
 
@@ -5,6 +6,7 @@ interface Props {
   node: CategoryDto;
   depth: number;
   expanded: Set<string>;
+  filterText: string;
   onToggle: (id: string) => void;
   onAddChild: (parentId: string | null) => void;
   onEdit: (category: CategoryDto) => void;
@@ -12,11 +14,37 @@ interface Props {
 }
 
 const CHEVRON_BOX = 18;
+const INDENT_PX = 18;
+const ROW_LEFT_PAD = 12;
+
+function highlight(text: string, filter: string): ReactNode {
+  if (!filter) return text;
+  const lower = text.toLowerCase();
+  const needle = filter.toLowerCase();
+  const idx = lower.indexOf(needle);
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark
+        style={{
+          background: 'var(--color-accent-tint)',
+          color: 'var(--color-ink)',
+          padding: '0 1px',
+        }}
+      >
+        {text.slice(idx, idx + needle.length)}
+      </mark>
+      {text.slice(idx + needle.length)}
+    </>
+  );
+}
 
 export default function CategoryTreeNode({
   node,
   depth,
   expanded,
+  filterText,
   onToggle,
   onAddChild,
   onEdit,
@@ -25,13 +53,16 @@ export default function CategoryTreeNode({
   const hasChildren = node.subCategories.length > 0;
   const isExpanded = expanded.has(node.id);
   const childCount = node.subCategories.length;
+  const isRoot = depth === 0;
 
   return (
     <div className="flex flex-col">
       <div
-        className="group flex items-center gap-2 py-1.5 pr-2 rounded"
+        className="group flex items-center gap-2 py-2 pr-3 transition-colors hover:bg-[var(--color-shell-hover)]"
         style={{
-          paddingLeft: 8 + depth * 16,
+          paddingLeft: ROW_LEFT_PAD + depth * INDENT_PX,
+          minHeight: 36,
+          boxShadow: isRoot ? 'inset 2px 0 0 var(--color-accent)' : undefined,
         }}
       >
         {hasChildren ? (
@@ -48,6 +79,7 @@ export default function CategoryTreeNode({
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
+              flexShrink: 0,
             }}
           >
             <Icon name={isExpanded ? 'chev_down' : 'chev'} size={12} />
@@ -56,19 +88,48 @@ export default function CategoryTreeNode({
           <span
             aria-hidden="true"
             className="inline-block"
-            style={{ width: CHEVRON_BOX, height: CHEVRON_BOX }}
+            style={{ width: CHEVRON_BOX, height: CHEVRON_BOX, flexShrink: 0 }}
           />
         )}
 
-        <span style={{ color: 'var(--color-ink)', fontSize: 13.5 }}>{node.name}</span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span
+            style={{
+              color: 'var(--color-ink)',
+              fontSize: 13.5,
+              fontWeight: isRoot ? 600 : 500,
+            }}
+          >
+            {highlight(node.name, filterText)}
+          </span>
+          {node.description && (
+            <span
+              className="line-clamp-1"
+              style={{
+                color: 'var(--color-ink-3)',
+                fontSize: 12,
+                marginTop: 1,
+              }}
+            >
+              {highlight(node.description, filterText)}
+            </span>
+          )}
+        </div>
 
         {hasChildren && (
-          <span className="tag tag-neutral" aria-label={`${childCount} subcategories`}>
-            {`{${childCount}}`}
+          <span
+            className="tag tag-neutral"
+            aria-label={`${childCount} subcategories`}
+            style={{ flexShrink: 0 }}
+          >
+            {childCount}
           </span>
         )}
 
-        <div className="ml-auto flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <div
+          className="ml-1 flex items-center gap-1 opacity-[0.35] transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+          style={{ flexShrink: 0 }}
+        >
           <button
             type="button"
             className="icon-btn"
@@ -107,6 +168,7 @@ export default function CategoryTreeNode({
               node={child}
               depth={depth + 1}
               expanded={expanded}
+              filterText={filterText}
               onToggle={onToggle}
               onAddChild={onAddChild}
               onEdit={onEdit}
