@@ -25,6 +25,7 @@ function toListRequestParams(params: ProductQueryParams) {
   if (params.search && params.search.length > 0) req.search = params.search;
   if (params.categoryId) req.categoryId = params.categoryId;
   if (params.isActive !== undefined) req.isActive = params.isActive;
+  if (params.archive) req.archive = params.archive;
   return req;
 }
 
@@ -111,6 +112,18 @@ export function useArchiveProduct() {
   return useMutation<void, unknown, string>({
     mutationFn: async (id) => {
       await apiClient.patch(`/products/${id}/archive`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+  });
+}
+
+export function useRestoreProduct() {
+  const queryClient = useQueryClient();
+  return useMutation<void, unknown, string>({
+    mutationFn: async (id) => {
+      await apiClient.patch(`/products/${id}/restore`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });

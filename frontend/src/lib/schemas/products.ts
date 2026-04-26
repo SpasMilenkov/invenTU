@@ -26,8 +26,8 @@ const baseObject = z.object({
 const stockRefine = (data: { minStockLevel: number; maxStockLevel?: number | null }) =>
   data.maxStockLevel == null || data.maxStockLevel >= data.minStockLevel;
 
-const reorderRefine = (data: { reorderPoint: number; maxStockLevel?: number | null }) =>
-  data.maxStockLevel == null || data.reorderPoint <= data.maxStockLevel;
+const reorderRefine = (data: { reorderPoint: number; minStockLevel: number }) =>
+  data.reorderPoint <= data.minStockLevel;
 
 export const createProductSchema = baseObject
   .extend({
@@ -38,13 +38,13 @@ export const createProductSchema = baseObject
       .regex(SKU_PATTERN, 'Only letters, numbers, -, _, .'),
   })
   .refine(stockRefine, { message: 'Max stock must be ≥ min stock', path: ['maxStockLevel'] })
-  .refine(reorderRefine, { message: 'Reorder point must be ≤ max stock', path: ['reorderPoint'] });
+  .refine(reorderRefine, { message: 'Reorder point must be ≤ min stock', path: ['reorderPoint'] });
 
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 
 export const updateProductSchema = baseObject
   .refine(stockRefine, { message: 'Max stock must be ≥ min stock', path: ['maxStockLevel'] })
-  .refine(reorderRefine, { message: 'Reorder point must be ≤ max stock', path: ['reorderPoint'] });
+  .refine(reorderRefine, { message: 'Reorder point must be ≤ min stock', path: ['reorderPoint'] });
 
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 

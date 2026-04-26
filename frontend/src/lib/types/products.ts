@@ -30,10 +30,13 @@ export interface PagedResult<T> {
   hasPreviousPage: boolean;
 }
 
+export type ArchiveStatusFilter = 'Active' | 'Archived' | 'All';
+
 export interface ProductQueryParams {
   search?: string;
   categoryId?: string;
   isActive?: boolean;
+  archive?: ArchiveStatusFilter;
   page: number;
   pageSize: number;
 }

@@ -12,7 +12,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
 {
     public Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Products
-            .Where(p => p.Id == id && p.DeletedAt == null)
+            .Where(p => p.Id == id)
             .Select(ProductProjections.ToDto)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -64,6 +64,18 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
                 cancellationToken);
     }
 
+    public async Task<bool> RestoreAsync(Guid id, DateTime updatedAt, CancellationToken cancellationToken = default)
+    {
+        var affected = await dbContext.Products
+            .Where(p => p.Id == id && p.DeletedAt != null)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(p => p.DeletedAt, (DateTime?)null)
+                    .SetProperty(p => p.UpdatedAt, updatedAt),
+                cancellationToken);
+        return affected > 0;
+    }
+
     public Task<PagedResult<ProductDto>> GetPagedAsync(
         ProductQueryParams query,
         CancellationToken cancellationToken = default)
@@ -104,8 +116,13 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
         ProductQueryParams query,
         CancellationToken cancellationToken)
     {
-        var q = dbContext.Products
-            .Where(p => p.DeletedAt == null);
+        var q = query.Archive switch
+        {
+            ArchiveStatusFilter.Active   => dbContext.Products.Where(p => p.DeletedAt == null),
+            ArchiveStatusFilter.Archived => dbContext.Products.Where(p => p.DeletedAt != null),
+            ArchiveStatusFilter.All      => dbContext.Products.AsQueryable(),
+            _                            => dbContext.Products.Where(p => p.DeletedAt == null),
+        };
 
         if (query.CategoryId.HasValue)
         {
@@ -188,12 +205,17 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
         var hasCategoryFilter = categoryIdsParam is { Length: > 0 };
 
         var isActiveParam = (object?)query.IsActive ?? DBNull.Value;
+        var archiveMode = (int)query.Archive;
 
         var totalCount = await dbContext.Database
             .SqlQuery<int>($"""
                 SELECT COUNT(*)::int AS "Value"
                 FROM   "Products" p
-                WHERE  p."DeletedAt" IS NULL
+                WHERE  (
+                           ({archiveMode} = 0 AND p."DeletedAt" IS NULL)
+                        OR ({archiveMode} = 1 AND p."DeletedAt" IS NOT NULL)
+                        OR ({archiveMode} = 2)
+                       )
                   AND  (
                            p."SKU"     ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                         OR p."Name"    ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
@@ -245,7 +267,11 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
                     END             AS "MatchPriority"
                 FROM  "Products"   p
                 INNER JOIN "Categories" c ON c."Id" = p."CategoryId"
-                WHERE p."DeletedAt" IS NULL
+                WHERE (
+                          ({archiveMode} = 0 AND p."DeletedAt" IS NULL)
+                       OR ({archiveMode} = 1 AND p."DeletedAt" IS NOT NULL)
+                       OR ({archiveMode} = 2)
+                      )
                   AND (
                           p."SKU"     ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'
                        OR p."Name"    ILIKE '%' || {escapedTerm} || '%' ESCAPE '\'

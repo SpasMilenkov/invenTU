@@ -5,6 +5,7 @@ import UserMenu from '../components/layout/UserMenu';
 import PreferencesMenu from '../components/layout/PreferencesMenu';
 import RouteGuard from '../components/auth/RouteGuard';
 import CommandPaletteController from '../components/ui/CommandPalette';
+import AppToaster from '../components/ui/AppToaster';
 
 interface Props {
   title: string;
@@ -178,6 +179,9 @@ const crumbLabel = (crumb ?? deriveCrumb(currentPath)).toUpperCase();
 
     <!-- Command palette mounts globally -->
     <CommandPaletteController client:only="react" />
+
+    <!-- Toast notifications mount globally -->
+    <AppToaster client:only="react" />
 
     <script>
       const html = document.documentElement;

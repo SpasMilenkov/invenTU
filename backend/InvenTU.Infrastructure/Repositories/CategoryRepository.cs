@@ -63,8 +63,8 @@ public sealed class CategoryRepository(InvenTUDbContext dbContext) : ICategoryRe
 
     public async Task<bool> ProductsExistForCategoryAsync(Guid categoryId, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Products.AnyAsync(p => p.CategoryId == categoryId
-                                                    && p.IsActive
-                                                    && p.DeletedAt != null);
+        return await _dbContext.Products.AnyAsync(
+            p => p.CategoryId == categoryId && p.DeletedAt == null,
+            cancellationToken);
     }
 }

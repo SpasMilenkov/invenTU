@@ -6,17 +6,19 @@ import {
   useProductsList,
   useProductStockSummaries,
 } from '../../lib/hooks/useProducts';
-import type { ProductQueryParams, StockSummary } from '../../lib/types/products';
+import { useCurrentUser } from '../../lib/auth/useCurrentUser';
+import type { ArchiveStatusFilter, ProductQueryParams, StockSummary } from '../../lib/types/products';
 import ProductsFilterBar from './ProductsFilterBar';
 import ProductsTable from './ProductsTable';
 import { PageHeader } from '../ui/PageHeader';
 
 const DEFAULT_PAGE_SIZE = 20;
+const CAN_MANAGE_ROLES = ['Admin', 'Manager'];
 
 type UrlState = {
   search: string;
   categoryId: string;
-  isActive: string;
+  archive: ArchiveStatusFilter;
   page: number;
   pageSize: number;
 };
@@ -24,25 +26,20 @@ type UrlState = {
 const DEFAULTS: UrlState = {
   search: '',
   categoryId: '',
-  isActive: 'true',
+  archive: 'Active',
   page: 1,
   pageSize: DEFAULT_PAGE_SIZE,
 };
 
-function parseIsActive(raw: string): boolean | undefined {
-  if (raw === 'true') return true;
-  if (raw === 'false') return false;
-  return undefined;
-}
-
-function stringifyIsActive(value: boolean | undefined): string {
-  if (value === true) return 'true';
-  if (value === false) return 'false';
-  return 'all';
+function parseArchive(raw: string): ArchiveStatusFilter {
+  if (raw === 'Archived' || raw === 'All') return raw;
+  return 'Active';
 }
 
 function ProductsPageInner() {
   const [urlState, setUrlState] = useUrlSearchParams<UrlState>(DEFAULTS);
+  const { data: me } = useCurrentUser();
+  const canManage = me?.roles?.some((r) => CAN_MANAGE_ROLES.includes(r)) ?? false;
 
   // Local search state for responsive typing, debounced into URL/query.
   const [searchInput, setSearchInput] = useState(urlState.search);
@@ -59,7 +56,7 @@ function ProductsPageInner() {
     () => ({
       search: urlState.search || undefined,
       categoryId: urlState.categoryId || undefined,
-      isActive: parseIsActive(urlState.isActive),
+      archive: parseArchive(urlState.archive),
       page: urlState.page,
       pageSize: urlState.pageSize,
     }),
@@ -89,7 +86,7 @@ function ProductsPageInner() {
   const hasActiveFilters =
     urlState.search !== DEFAULTS.search ||
     urlState.categoryId !== DEFAULTS.categoryId ||
-    urlState.isActive !== DEFAULTS.isActive ||
+    urlState.archive !== DEFAULTS.archive ||
     urlState.page !== DEFAULTS.page;
 
   function clearFilters() {
@@ -98,7 +95,7 @@ function ProductsPageInner() {
       {
         search: '',
         categoryId: '',
-        isActive: DEFAULTS.isActive,
+        archive: DEFAULTS.archive,
         page: 1,
         pageSize: DEFAULTS.pageSize,
       },
@@ -111,8 +108,8 @@ function ProductsPageInner() {
     setUrlState({ page: nextPage }, { historyMode: 'push' });
   }
 
-  function changeIsActive(value: boolean | undefined) {
-    setUrlState({ isActive: stringifyIsActive(value), page: 1 }, { historyMode: 'push' });
+  function changeArchive(value: ArchiveStatusFilter) {
+    setUrlState({ archive: value, page: 1 }, { historyMode: 'push' });
   }
 
   function changeCategory(id: string | null) {
@@ -129,6 +126,13 @@ function ProductsPageInner() {
         sub="OPERATE / PRODUCTS"
         title="Products"
         description="Browse the catalogue, filter by status, and open a product to see stock-on-hand and act on it."
+        actions={
+          canManage ? (
+            <a className="btn btn-primary" href="/products/new">
+              New product
+            </a>
+          ) : null
+        }
       />
 
       <ProductsFilterBar
@@ -136,8 +140,8 @@ function ProductsPageInner() {
         onSearchChange={setSearchInput}
         categoryId={urlState.categoryId || null}
         onCategoryChange={changeCategory}
-        isActiveFilter={parseIsActive(urlState.isActive)}
-        onIsActiveChange={changeIsActive}
+        archive={parseArchive(urlState.archive)}
+        onArchiveChange={changeArchive}
         onClear={clearFilters}
         hasActiveFilters={hasActiveFilters}
       />
