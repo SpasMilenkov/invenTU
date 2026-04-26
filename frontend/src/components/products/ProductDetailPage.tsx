@@ -1,10 +1,12 @@
 import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
 import QueryProvider from '../providers/QueryProvider';
 import { useCurrentUser } from '../../lib/auth/useCurrentUser';
 import { extractAuthErrorMessage } from '../../lib/auth/errors';
 import {
   useArchiveProduct,
   useProduct,
+  useRestoreProduct,
   useStockSummary,
 } from '../../lib/hooks/useProducts';
 import { useWarehousesList } from '../../lib/hooks/useWarehouses';
@@ -151,11 +153,14 @@ function ProductDetailInner({ productId }: { productId: string }) {
 
   const { data: product, isLoading, isError, refetch } = useProduct(productId);
   const archive = useArchiveProduct();
+  const restore = useRestoreProduct();
   const warehouses = useWarehousesList({ page: 1, pageSize: 200, status: 'All' });
 
   const [editOpen, setEditOpen] = useState(false);
   const [archivingOpen, setArchivingOpen] = useState(false);
   const [archiveError, setArchiveError] = useState<string | undefined>(undefined);
+  const [restoringOpen, setRestoringOpen] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | undefined>(undefined);
 
   const closeEdit = useCallback(() => setEditOpen(false), []);
 
@@ -168,6 +173,19 @@ function ProductDetailInner({ productId }: { productId: string }) {
       window.location.assign('/products');
     } catch (err) {
       setArchiveError(extractAuthErrorMessage(err));
+    }
+  }
+
+  async function confirmRestore() {
+    if (!product) return;
+    setRestoreError(undefined);
+    try {
+      await restore.mutateAsync(product.id);
+      setRestoringOpen(false);
+      toast.success('Product restored');
+      await refetch();
+    } catch (err) {
+      setRestoreError(extractAuthErrorMessage(err));
     }
   }
 
@@ -189,6 +207,8 @@ function ProductDetailInner({ productId }: { productId: string }) {
     );
   }
 
+  const isArchived = product.deletedAt !== null;
+
   return (
     <div className="flex w-full flex-col gap-5">
       <div>
@@ -202,7 +222,7 @@ function ProductDetailInner({ productId }: { productId: string }) {
         title={
           <>
             {product.name}
-            {!product.isActive && (
+            {isArchived && (
               <Tag kind="neutral" className="ml-3">
                 ARCHIVED
               </Tag>
@@ -217,27 +237,40 @@ function ProductDetailInner({ productId }: { productId: string }) {
           </>
         }
         actions={
-          canManage && product.isActive ? (
-            <>
+          canManage ? (
+            isArchived ? (
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => setEditOpen(true)}
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                style={{ color: 'var(--color-crit)' }}
                 onClick={() => {
-                  setArchiveError(undefined);
-                  setArchivingOpen(true);
+                  setRestoreError(undefined);
+                  setRestoringOpen(true);
                 }}
               >
-                Archive
+                Restore
               </button>
-            </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setEditOpen(true)}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ color: 'var(--color-crit)' }}
+                  onClick={() => {
+                    setArchiveError(undefined);
+                    setArchivingOpen(true);
+                  }}
+                >
+                  Archive
+                </button>
+              </>
+            )
           ) : null
         }
       />
@@ -308,6 +341,26 @@ function ProductDetailInner({ productId }: { productId: string }) {
           onConfirm={confirmArchive}
           onClose={() => {
             if (!archive.isPending) setArchivingOpen(false);
+          }}
+        />
+      )}
+
+      {restoringOpen && (
+        <ConfirmModal
+          title={`Restore ${product.name}?`}
+          body={
+            <>
+              The product will be visible again in normal product views and editable.
+            </>
+          }
+          confirmLabel="Restore"
+          pendingLabel="Restoring…"
+          isPending={restore.isPending}
+          errorMessage={restoreError}
+          variant="primary"
+          onConfirm={confirmRestore}
+          onClose={() => {
+            if (!restore.isPending) setRestoringOpen(false);
           }}
         />
       )}
