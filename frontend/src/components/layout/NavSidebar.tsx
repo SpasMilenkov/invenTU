@@ -15,6 +15,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',     href: '/dashboard',  glyph: 'grid',      group: 'OPERATE' },
   { label: 'Products',      href: '/products',   glyph: 'box',       group: 'OPERATE' },
+  { label: 'Categories',    href: '/categories', glyph: 'layers',    group: 'OPERATE' },
   { label: 'Warehouses',    href: '/warehouses', glyph: 'warehouse', group: 'OPERATE' },
   { label: 'Stock Ops',     href: '/stock',      glyph: 'scan',      group: 'OPERATE' },
   { label: 'Suppliers',     href: '/suppliers',  glyph: 'truck',     group: 'PROCURE' },

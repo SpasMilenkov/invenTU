@@ -1,5 +1,6 @@
 export const ROUTE_ROLES: Record<string, readonly string[]> = {
   '/users': ['Admin', 'Manager'],
+  '/categories': ['Admin', 'Manager'],
 };
 
 export function getRequiredRoles(pathname: string): readonly string[] | null {
