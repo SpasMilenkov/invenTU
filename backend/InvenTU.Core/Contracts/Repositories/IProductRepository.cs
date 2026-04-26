@@ -16,4 +16,5 @@ public interface IProductRepository
     Task UpdateAsync(Product product, CancellationToken cancellationToken = default);
     Task<decimal> GetTotalStockAsync(Guid productId, CancellationToken cancellationToken = default);
     Task ArchiveAsync(Guid id, DateTime deletedAt, CancellationToken cancellationToken = default);
+    Task<bool> RestoreAsync(Guid id, DateTime updatedAt, CancellationToken cancellationToken = default);
 }
