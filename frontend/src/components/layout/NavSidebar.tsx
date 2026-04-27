@@ -13,7 +13,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", glyph: "grid", group: "OPERATE" },
+  { label: "Dashboard", href: "/", glyph: "grid", group: "OPERATE" },
   { label: "Products", href: "/products", glyph: "box", group: "OPERATE" },
   {
     label: "Categories",
