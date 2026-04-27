@@ -2,6 +2,7 @@ import { useCurrentUser } from "../../lib/auth/useCurrentUser";
 import QueryProvider from "../providers/QueryProvider";
 import StockAdjustmentForm from "./StockAdjustmentForm";
 import PendingAdjustmentsTable from "./PendingAdjustmentsTable";
+import StockSubNav from "./shared/StockSubNav";
 
 function StockAdjustmentsPageInner() {
   const { data: user } = useCurrentUser();
@@ -9,20 +10,9 @@ function StockAdjustmentsPageInner() {
     user?.roles?.some((r) => r === "Manager" || r === "Admin") ?? false;
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-      <div className="page-head">
-        <div>
-          <div className="page-sub">OPERATE / STOCK / ADJUSTMENTS</div>
-          <h1 className="page-title">Stock adjustments</h1>
-          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
-            Record physical count discrepancies. Corrections within 10&nbsp;% are
-            applied immediately; larger changes require manager approval.
-          </p>
-        </div>
-      </div>
-
+    <div className="flex w-full flex-col gap-5 flex-1">
+      <StockSubNav active="adjustments" />
       <StockAdjustmentForm />
-
       {isManager && <PendingAdjustmentsTable />}
     </div>
   );
