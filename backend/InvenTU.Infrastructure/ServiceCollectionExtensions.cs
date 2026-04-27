@@ -92,15 +92,31 @@ public static class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
-                    OnMessageReceived = context =>
+                    OnMessageReceived = ctx =>
                     {
-                        if (string.IsNullOrEmpty(context.Token) &&
-                            context.Request.Cookies.TryGetValue("AccessToken", out var cookieToken))
+                        // 1. Cookie (your existing auth mechanism)
+                        if (string.IsNullOrEmpty(ctx.Token) &&
+                            ctx.Request.Cookies.TryGetValue("AccessToken", out var cookieToken))
                         {
-                            context.Token = cookieToken;
+                            ctx.Token = cookieToken;
                         }
+
+                        // 2. Query string fallback — SignalR WebSocket transport can't set
+                        //    the Authorization header on the upgrade request, so the client
+                        //    SDK falls back to ?access_token=<jwt> automatically.
+                        if (string.IsNullOrEmpty(ctx.Token))
+                        {
+                            var token = ctx.Request.Query["access_token"];
+                            if (!string.IsNullOrEmpty(token) &&
+                                ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                            {
+                                ctx.Token = token;
+                            }
+                        }
+
                         return Task.CompletedTask;
                     }
+
                 };
             });
 
@@ -127,6 +143,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
 
+        services.AddScoped<IStatsRepository, StatsRepository>();
         return services;
     }
 }

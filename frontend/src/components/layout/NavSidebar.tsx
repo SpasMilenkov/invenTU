@@ -1,9 +1,13 @@
-import { useCurrentUser } from '../../lib/auth/useCurrentUser';
-import { getRequiredRoles, hasRequiredRole } from '../../lib/auth/routeRoles';
-import QueryProvider from '../providers/QueryProvider';
-import { Icon, type IconName } from '../ui/Icon';
+import { useCurrentUser } from "../../lib/auth/useCurrentUser";
+import { getRequiredRoles, hasRequiredRole } from "../../lib/auth/routeRoles";
+import QueryProvider from "../providers/QueryProvider";
+import { Icon, type IconName } from "../ui/Icon";
+import {
+  useHealthCheck,
+  type HealthStatus,
+} from "../../lib/hooks/useHealthCheck";
 
-type NavGroup = 'OPERATE' | 'MONITOR' | 'PROCURE' | 'ANALYZE' | 'ADMIN';
+type NavGroup = "OPERATE" | "MONITOR" | "PROCURE" | "ANALYZE" | "ADMIN";
 
 interface NavItem {
   label: string;
@@ -13,23 +17,67 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',     href: '/dashboard',  glyph: 'grid',      group: 'OPERATE' },
-  { label: 'Products',      href: '/products',   glyph: 'box',       group: 'OPERATE' },
-  { label: 'Categories',    href: '/categories', glyph: 'layers',    group: 'OPERATE' },
-  { label: 'Warehouses',    href: '/warehouses', glyph: 'warehouse', group: 'OPERATE' },
-  { label: 'Stock Ops',     href: '/stock',      glyph: 'scan',      group: 'OPERATE' },
-  { label: 'Suppliers',     href: '/suppliers',  glyph: 'truck',     group: 'PROCURE' },
-  { label: 'Reports',       href: '/reports',    glyph: 'chart',     group: 'ANALYZE' },
-  { label: 'Users',         href: '/users',      glyph: 'users',     group: 'ADMIN' },
-  { label: 'Profile',       href: '/profile',    glyph: 'user',      group: 'ADMIN' },
+  { label: "Dashboard", href: "/dashboard", glyph: "grid", group: "OPERATE" },
+  { label: "Products", href: "/products", glyph: "box", group: "OPERATE" },
+  {
+    label: "Warehouses",
+    href: "/warehouses",
+    glyph: "warehouse",
+    group: "OPERATE",
+  },
+  { label: "Stock Ops", href: "/stock", glyph: "scan", group: "OPERATE" },
+  { label: "Suppliers", href: "/suppliers", glyph: "truck", group: "PROCURE" },
+  { label: "Reports", href: "/reports", glyph: "chart", group: "ANALYZE" },
+  { label: "Users", href: "/users", glyph: "users", group: "ADMIN" },
+  { label: "Profile", href: "/profile", glyph: "user", group: "ADMIN" },
 ];
 
-const GROUP_ORDER: NavGroup[] = ['OPERATE', 'PROCURE', 'ANALYZE', 'ADMIN'];
+const GROUP_ORDER: NavGroup[] = ["OPERATE", "PROCURE", "ANALYZE", "ADMIN"];
+
+// Maps each HealthStatus to a dot CSS class and display label.
+const HEALTH_META: Record<
+  HealthStatus,
+  { dotClass: string; label: string; title: string }
+> = {
+  healthy: {
+    dotClass: "dot dot--healthy",
+    label: "OPERATIONAL",
+    title: "API is healthy",
+  },
+  degraded: {
+    dotClass: "dot dot--degraded",
+    label: "DEGRADED",
+    title: "API is degraded",
+  },
+  unhealthy: {
+    dotClass: "dot dot--unhealthy",
+    label: "DEGRADED",
+    title: "API is unhealthy",
+  },
+  unknown: {
+    dotClass: "dot dot--unknown",
+    label: "UNKNOWN",
+    title: "Health status unknown",
+  },
+};
 
 function getInitials(firstName?: string, lastName?: string): string {
-  const f = firstName?.[0] ?? '';
-  const l = lastName?.[0] ?? '';
-  return (f + l).toUpperCase() || 'U';
+  const f = firstName?.[0] ?? "";
+  const l = lastName?.[0] ?? "";
+  return (f + l).toUpperCase() || "U";
+}
+
+function SystemStatus() {
+  const { data } = useHealthCheck();
+  const status = data?.status ?? "unknown";
+  const meta = HEALTH_META[status];
+
+  return (
+    <div className="side-status" title={meta.title}>
+      <span className={meta.dotClass} />
+      <span>{meta.label}</span>
+    </div>
+  );
 }
 
 function NavSidebarInner({ currentPath }: { currentPath: string }) {
@@ -46,7 +94,7 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
 
   return (
     <>
-      <a href="/" className="brand">
+      <a href="/dashboard" className="brand">
         <span className="brand-mark" />
         <span className="brand-name">InvenTU</span>
         <span className="brand-tag">v0.1</span>
@@ -58,7 +106,7 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
               <div
                 key={i}
                 className="mx-3 my-2 h-9 animate-pulse"
-                style={{ background: 'var(--color-shell-hover)' }}
+                style={{ background: "var(--color-shell-hover)" }}
               />
             ))
           : grouped.map((g) => (
@@ -67,8 +115,9 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
                 {g.items.map((it) => {
                   const isActive =
                     currentPath === it.href ||
-                    (it.href !== '/' && currentPath.startsWith(it.href + '/')) ||
-                    (it.href === '/dashboard' && currentPath === '/');
+                    (it.href !== "/" &&
+                      currentPath.startsWith(it.href + "/")) ||
+                    (it.href === "/dashboard" && currentPath === "/");
                   return (
                     <a
                       key={it.href}
@@ -87,18 +136,25 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
       </div>
 
       <div className="side-foot">
-        <div className="side-status">
-          <span className="dot" />
-          <span>OPERATIONAL</span>
-        </div>
+        <SystemStatus />
         {user && (
+<<<<<<< HEAD
           <a href="/profile" className="user-pill" title={`${user.firstName} ${user.lastName}`}>
             <div className="user-avatar">{getInitials(user.firstName, user.lastName)}</div>
             <div className="user-pill-text">
+=======
+          <a href="/profile" className="user-pill">
+            <div className="user-avatar">
+              {getInitials(user.firstName, user.lastName)}
+            </div>
+            <div className="flex flex-col leading-tight">
+>>>>>>> 1563885 (feat: wire up the auth layout stats with the backend. Fix wrong redirect)
               <span className="user-name">
                 {user.firstName} {user.lastName}
               </span>
-              <span className="user-role">{user.roles?.[0]?.toUpperCase() ?? 'USER'}</span>
+              <span className="user-role">
+                {user.roles?.[0]?.toUpperCase() ?? "USER"}
+              </span>
             </div>
           </a>
         )}

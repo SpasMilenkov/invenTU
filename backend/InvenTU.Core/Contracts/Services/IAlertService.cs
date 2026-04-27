@@ -1,3 +1,4 @@
+using InvenTU.Core.DTOs.Alerts;
 using InvenTU.Core.Enums;
 
 namespace InvenTU.Core.Contracts.Services;
@@ -16,5 +17,7 @@ public interface IAlertService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-
+    Task<IReadOnlyList<AlertLiveDto>> GetMyAlertsAsync(Guid userId, CancellationToken ct = default);
+    Task MarkReadAsync(Guid userId, Guid alertId, CancellationToken ct = default);
+    Task MarkAllReadAsync(Guid userId, CancellationToken ct = default);
 }
