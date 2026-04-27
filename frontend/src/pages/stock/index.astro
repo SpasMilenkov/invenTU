@@ -1,5 +1,48 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import StockSubNav from '../../components/stock/shared/StockSubNav';
+
+const ops = [
+  {
+    id: 'receive',
+    href: '/stock/receive',
+    label: 'Receive',
+    desc: 'Inbound shipment from supplier or transfer.',
+    color: 'var(--color-ok)',
+    verb: '+ in',
+    iconPath:
+      'M3 13 H8 L9 16 H15 L16 13 H21 M3 13 V20 H21 V13 L17 4 H7 Z',
+  },
+  {
+    id: 'issue',
+    href: '/stock/issue',
+    label: 'Issue / Pick',
+    desc: 'Outbound order fulfilment from a bin.',
+    color: 'var(--color-crit)',
+    verb: '− out',
+    iconPath: 'M5 12 H19 M14 7 L19 12 L14 17',
+  },
+  {
+    id: 'transfer',
+    href: '/stock/transfer',
+    label: 'Transfer',
+    desc: 'Move stock between bins or warehouses.',
+    color: 'var(--color-info)',
+    verb: '↔ move',
+    iconPath:
+      'M12 3 L21 8 L12 13 L3 8 Z M3 12 L12 17 L21 12 M3 16 L12 21 L21 16',
+  },
+  {
+    id: 'adjustments',
+    href: '/stock/adjustments',
+    label: 'Adjust',
+    desc: 'Cycle-count correction or shrinkage.',
+    color: 'var(--color-warn)',
+    verb: '± fix',
+    iconPath:
+      'M12 3 V6 M12 18 V21 M3 12 H6 M18 12 H21 M5.5 5.5 L7.5 7.5 M16.5 16.5 L18.5 18.5 M5.5 18.5 L7.5 16.5 M16.5 7.5 L18.5 5.5',
+  },
+];
 ---
 
 <Layout title="Stock Operations" crumb="Stock Operations">
@@ -7,58 +50,40 @@ import Layout from '../../layouts/Layout.astro';
     <div>
       <div class="page-sub">OPERATE / STOCK</div>
       <h1 class="page-title">Stock Operations</h1>
-      <p class="mt-1 text-[12.5px]" style="color: var(--color-ink-3);">Choose an operation below.</p>
+      <p class="mt-1 text-[12.5px]" style="color: var(--color-ink-3);">
+        Pick a guided flow. Each operation walks you through the steps that match its purpose.
+      </p>
     </div>
   </div>
 
-  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    <a href="/stock/receive" class="panel" style="text-decoration: none; transition: border-color .15s;">
-      <div class="panel-head">
-        <span class="panel-title">RECEIVE</span>
-        <span class="micro" style="color: var(--color-ok);">IN</span>
-      </div>
-      <div class="panel-body">
-        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Receive stock</h2>
-        <p class="text-[12px]" style="color: var(--color-ink-3);">
-          Record inbound goods from a purchase order or direct delivery.
-        </p>
-      </div>
-    </a>
-    <a href="/stock/issue" class="panel" style="text-decoration: none;">
-      <div class="panel-head">
-        <span class="panel-title">ISSUE</span>
-        <span class="micro" style="color: var(--color-crit);">OUT</span>
-      </div>
-      <div class="panel-body">
-        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Issue / pick stock</h2>
-        <p class="text-[12px]" style="color: var(--color-ink-3);">
-          Remove stock from a location for an order or other outbound use.
-        </p>
-      </div>
-    </a>
-    <a href="/stock/transfer" class="panel" style="text-decoration: none;">
-      <div class="panel-head">
-        <span class="panel-title">TRANSFER</span>
-        <span class="micro" style="color: var(--color-info);">XFER</span>
-      </div>
-      <div class="panel-body">
-        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Transfer stock</h2>
-        <p class="text-[12px]" style="color: var(--color-ink-3);">
-          Move stock between locations or warehouses within the system.
-        </p>
-      </div>
-    </a>
-    <a href="/stock/adjustments" class="panel" style="text-decoration: none;">
-      <div class="panel-head">
-        <span class="panel-title">ADJUST</span>
-        <span class="micro" style="color: var(--color-warn);">ADJ</span>
-      </div>
-      <div class="panel-body">
-        <h2 class="text-[14px] font-semibold" style="color: var(--color-ink); margin: 0 0 6px;">Stock adjustments</h2>
-        <p class="text-[12px]" style="color: var(--color-ink-3);">
-          Submit count corrections. Large discrepancies are sent for manager approval.
-        </p>
-      </div>
-    </a>
+  <StockSubNav active="hub" client:load />
+
+  <div class="op-launcher">
+    {ops.map((o) => (
+      <a href={o.href} class="op-card">
+        <div class="op-card-head">
+          <span class="op-card-pip" style={`background:${o.color}`}></span>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="square"
+            stroke-linejoin="miter"
+          >
+            <path d={o.iconPath} />
+          </svg>
+          <span class="op-card-verb">{o.verb}</span>
+        </div>
+        <div class="op-card-label">{o.label}</div>
+        <div class="op-card-desc">{o.desc}</div>
+        <div class="op-card-cta">
+          <span>OPEN GUIDED FLOW</span>
+          <span>›</span>
+        </div>
+      </a>
+    ))}
   </div>
 </Layout>
