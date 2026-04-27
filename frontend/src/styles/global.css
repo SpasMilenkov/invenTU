@@ -1635,42 +1635,46 @@ button {
     }
 
     /* Sidebar collapsed mode hides text */
-    [data-collapsed="true"] .nav-label,
-    [data-collapsed="true"] .nav-count,
-    [data-collapsed="true"] .nav-section-label,
-    [data-collapsed="true"] .brand-name,
-    [data-collapsed="true"] .brand-tag,
-    [data-collapsed="true"] .side-foot .user-pill > div:not(.user-avatar),
-    [data-collapsed="true"] .side-status > span:not(.dot) {
-        display: none;
+    @media (min-width: 1024px) {
+        [data-collapsed="true"] .nav-label,
+        [data-collapsed="true"] .nav-count,
+        [data-collapsed="true"] .nav-section-label,
+        [data-collapsed="true"] .brand-name,
+        [data-collapsed="true"] .brand-tag,
+        [data-collapsed="true"] .side-foot .user-pill > div:not(.user-avatar),
+        [data-collapsed="true"] .side-status > span:not(.dot) {
+            display: none;
+        }
+        [data-collapsed="true"] .nav-item {
+            justify-content: center;
+            padding: 10px 0;
+        }
+        [data-collapsed="true"] .brand {
+            justify-content: center;
+            padding: 16px 0;
+        }
+        [data-collapsed="true"] .side-foot .user-pill,
+        [data-collapsed="true"] .side-status {
+            justify-content: center;
+        }
+        [data-collapsed="true"] .side-foot {
+            padding: 8px 0;
+            gap: 4px;
+        }
+        [data-collapsed="true"] .side-foot .user-pill {
+            padding: 8px 0;
+            background: transparent;
+        }
+        [data-collapsed="true"] .side-foot .user-pill:hover {
+            background: var(--color-shell-hover);
+        }
+        [data-collapsed="true"] .side-status {
+            padding: 6px 0;
+        }
+        [data-collapsed="true"] #sidebar {
+            width: 3.5rem !important;
+        }
     }
-    [data-collapsed="true"] .nav-item {
-        justify-content: center;
-        padding: 10px 0;
-    }
-    [data-collapsed="true"] .brand {
-        justify-content: center;
-        padding: 16px 0;
-    }
-    [data-collapsed="true"] .side-foot .user-pill,
-    [data-collapsed="true"] .side-status {
-        justify-content: center;
-    }
-    [data-collapsed="true"] .side-foot {
-        padding: 8px 0;
-        gap: 4px;
-    }
-    [data-collapsed="true"] .side-foot .user-pill {
-        padding: 8px 0;
-        background: transparent;
-    }
-    [data-collapsed="true"] .side-foot .user-pill:hover {
-        background: var(--color-shell-hover);
-    }
-    [data-collapsed="true"] .side-status {
-        padding: 6px 0;
-    }
-
     /* Sidebar width: shrink at desktop when collapsed.
      The aside's static lg:w-60 sets the default; this rule overrides at lg+. */
     @media (min-width: 1024px) {
@@ -1956,58 +1960,4 @@ button {
 }
 .rise-in {
     animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-/* ─── Mobile nav — checkbox toggle, no JS ─────────────────────────────────── */
-
-/* The checkbox itself is never visible */
-.mobile-nav-toggle {
-    display: none;
-}
-
-/* Scrim and drawer are hidden by default */
-.mobile-nav-scrim {
-    display: none;
-    background: rgba(0, 0, 0, 0);
-    pointer-events: none;
-    transition: background 0.22s ease;
-}
-
-.mobile-nav-drawer {
-    transform: translateX(-100%);
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* X icon hidden by default; hamburger icon shown */
-.mobile-nav-icon-close {
-    display: none;
-}
-.mobile-nav-icon-open {
-    display: block;
-}
-
-/* ── When checkbox is checked ── */
-
-/* Show scrim */
-.mobile-nav-toggle:checked ~ * .mobile-nav-scrim,
-.mobile-nav-toggle:checked + * .mobile-nav-scrim {
-    display: block;
-    background: rgba(0, 0, 0, 0.5);
-    pointer-events: auto;
-}
-
-/* Slide in drawer */
-.mobile-nav-toggle:checked ~ .mobile-nav-drawer,
-.mobile-nav-toggle:checked ~ * .mobile-nav-drawer {
-    transform: translateX(0);
-}
-
-/* Swap hamburger → X */
-.mobile-nav-toggle:checked ~ * .mobile-nav-icon-open,
-.mobile-nav-toggle:checked ~ * .mobile-nav-hamburger .mobile-nav-icon-open {
-    display: none;
-}
-.mobile-nav-toggle:checked ~ * .mobile-nav-icon-close,
-.mobile-nav-toggle:checked ~ * .mobile-nav-hamburger .mobile-nav-icon-close {
-    display: block;
 }
