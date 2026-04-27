@@ -18,13 +18,14 @@ public sealed class SuppliersController (ISupplierService supplierService) : Con
     /// <summary>
     /// Fetching a list of queried suppliers
     /// </summary>
+    /// <param name="search">Search term</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns></returns>
     [HttpGet]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> GetSuppliers(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetSuppliers([FromQuery] string search, CancellationToken cancellationToken)
     {
-        var suppliers = await supplierService.GetSuppliersAsync(cancellationToken);
+        var suppliers = await supplierService.GetSuppliersAsync(search, cancellationToken);
 
         return Ok(suppliers);
     }

@@ -1,24 +1,23 @@
+using FluentValidation;
 using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Contracts.Services;
+using InvenTU.Core.DTOs.Common;
 using InvenTU.Core.DTOs.Suppliers;
 using InvenTU.Core.DTOs.Suppliers.PurchaseOrders;
-using InvenTU.Core.Entities;
+using InvenTU.Core.Exceptions;
+using InvenTU.Core.Extensions;
+using ValidationException = InvenTU.Core.Exceptions.ValidationException;
 
 namespace InvenTU.Application.Suppliers;
 
-public sealed class SupplierService (ISupplierRepository supplierRepository) : ISupplierService
+public sealed class SupplierService (
+    ISupplierRepository supplierRepository,
+    IValidator<CreateSupplierRequest> createSupplierRequestValidator,
+    IValidator<UpdateSupplierRequest> updateSupplierRequestValidator) : ISupplierService
 {
     public async Task<PurchaseOrderDTO> CreatePurchaseOrdersAsync(CreatePurchaseOrderRequest createPurchaseOrderRequest, CancellationToken cancellationToken)
     {
-        var newPurchaseOrder = new PurchaseOrder
-        {
-            Id = Guid.NewGuid(),
-            SupplierId = createPurchaseOrderRequest.SupplierId,
-            CreatedByUserId = createPurchaseOrderRequest.CreatedByUserId,
-            Status = createPurchaseOrderRequest.Status,
-            OrderDate = createPurchaseOrderRequest.OrderDate,
-            ExpectedDate = createPurchaseOrderRequest.ExpectedDate
-        };
+        var newPurchaseOrder = createPurchaseOrderRequest.ToEntity();
 
         await supplierRepository.CreatePurchaseOrdersAsync(newPurchaseOrder, cancellationToken);
 
@@ -34,14 +33,20 @@ public sealed class SupplierService (ISupplierRepository supplierRepository) : I
     }
     public async Task<SupplierDTO> CreateSupplierAsync(CreateSupplierRequest createSupplierRequest, CancellationToken cancellationToken)
     {
-        var newSupplier = new Supplier
+        var validationResult = await createSupplierRequestValidator.ValidateAsync(createSupplierRequest, cancellationToken);
+
+        if (!validationResult.IsValid)
         {
-            Id = Guid.NewGuid(),
-            Name = createSupplierRequest.Name,
-            ContactEmail = createSupplierRequest.ContactEmail,
-            ContactPhone = createSupplierRequest.ContactPhone,
-            Address = createSupplierRequest.Address
-        };
+            // Reformats the validation error into more descriptive custom exception 
+            var errorDictionary = validationResult.Errors.GroupBy(e => e.PropertyName)
+                                    .ToDictionary(p => p.Key,
+                                        p => p.Select(p => p.ErrorMessage).ToArray()
+                                    );
+
+            throw new ValidationException(errorDictionary);
+        }
+
+        var newSupplier = createSupplierRequest.ToEntity();
 
         await supplierRepository.CreateSupplierAsync(newSupplier, cancellationToken);
 
@@ -56,19 +61,18 @@ public sealed class SupplierService (ISupplierRepository supplierRepository) : I
     }
     public async Task DeleteSupplierAsync(Guid id, CancellationToken cancellationToken)
     {
-        if (!await supplierRepository.PurchaseOrderExistsForSupplierAsync(id, cancellationToken))
-        {
-            var supplierToDeactivate = await supplierRepository.GetSupplierForUpdateAsync(id, cancellationToken) ?? throw new InvalidOperationException("Can't find supplier for update");
-            await supplierRepository.DeleteSupplierAsync(supplierToDeactivate, cancellationToken);
-        }
+        if (await supplierRepository.PurchaseOrderExistsForSupplierAsync(id, cancellationToken))
+            throw new SupplierHasPurchaseOrdersException();
+
+        await supplierRepository.DeleteSupplierAsync(id, cancellationToken);
     }
-    public async Task<IReadOnlyList<PurchaseOrderDTO>> GetPurchaseOrdersAsync(PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken)
+    public async Task<PagedResult<PurchaseOrderDTO>> GetPurchaseOrdersAsync(PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken)
     {
         return await supplierRepository.GetPurchaseOrdersAsync(purchaseOrderQueryParams, cancellationToken);
     }
-    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string search, CancellationToken cancellationToken)
     {
-        return await supplierRepository.GetSuppliersAsync(cancellationToken);
+        return await supplierRepository.GetSuppliersAsync(search.Trim(), cancellationToken);
     }
     public async Task UpdatePurchaseOrderStatusAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -78,12 +82,22 @@ public sealed class SupplierService (ISupplierRepository supplierRepository) : I
     }
     public async Task<SupplierDTO> UpdateSupplierAsync(Guid id, UpdateSupplierRequest updateSupplierRequest, CancellationToken cancellationToken)
     {
+        var validationResult = await updateSupplierRequestValidator.ValidateAsync(updateSupplierRequest, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            // Reformats the validation error into more descriptive custom exception 
+            var errorDictionary = validationResult.Errors.GroupBy(e => e.PropertyName)
+                                    .ToDictionary(p => p.Key,
+                                        p => p.Select(p => p.ErrorMessage).ToArray()
+                                    );
+
+            throw new ValidationException(errorDictionary);
+        }
+
         var supplierForUpdate = await supplierRepository.GetSupplierForUpdateAsync(id, cancellationToken) ?? throw new InvalidOperationException("Can't find supplier for update");
 
-        supplierForUpdate.Name = updateSupplierRequest.Name;
-        supplierForUpdate.Address = updateSupplierRequest.Address;
-        supplierForUpdate.ContactEmail = updateSupplierRequest.ContactEmail;
-        supplierForUpdate.ContactPhone = updateSupplierRequest.ContactPhone;
+        supplierForUpdate.ApplyUpdate(updateSupplierRequest);
 
         await supplierRepository.UpdateSupplierAsync(supplierForUpdate, cancellationToken);
 

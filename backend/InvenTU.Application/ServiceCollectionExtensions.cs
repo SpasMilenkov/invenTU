@@ -9,6 +9,7 @@ using InvenTU.Application.Stock.Validators;
 using InvenTU.Application.StockLocations;
 using InvenTU.Application.StockLocations.Validators;
 using InvenTU.Application.Suppliers;
+using InvenTU.Application.Suppliers.Validators;
 using InvenTU.Application.Users;
 using InvenTU.Application.Warehouses;
 using InvenTU.Application.Warehouses.Validators;
@@ -17,6 +18,7 @@ using InvenTU.Core.DTOs.Categories;
 using InvenTU.Core.DTOs.Products;
 using InvenTU.Core.DTOs.Stock;
 using InvenTU.Core.DTOs.StockLocations;
+using InvenTU.Core.DTOs.Suppliers;
 using InvenTU.Core.DTOs.Warehouses;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -59,6 +61,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
 
         services.AddScoped<ISupplierService, SupplierService>();
+        services.AddScoped<IValidator<CreateSupplierRequest>, CreateSupplierRequestValidator>();
+        services.AddScoped<IValidator<UpdateSupplierRequest>, UpdateSupplierRequestValidator>();
 
         return services;
     }
