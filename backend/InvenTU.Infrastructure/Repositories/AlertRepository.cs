@@ -85,7 +85,7 @@ public sealed class AlertRepository(InvenTUDbContext dbContext) : IAlertReposito
                 // Clamp to [0,100]; null when denominator is unknown/zero
                 StockHealthPct = s.Alert.MinStockLevel > 0 && s.Alert.CurrentQuantity != null
                     ? (int)Math.Clamp(
-                        (double)(s.Alert.CurrentQuantity.Value / s.Alert.MinStockLevel.Value) * 100,
+                        (double)s.Alert.CurrentQuantity.Value / s.Alert.MinStockLevel.Value * 100,
                         0, 100)
                     : null,
             })

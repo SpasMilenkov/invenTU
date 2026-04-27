@@ -11,10 +11,6 @@ public interface IAlertRepository
     Task CreateUserStatesAsync(Guid alertId, IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
     Task<Alert?> UnresolvedAlertForProductAsync(Guid productId, AlertType alertType, CancellationToken cancellationToken = default);
     Task ResolveAsync(Guid alertId, CancellationToken cancellationToken = default);
-}
-    Task<Guid> CreateAsync(Alert alert, CancellationToken ct = default);
-    Task CreateUserStatesAsync(Guid alertId, IEnumerable<Guid> userIds, CancellationToken ct = default);
-
     // NEW
     Task<IReadOnlyList<AlertLiveDto>> GetLiveForUserAsync(
         Guid userId,
