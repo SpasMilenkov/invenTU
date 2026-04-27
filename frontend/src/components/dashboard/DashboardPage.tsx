@@ -10,7 +10,7 @@ import QueryProvider from "../providers/QueryProvider";
 import KpiCards from "./KpiCards";
 import StockByCategoryChart from "./StockByCategory";
 import RecentMovements from "./RecentMovements";
-import LowStockPanel from "./LowStockPanel";
+import AlertPanel from "./AlertPanel";
 import LiveStockFeed from "./LiveStockFeed";
 import { KpiSkeleton, ChartSkeleton, FeedSkeleton } from "./DashboardSkeletons";
 
@@ -107,7 +107,8 @@ function DashboardInner() {
       )}
 
       {/* Chart row + low-stock panel */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.25fr_1fr]">
+        <AlertPanel />
         {dashError ? (
           <ErrorBanner message={dashErrorMsg} />
         ) : dashLoading || !dashData ? (
@@ -116,8 +117,7 @@ function DashboardInner() {
           <StockByCategoryChart items={dashData.stockByCategory} />
         )}
 
-        {/* LowStockPanel is always mounted — it owns its own loading state */}
-        <LowStockPanel />
+        {/* AlertPanel is always mounted — it owns its own loading state */}
       </div>
 
       {/* Recent movements feed */}
@@ -133,9 +133,7 @@ function DashboardInner() {
   );
 }
 
-// ---------------------------------------------------------------------------
 // Public export (wraps with QueryProvider)
-// ---------------------------------------------------------------------------
 export default function DashboardPage() {
   return (
     <QueryProvider>
