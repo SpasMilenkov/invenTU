@@ -18,6 +18,7 @@ using InvenTU.Core.DTOs.Stock;
 using InvenTU.Core.DTOs.StockLocations;
 using InvenTU.Core.DTOs.Warehouses;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace InvenTU.Application;
 
@@ -56,6 +57,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
         services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
+
+        services.AddHostedService<LowStockMonitoringService>();
 
         return services;
     }
