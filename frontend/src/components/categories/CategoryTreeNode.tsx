@@ -58,7 +58,7 @@ export default function CategoryTreeNode({
   return (
     <div className="flex flex-col">
       <div
-        className="group flex items-center gap-2 py-2 pr-3 transition-colors hover:bg-[var(--color-shell-hover)]"
+        className="group flex items-center gap-2 py-2 pr-3 transition-colors dark:hover:bg-[var(--color-shell-hover)] hover:bg-[var(--color-bg-elev)]"
         style={{
           paddingLeft: ROW_LEFT_PAD + depth * INDENT_PX,
           minHeight: 36,
