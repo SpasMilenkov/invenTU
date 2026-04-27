@@ -49,6 +49,51 @@ public sealed class AlertService(
         }
     }
 
+    public async Task CreateProductAlertAsync(
+        AlertType alertType,
+        string message,
+        Guid productId,
+        decimal currentQuantity,
+        int minStockLevel,
+        CancellationToken ct = default)
+    {
+        var alert = new Alert
+        {
+            Id = Guid.NewGuid(),
+            AlertType = alertType,
+            ProductId = productId,
+            CurrentQuantity = currentQuantity,
+            MinStockLevel = minStockLevel,
+            Message = message,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        var alertId = await alertRepository.CreateAsync(alert, ct);
+
+        var userIds = (await Task.WhenAll(
+            userRepository.GetUserIdsByRoleAsync("Manager", ct),
+            userRepository.GetUserIdsByRoleAsync("Admin", ct)))
+            .SelectMany(ids => ids)
+            .Distinct()
+            .ToList();
+
+        if (userIds.Count > 0)
+        {
+            await alertRepository.CreateUserStatesAsync(alertId, userIds, ct);
+            await alertNotificationService.NotifyUsersAsync(new AlertLiveDto
+            {
+                AlertId = alertId,
+                AlertType = alertType.ToString(),
+                Message = message,
+                ProductId = productId,
+                CurrentQuantity = currentQuantity,
+                MinStockLevel = minStockLevel,
+                IsRead = false,
+                CreatedAt = DateTimeOffset.UtcNow,
+            }, userIds, ct);
+        }
+    }
+
     public Task<IReadOnlyList<AlertLiveDto>> GetMyAlertsAsync(Guid userId, CancellationToken ct = default)
         => alertRepository.GetLiveForUserAsync(userId, limit: 100, ct);
 

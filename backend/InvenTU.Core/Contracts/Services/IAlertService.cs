@@ -16,6 +16,13 @@ public interface IAlertService
         string targetRole,
         CancellationToken cancellationToken = default);
 
+    Task CreateProductAlertAsync(
+        AlertType alertType,
+        string message,
+        Guid productId,
+        decimal currentQuantity,
+        int minStockLevel,
+        CancellationToken ct = default);
     /// <summary>
     Task<IReadOnlyList<AlertLiveDto>> GetMyAlertsAsync(Guid userId, CancellationToken ct = default);
     Task MarkReadAsync(Guid userId, Guid alertId, CancellationToken ct = default);

@@ -56,7 +56,7 @@ public sealed class AlertRepository(InvenTUDbContext dbContext) : IAlertReposito
         CancellationToken ct = default)
     {
         return await dbContext.AlertUserStates
-            .Where(s => s.UserId == userId)
+            .Where(s => s.UserId == userId && s.Alert.ResolvedAt == null )
             .OrderByDescending(s => s.Alert.CreatedAt)
             .Take(limit)
             .Select(s => new AlertLiveDto
