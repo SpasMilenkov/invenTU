@@ -12,9 +12,11 @@ public interface ISupplierRepository
     Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(CancellationToken cancellationToken);
     Task CreateSupplierAsync(Supplier supplier, CancellationToken cancellationToken);
     Task UpdateSupplierAsync(Supplier supplier, CancellationToken cancellationToken);
-    Task<Supplier> GetSupplierForUpdateAsync(Guid id, CancellationToken cancellationToken);
-    Task DeleteSupplierAsync(Guid id, CancellationToken cancellationToken);
-    Task<PurchaseOrderDTO> CreatePurchaseOrdersAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken);
+    Task<Supplier?> GetSupplierForUpdateAsync(Guid id, CancellationToken cancellationToken);
+    Task DeleteSupplierAsync(Supplier supplier, CancellationToken cancellationToken);
+    Task CreatePurchaseOrdersAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken);
     Task<IReadOnlyList<PurchaseOrderDTO>> GetPurchaseOrdersAsync(PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken);
-    Task UpdatePurchaseOrderStatusAsync(Guid id, CancellationToken cancellationToken);
+    Task UpdatePurchaseOrderStatusAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken);
+    Task<bool> PurchaseOrderExistsForSupplierAsync(Guid id, CancellationToken cancellationToken);
+    Task<PurchaseOrder?> GetPurchaseOrderForUpdateAsync(Guid id, CancellationToken cancellationToken);
 }
