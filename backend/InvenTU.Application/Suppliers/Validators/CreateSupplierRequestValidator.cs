@@ -16,6 +16,6 @@ public sealed class CreateSupplierRequestValidator : AbstractValidator<CreateSup
             .NotEmpty().WithMessage("Name can't be empty")
             .MaximumLength(200).WithMessage("Name must be no longer than 200 characters");
         RuleFor(x => x.ContactPhone)
-            .Matches("^(\\+\\d{1,3}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$").WithMessage("Contact Phone must be a valid phone number");
+            .Matches("^\\+?(\\d{1,3})?[-.\\s]?(\\(?\\d{3}\\)?[-.\\s]?)?(\\d[-.\\s]?){6,9}\\d$").WithMessage("Contact Phone must be a valid phone number");
     }
 }

@@ -23,7 +23,7 @@ public sealed class SuppliersController (ISupplierService supplierService) : Con
     /// <returns></returns>
     [HttpGet]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> GetSuppliers([FromQuery] string search, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetSuppliers([FromQuery] string? search, CancellationToken cancellationToken)
     {
         var suppliers = await supplierService.GetSuppliersAsync(search, cancellationToken);
 
@@ -94,7 +94,7 @@ public sealed class SuppliersController (ISupplierService supplierService) : Con
     /// <returns></returns>
     [HttpGet("purchase-orders")]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> GetPurchaseOrders(PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetPurchaseOrders([FromQuery] PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken)
     {
         var purchaseOrders = await supplierService.GetPurchaseOrdersAsync(purchaseOrderQueryParams, cancellationToken);
 

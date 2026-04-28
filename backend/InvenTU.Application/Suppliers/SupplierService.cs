@@ -70,9 +70,9 @@ public sealed class SupplierService (
     {
         return await supplierRepository.GetPurchaseOrdersAsync(purchaseOrderQueryParams, cancellationToken);
     }
-    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string search, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string? search, CancellationToken cancellationToken)
     {
-        return await supplierRepository.GetSuppliersAsync(search.Trim(), cancellationToken);
+        return await supplierRepository.GetSuppliersAsync(search?.Trim().ToUpperInvariant(), cancellationToken);
     }
     public async Task UpdatePurchaseOrderStatusAsync(Guid id, CancellationToken cancellationToken)
     {

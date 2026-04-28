@@ -75,14 +75,14 @@ public sealed class SupplierRepository (InvenTUDbContext dbContext) : ISupplierR
             .Where(s => s.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
     }
-    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string search, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string? search, CancellationToken cancellationToken)
     {
         return await dbContext.Suppliers
             .Where(s => s.IsActive
-                && (s.Name.Contains(search)
-                    || s.Address == null ? true : s.Address.Contains(search)
-                    || s.ContactPhone == null ? true : s.ContactPhone.Contains(search)
-                    || s.ContactEmail == null ? true : s.ContactEmail.Contains(search)
+                && (s.Name.ToUpper().Contains(search ?? "")
+                    || s.Address == null ? true : s.Address.ToUpper().Contains(search ?? "")
+                    || s.ContactPhone == null ? true : s.ContactPhone.ToUpper().Contains(search ?? "")
+                    || s.ContactEmail == null ? true : s.ContactEmail.ToUpper().Contains(search ?? "")
                 ))
             .Select(SupplierProjections.ToDto)
             .AsNoTracking()

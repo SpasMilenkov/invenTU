@@ -7,7 +7,7 @@ namespace InvenTU.Core.Contracts.Repositories;
 
 public interface ISupplierRepository
 {
-    Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string search, CancellationToken cancellationToken);
+    Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string? search, CancellationToken cancellationToken);
     Task CreateSupplierAsync(Supplier supplier, CancellationToken cancellationToken);
     Task UpdateSupplierAsync(Supplier supplier, CancellationToken cancellationToken);
     Task<Supplier?> GetSupplierForUpdateAsync(Guid id, CancellationToken cancellationToken);

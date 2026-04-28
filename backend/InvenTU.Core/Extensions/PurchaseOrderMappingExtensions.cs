@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using InvenTU.Core.DTOs.Suppliers.PurchaseOrders;
 using InvenTU.Core.Entities;
+using InvenTU.Core.Enums;
 
 namespace InvenTU.Core.Extensions;
 
@@ -15,9 +13,21 @@ public static class PurchaseOrderMappingExtensions
             Id = Guid.NewGuid(),
             SupplierId = createRequest.SupplierId,
             CreatedByUserId = createRequest.CreatedByUserId,
-            Status = createRequest.Status,
+            Status = PurchaseOrderStatus.Draft,
             OrderDate = createRequest.OrderDate,
-            ExpectedDate = createRequest.ExpectedDate
+            ExpectedDate = createRequest.ExpectedDate,
+            PurchaseOrderLines = createRequest.PurchaseOrderLines.Select(l => l.ToEntity()).ToList(),
+        };
+    }
+    public static PurchaseOrderLine ToEntity(this CreatePurchaseOrderLineRequest createRequest)
+    {
+        return new PurchaseOrderLine
+        {
+            Id = Guid.NewGuid(),
+            PurchaseOrderId = createRequest.PurchaseOrderId,
+            ProductId = createRequest.ProductId,
+            Quantity = createRequest.Quantity,
+            UnitPrice = createRequest.UnitPrice,
         };
     }
 }

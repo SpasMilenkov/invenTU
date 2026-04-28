@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Text.RegularExpressions;
 using InvenTU.Core.DTOs.Suppliers;
 using InvenTU.Core.Entities;
 
@@ -16,7 +14,8 @@ public static class SupplierMappingExtensions
             Name = createRequest.Name.Trim(),
             Address = createRequest.Address?.Trim(),
             ContactEmail = createRequest.ContactEmail,
-            ContactPhone = createRequest.ContactPhone
+            ContactPhone = Regex.Replace(createRequest.ContactPhone ?? "", "[-.\\s]", ""),
+            IsActive = true
         };
     }
     public static void ApplyUpdate(this Supplier supplier, UpdateSupplierRequest updateRequest)
@@ -24,6 +23,6 @@ public static class SupplierMappingExtensions
         supplier.Name = updateRequest.Name.Trim();
         supplier.Address = updateRequest.Address?.Trim();
         supplier.ContactEmail = updateRequest.ContactEmail;
-        supplier.ContactPhone = updateRequest.ContactPhone;
+        supplier.ContactPhone = Regex.Replace(updateRequest.ContactPhone ?? "", "[-.\\s]", "");
     }
 }
