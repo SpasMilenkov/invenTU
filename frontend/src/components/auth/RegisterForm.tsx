@@ -21,7 +21,7 @@ function RegisterFormInner() {
   });
 
   useEffect(() => {
-    if (existingUser) window.location.assign('/dashboard');
+    if (existingUser) window.location.assign('/');
   }, [existingUser]);
 
   const mutation = useMutation<void, Error, RegisterFormData>({

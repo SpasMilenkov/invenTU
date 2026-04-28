@@ -13,6 +13,7 @@ public sealed class StockAdjustmentService(
     IStockLocationRepository stockLocationRepository,
     IStockAdjustmentRepository stockAdjustmentRepository,
     ICurrentUserService currentUserService,
+    ILiveFeedService liveFeedService,
     IValidator<AdjustStockRequest> validator) : IStockAdjustmentService
 {
     private const decimal ApprovalThreshold = 0.10m;
@@ -38,9 +39,7 @@ public sealed class StockAdjustmentService(
 
         var location = await stockLocationRepository.GetForUpdateAsync(request.WarehouseId, request.StockLocationId, cancellationToken);
         if (location is null)
-        {
             throw new StockLocationInvalidException(request.StockLocationId, "does not exist or does not belong to the target warehouse");
-        }
 
         var currentUser = await currentUserService.GetCurrentUserAsync()
             ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
@@ -56,8 +55,26 @@ public sealed class StockAdjustmentService(
             request.Notes,
             cancellationToken);
 
-        return await stockAdjustmentRepository.GetAsync(movementId, cancellationToken)
+        var adjustmentDto = await stockAdjustmentRepository.GetAsync(movementId, cancellationToken)
             ?? throw new InvalidOperationException("Adjustment not found after submission.");
+
+        await liveFeedService.BroadcastMovementAsync(new StockMovementLiveDto
+        {
+            MovementId = movementId,
+            MovementType = "Adjustment",
+            ProductId = request.ProductId,
+            ProductName = string.Empty,
+            Quantity = Math.Abs(adjustmentDto.Delta),
+            DisplayQuantity = adjustmentDto.Delta,                       // signed delta from the repo
+            DestinationWarehouseName = warehouse.Name,
+            LocationCode = StockMovementLiveDto.FormatLocation(location),
+            StatusOrReason = adjustmentDto.Status,                       // "Pending", "AutoApproved", etc.
+            ReferenceNumber = request.ReferenceNumber,
+            Notes = request.Notes,
+            OccurredAt = DateTimeOffset.UtcNow,
+        }, cancellationToken);
+
+        return adjustmentDto;
     }
 
     public Task<IReadOnlyList<StockAdjustmentDto>> GetPendingAsync(CancellationToken cancellationToken = default)

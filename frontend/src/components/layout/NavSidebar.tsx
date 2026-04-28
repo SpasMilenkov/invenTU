@@ -1,9 +1,9 @@
-import { useCurrentUser } from '../../lib/auth/useCurrentUser';
-import { getRequiredRoles, hasRequiredRole } from '../../lib/auth/routeRoles';
-import QueryProvider from '../providers/QueryProvider';
-import { Icon, type IconName } from '../ui/Icon';
+import { useCurrentUser } from "../../lib/auth/useCurrentUser";
+import { getRequiredRoles, hasRequiredRole } from "../../lib/auth/routeRoles";
+import QueryProvider from "../providers/QueryProvider";
+import { Icon, type IconName } from "../ui/Icon";
 
-type NavGroup = 'OPERATE' | 'MONITOR' | 'PROCURE' | 'ANALYZE' | 'ADMIN';
+type NavGroup = "OPERATE" | "MONITOR" | "PROCURE" | "ANALYZE" | "ADMIN";
 
 interface NavItem {
   label: string;
@@ -13,23 +13,33 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',     href: '/dashboard',  glyph: 'grid',      group: 'OPERATE' },
-  { label: 'Products',      href: '/products',   glyph: 'box',       group: 'OPERATE' },
-  { label: 'Categories',    href: '/categories', glyph: 'layers',    group: 'OPERATE' },
-  { label: 'Warehouses',    href: '/warehouses', glyph: 'warehouse', group: 'OPERATE' },
-  { label: 'Stock Ops',     href: '/stock',      glyph: 'scan',      group: 'OPERATE' },
-  { label: 'Suppliers',     href: '/suppliers',  glyph: 'truck',     group: 'PROCURE' },
-  { label: 'Reports',       href: '/reports',    glyph: 'chart',     group: 'ANALYZE' },
-  { label: 'Users',         href: '/users',      glyph: 'users',     group: 'ADMIN' },
-  { label: 'Profile',       href: '/profile',    glyph: 'user',      group: 'ADMIN' },
+  { label: "Dashboard", href: "/", glyph: "grid", group: "OPERATE" },
+  { label: "Products", href: "/products", glyph: "box", group: "OPERATE" },
+  {
+    label: "Categories",
+    href: "/categories",
+    glyph: "layers",
+    group: "OPERATE",
+  },
+  {
+    label: "Warehouses",
+    href: "/warehouses",
+    glyph: "warehouse",
+    group: "OPERATE",
+  },
+  { label: "Stock Ops", href: "/stock", glyph: "scan", group: "OPERATE" },
+  { label: "Suppliers", href: "/suppliers", glyph: "truck", group: "PROCURE" },
+  { label: "Reports", href: "/reports", glyph: "chart", group: "ANALYZE" },
+  { label: "Users", href: "/users", glyph: "users", group: "ADMIN" },
+  { label: "Profile", href: "/profile", glyph: "user", group: "ADMIN" },
 ];
 
-const GROUP_ORDER: NavGroup[] = ['OPERATE', 'PROCURE', 'ANALYZE', 'ADMIN'];
+const GROUP_ORDER: NavGroup[] = ["OPERATE", "PROCURE", "ANALYZE", "ADMIN"];
 
 function getInitials(firstName?: string, lastName?: string): string {
-  const f = firstName?.[0] ?? '';
-  const l = lastName?.[0] ?? '';
-  return (f + l).toUpperCase() || 'U';
+  const f = firstName?.[0] ?? "";
+  const l = lastName?.[0] ?? "";
+  return (f + l).toUpperCase() || "U";
 }
 
 function NavSidebarInner({ currentPath }: { currentPath: string }) {
@@ -47,7 +57,7 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
   return (
     <>
       <a href="/" className="brand">
-        <span className="brand-mark" />
+        <img className="brand-mark" src="/favicon.svg" alt="ivenTU logo"/>
         <span className="brand-name">InvenTU</span>
         <span className="brand-tag">v0.1</span>
       </a>
@@ -58,7 +68,7 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
               <div
                 key={i}
                 className="mx-3 my-2 h-9 animate-pulse"
-                style={{ background: 'var(--color-shell-hover)' }}
+                style={{ background: "var(--color-shell-hover)" }}
               />
             ))
           : grouped.map((g) => (
@@ -67,8 +77,9 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
                 {g.items.map((it) => {
                   const isActive =
                     currentPath === it.href ||
-                    (it.href !== '/' && currentPath.startsWith(it.href + '/')) ||
-                    (it.href === '/dashboard' && currentPath === '/');
+                    (it.href !== "/" &&
+                      currentPath.startsWith(it.href + "/")) ||
+                    (it.href === "/dashboard" && currentPath === "/");
                   return (
                     <a
                       key={it.href}
@@ -92,13 +103,21 @@ function NavSidebarInner({ currentPath }: { currentPath: string }) {
           <span>OPERATIONAL</span>
         </div>
         {user && (
-          <a href="/profile" className="user-pill" title={`${user.firstName} ${user.lastName}`}>
-            <div className="user-avatar">{getInitials(user.firstName, user.lastName)}</div>
+          <a
+            href="/profile"
+            className="user-pill"
+            title={`${user.firstName} ${user.lastName}`}
+          >
+            <div className="user-avatar">
+              {getInitials(user.firstName, user.lastName)}
+            </div>
             <div className="user-pill-text">
               <span className="user-name">
                 {user.firstName} {user.lastName}
               </span>
-              <span className="user-role">{user.roles?.[0]?.toUpperCase() ?? 'USER'}</span>
+              <span className="user-role">
+                {user.roles?.[0]?.toUpperCase() ?? "USER"}
+              </span>
             </div>
           </a>
         )}

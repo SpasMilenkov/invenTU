@@ -7,6 +7,9 @@ using InvenTU.Infrastructure.DataSeeders;
 using Microsoft.AspNetCore.Authorization;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using InvenTU.Api.Hubs;
+using InvenTU.Api.Services;
+using InvenTU.Core.Contracts.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +64,10 @@ builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, Authorizati
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
 builder.Services.AddInvenTUApplication();
 
+builder.Services.AddSignalR();
+builder.Services.AddScoped<ILiveFeedService, SignalRLiveFeedService>();
+builder.Services.AddScoped<IAlertNotificationService, SignalRAlertNotificationService>();
+builder.Services.AddHealthChecks();
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
@@ -131,6 +138,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<StockHub>("/hubs/stock");
+app.MapHub<AlertHub>("hubs/alerts");
+
+app.MapHealthChecks("/api/v1/health");
 
 try
 {

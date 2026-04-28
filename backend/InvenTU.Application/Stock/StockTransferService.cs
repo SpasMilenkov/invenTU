@@ -22,6 +22,7 @@ public sealed class StockTransferService(
     IStockTransferRepository stockTransferRepository,
     ICurrentUserService currentUserService,
     IAlertService alertService,
+    ILiveFeedService liveFeedService,
     IValidator<TransferStockRequest> validator) : IStockTransferService
 {
     /// <summary>
@@ -107,9 +108,7 @@ public sealed class StockTransferService(
             var currentTotal = await warehouseRepository.GetTotalStockAsync(request.DestinationWarehouseId, cancellationToken);
             var headroom = (decimal)destWarehouse.MaxStockLevel.Value - currentTotal;
             if (request.Quantity > headroom)
-            {
                 throw new WarehouseCapacityExceededException(Math.Max(0m, headroom));
-            }
         }
 
         _ = await stockLocationRepository.GetForUpdateAsync(request.SourceWarehouseId, request.SourceStockLocationId, cancellationToken)
@@ -133,6 +132,21 @@ public sealed class StockTransferService(
             request.ReferenceNumber,
             request.Notes,
             cancellationToken);
+
+        await liveFeedService.BroadcastMovementAsync(new StockMovementLiveDto
+        {
+            MovementId = movementId,
+            MovementType = "Transfer",
+            ProductId = request.ProductId,
+            ProductName = string.Empty,
+            Quantity = request.Quantity,
+            DisplayQuantity = request.Quantity,                          // direction via source/dest names
+            SourceWarehouseName = sourceWarehouse.Name,
+            DestinationWarehouseName = destWarehouse.Name,
+            // LocationCode omitted for transfers — two locations involved, names carry the context
+            Notes = request.Notes,
+            OccurredAt = DateTimeOffset.UtcNow,
+        }, cancellationToken);
 
         return new StockTransferDto
         {

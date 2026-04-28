@@ -28,12 +28,12 @@ function LoginFormInner() {
   }, []);
 
   useEffect(() => {
-    if (existingUser) window.location.assign('/dashboard');
+    if (existingUser) window.location.assign('/');
   }, [existingUser]);
 
   const mutation = useMutation({
     mutationFn: login,
-    onSuccess: () => window.location.assign('/dashboard'),
+    onSuccess: () => window.location.assign('/'),
   });
 
   const onSubmit = (data: LoginFormData) => mutation.mutate(data);
