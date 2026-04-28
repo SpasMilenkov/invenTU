@@ -4,6 +4,7 @@ using InvenTU.Application.Categories;
 using InvenTU.Application.Categories.Validators;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
+using InvenTU.Application.Stats;
 using InvenTU.Application.Stock;
 using InvenTU.Application.Stock.Validators;
 using InvenTU.Application.StockLocations;
@@ -66,6 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IValidator<UpdateSupplierRequest>, UpdateSupplierRequestValidator>();
 
         services.AddHostedService<LowStockMonitoringService>();
+        services.AddScoped<IStatsService, StatsService>();
 
         return services;
     }
