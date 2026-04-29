@@ -168,7 +168,7 @@ const crumbLabel = (crumb ?? deriveCrumb(currentPath)).toUpperCase();
         </header>
 
         <!-- Content -->
-        <main class="flex-1 overflow-y-auto px-6 py-6 lg:px-8 lg:py-8">
+        <main class="flex-1 overflow-y-auto px-6 py-6 lg:px-8 lg:py-8 flex flex-col">
           <RouteGuard currentPath={currentPath} client:only="react">
             <slot />
           </RouteGuard>
