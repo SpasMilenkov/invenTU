@@ -427,7 +427,7 @@ function StockIssueForm() {
           </div>
         </div>
 
-        <div className="dock-arrow reverse" aria-hidden="true">
+        <div className="dock-arrow" aria-hidden="true">
           <span className="micro">DEPARTS TO</span>
           <div className="dock-arrow-line">
             <div className="dock-arrow-head" />
