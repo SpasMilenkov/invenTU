@@ -32,8 +32,14 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
                     {
                         var totalStock = await productRepository.GetTotalStockAsync(product.Id, stoppingToken);
 
-                        await HandleStockAlert(scope, product, product.MinStockLevel, totalStock, AlertType.LowStock, $"{product.Name} has low total stock", stoppingToken);
-                        await HandleStockAlert(scope, product, product.ReorderPoint, totalStock, AlertType.NeedsReorder, $"Reorders must be made for {product.Name}", stoppingToken);
+                        await HandleStockAlert(scope, product, product.MinStockLevel, totalStock, AlertType.LowStock, $"{product.Name} has low total stock", ct:stoppingToken);
+
+                        // Exclude suggestion if no primary supplier associated with product
+                        decimal? suggestedReorderQty = product.PrimarySupplierName != null
+                                                    ? product.MaxStockLevel - product.TotalStock ?? 2 * product.MinStockLevel
+                                                    : null;
+
+                        await HandleStockAlert(scope, product, product.ReorderPoint, totalStock, AlertType.NeedsReorder,$"Reorders must be made for {product.Name}{ " must be made by " + product.PrimarySupplierName ?? ""}", suggestedReorderQty, stoppingToken);
                     }
                 }
                 while (productsPage.HasNextPage);
@@ -49,6 +55,7 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
         decimal totalStock,
         AlertType alertType,
         string alertMessage = "",
+        decimal? reorderSuggestion = null,
         CancellationToken ct = default)
     {
         var alertRepository = scope.ServiceProvider.GetRequiredService<IAlertRepository>();
@@ -64,6 +71,7 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
                 product.Id,
                 totalStock,
                 product.MinStockLevel,
+                reorderSuggestion,
                 ct: default);
         }
         else if (totalStock >= stockThreshold && existingAlert != null)
