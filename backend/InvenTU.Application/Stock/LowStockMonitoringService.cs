@@ -39,7 +39,7 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
                                                     ? product.MaxStockLevel - product.TotalStock ?? 2 * product.MinStockLevel
                                                     : null;
 
-                        await HandleStockAlert(scope, product, product.ReorderPoint, totalStock, AlertType.NeedsReorder,$"Reorders must be made for {product.Name}{ " must be made by " + product.PrimarySupplierName ?? ""}", suggestedReorderQty, stoppingToken);
+                        await HandleStockAlert(scope, product, product.ReorderPoint, totalStock, AlertType.NeedsReorder,$"Reorders must be made for {product.Name}{ " by " + product.PrimarySupplierName ?? ""}", suggestedReorderQty, stoppingToken);
                     }
                 }
                 while (productsPage.HasNextPage);
