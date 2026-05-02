@@ -40,6 +40,11 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
         builder.Entity<ProductSupplier>()
             .HasKey(ps => new { ps.ProductId, ps.SupplierId });
 
+        builder.Entity<Supplier>()
+            .HasMany(s => s.Products)
+            .WithMany(p => p.Suppliers)
+            .UsingEntity<ProductSupplier>();
+
         builder.Entity<AlertUserState>()
             .HasKey(aus => new { aus.AlertId, aus.UserId });
 
