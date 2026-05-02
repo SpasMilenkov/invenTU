@@ -55,6 +55,7 @@ public sealed class AlertService(
         Guid productId,
         decimal currentQuantity,
         int minStockLevel,
+        decimal? reorderSuggestion,
         CancellationToken ct = default)
     {
         var alert = new Alert
@@ -66,14 +67,16 @@ public sealed class AlertService(
             MinStockLevel = minStockLevel,
             Message = message,
             CreatedAt = DateTime.UtcNow,
+            ReorderSuggestion = reorderSuggestion,
         };
 
         var alertId = await alertRepository.CreateAsync(alert, ct);
 
-        var userIds = (await Task.WhenAll(
-            userRepository.GetUserIdsByRoleAsync("Manager", ct),
-            userRepository.GetUserIdsByRoleAsync("Admin", ct)))
-            .SelectMany(ids => ids)
+        var userIds = new List<Guid>();
+        userIds.AddRange(await userRepository.GetUserIdsByRoleAsync("Manager", ct));
+        userIds.AddRange(await userRepository.GetUserIdsByRoleAsync("Admin", ct));
+
+        userIds = userIds
             .Distinct()
             .ToList();
 

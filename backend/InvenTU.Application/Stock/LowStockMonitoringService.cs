@@ -11,14 +11,14 @@ using Microsoft.Extensions.Options;
 
 namespace InvenTU.Application.Stock;
 
-public sealed class LowStockMonitoringService(IServiceProvider services,
+public sealed class LowStockMonitoringService(IServiceScopeFactory scopeFactory,
                                                 IOptions<StockMonitoringOptions> options) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using (var scope = services.CreateScope())
+            using (var scope = scopeFactory.CreateScope())
             {
                 var productRepository = scope.ServiceProvider.GetRequiredService<IProductRepository>();
 
@@ -32,8 +32,14 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
                     {
                         var totalStock = await productRepository.GetTotalStockAsync(product.Id, stoppingToken);
 
-                        await HandleStockAlert(scope, product, product.MinStockLevel, totalStock, AlertType.LowStock, $"{product.Name} has low total stock", stoppingToken);
-                        await HandleStockAlert(scope, product, product.ReorderPoint, totalStock, AlertType.NeedsReorder, $"Reorders must be made for {product.Name}", stoppingToken);
+                        await HandleStockAlert(scope, product, product.MinStockLevel, totalStock, AlertType.LowStock, $"{product.Name} has low total stock", ct:stoppingToken);
+
+                        // Exclude suggestion if no primary supplier associated with product
+                        decimal? suggestedReorderQty = product.PrimarySupplierName != null
+                                                    ? product.MaxStockLevel - product.TotalStock ?? 2 * product.MinStockLevel
+                                                    : null;
+
+                        await HandleStockAlert(scope, product, product.ReorderPoint, totalStock, AlertType.NeedsReorder,$"Reorders must be made for {product.Name}{ " by " + product.PrimarySupplierName ?? ""}", suggestedReorderQty, stoppingToken);
                     }
                 }
                 while (productsPage.HasNextPage);
@@ -49,6 +55,7 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
         decimal totalStock,
         AlertType alertType,
         string alertMessage = "",
+        decimal? reorderSuggestion = null,
         CancellationToken ct = default)
     {
         var alertRepository = scope.ServiceProvider.GetRequiredService<IAlertRepository>();
@@ -64,6 +71,7 @@ public sealed class LowStockMonitoringService(IServiceProvider services,
                 product.Id,
                 totalStock,
                 product.MinStockLevel,
+                reorderSuggestion,
                 ct: default);
         }
         else if (totalStock >= stockThreshold && existingAlert != null)

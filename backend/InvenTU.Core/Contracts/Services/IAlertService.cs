@@ -22,6 +22,7 @@ public interface IAlertService
         Guid productId,
         decimal currentQuantity,
         int minStockLevel,
+        decimal? reorderSuggestion,
         CancellationToken ct = default);
     /// <summary>
     Task<IReadOnlyList<AlertLiveDto>> GetMyAlertsAsync(Guid userId, CancellationToken ct = default);

@@ -13,6 +13,7 @@ public sealed class ProductRepository(InvenTUDbContext dbContext) : IProductRepo
     public Task<ProductDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         => dbContext.Products
             .Where(p => p.Id == id)
+            .Include(p => p.ProductSuppliers)
             .Select(ProductProjections.ToDto)
             .FirstOrDefaultAsync(cancellationToken);
 
