@@ -11,14 +11,14 @@ using Microsoft.Extensions.Options;
 
 namespace InvenTU.Application.Stock;
 
-public sealed class LowStockMonitoringService(IServiceProvider services,
+public sealed class LowStockMonitoringService(IServiceScopeFactory scopeFactory,
                                                 IOptions<StockMonitoringOptions> options) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using (var scope = services.CreateScope())
+            using (var scope = scopeFactory.CreateScope())
             {
                 var productRepository = scope.ServiceProvider.GetRequiredService<IProductRepository>();
 
