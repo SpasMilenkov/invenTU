@@ -91,7 +91,7 @@ public sealed class SupplierRepository (InvenTUDbContext dbContext) : ISupplierR
 
     public async Task<bool> PurchaseOrderExistsForSupplierAsync(Guid id, CancellationToken cancellationToken)
     {
-        return await dbContext.PurchaseOrders.AnyAsync(cancellationToken);
+        return await dbContext.PurchaseOrders.AnyAsync(po => po.SupplierId == id, cancellationToken);
     }
 
     public async Task UpdatePurchaseOrderStatusAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken)
