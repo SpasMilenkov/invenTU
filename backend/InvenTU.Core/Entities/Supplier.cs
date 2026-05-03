@@ -10,5 +10,6 @@ public sealed class Supplier
     public string? Address { get; set; }
 
     public ICollection<ProductSupplier> ProductSuppliers { get; set; } = [];
+    public ICollection<Product> Products { get; set; } = [];
     public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
 }

@@ -25,4 +25,5 @@ public sealed class Product
     public ICollection<StockItem> StockItems { get; set; } = [];
     public ICollection<StockMovement> StockMovements { get; set; } = [];
     public ICollection<ProductSupplier> ProductSuppliers { get; set; } = [];
+    public ICollection<Supplier> Suppliers { get; set; } = [];
 }
