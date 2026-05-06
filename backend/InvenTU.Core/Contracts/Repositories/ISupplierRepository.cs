@@ -16,5 +16,6 @@ public interface ISupplierRepository
     Task<PagedResult<PurchaseOrderDTO>> GetPurchaseOrdersAsync(PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken);
     Task UpdatePurchaseOrderStatusAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken);
     Task<bool> PurchaseOrderExistsForSupplierAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> ProductsExistsForSupplierAsync(Guid id, CancellationToken cancellationToken);
     Task<PurchaseOrder?> GetPurchaseOrderForUpdateAsync(Guid id, CancellationToken cancellationToken);
 }

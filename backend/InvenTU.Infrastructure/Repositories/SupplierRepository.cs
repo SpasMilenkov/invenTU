@@ -93,7 +93,10 @@ public sealed class SupplierRepository (InvenTUDbContext dbContext) : ISupplierR
     {
         return await dbContext.PurchaseOrders.AnyAsync(po => po.SupplierId == id, cancellationToken);
     }
-
+    public async Task<bool> ProductsExistsForSupplierAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await dbContext.ProductSuppliers.AnyAsync(ps => ps.SupplierId == id, cancellationToken);
+    }
     public async Task UpdatePurchaseOrderStatusAsync(PurchaseOrder purchaseOrder, CancellationToken cancellationToken)
     {
         if (purchaseOrder.Status!=PurchaseOrderStatus.Received)
