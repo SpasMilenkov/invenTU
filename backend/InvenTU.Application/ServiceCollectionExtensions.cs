@@ -4,6 +4,7 @@ using InvenTU.Application.Categories;
 using InvenTU.Application.Categories.Validators;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
+using InvenTU.Application.Reports;
 using InvenTU.Application.Stats;
 using InvenTU.Application.Stock;
 using InvenTU.Application.Stock.Validators;
@@ -22,7 +23,6 @@ using InvenTU.Core.DTOs.StockLocations;
 using InvenTU.Core.DTOs.Suppliers;
 using InvenTU.Core.DTOs.Warehouses;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace InvenTU.Application;
 
@@ -68,6 +68,7 @@ public static class ServiceCollectionExtensions
 
         services.AddHostedService<LowStockMonitoringService>();
         services.AddScoped<IStatsService, StatsService>();
+        services.AddScoped<IReportsService, ReportsService>();
 
         return services;
     }
