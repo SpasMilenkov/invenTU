@@ -4,10 +4,13 @@ using InvenTU.Application.Categories;
 using InvenTU.Application.Categories.Validators;
 using InvenTU.Application.Products;
 using InvenTU.Application.Products.Validators;
+using InvenTU.Application.Stats;
 using InvenTU.Application.Stock;
 using InvenTU.Application.Stock.Validators;
 using InvenTU.Application.StockLocations;
 using InvenTU.Application.StockLocations.Validators;
+using InvenTU.Application.Suppliers;
+using InvenTU.Application.Suppliers.Validators;
 using InvenTU.Application.Users;
 using InvenTU.Application.Warehouses;
 using InvenTU.Application.Warehouses.Validators;
@@ -16,8 +19,10 @@ using InvenTU.Core.DTOs.Categories;
 using InvenTU.Core.DTOs.Products;
 using InvenTU.Core.DTOs.Stock;
 using InvenTU.Core.DTOs.StockLocations;
+using InvenTU.Core.DTOs.Suppliers;
 using InvenTU.Core.DTOs.Warehouses;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace InvenTU.Application;
 
@@ -56,6 +61,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IValidator<CreateCategoryRequest>, CreateCategoryRequestValidator>();
         services.AddScoped<IValidator<UpdateCategoryRequest>, UpdateCategoryRequestValidator>();
+
+        services.AddScoped<ISupplierService, SupplierService>();
+        services.AddScoped<IValidator<CreateSupplierRequest>, CreateSupplierRequestValidator>();
+        services.AddScoped<IValidator<UpdateSupplierRequest>, UpdateSupplierRequestValidator>();
+
+        services.AddHostedService<LowStockMonitoringService>();
+        services.AddScoped<IStatsService, StatsService>();
 
         return services;
     }

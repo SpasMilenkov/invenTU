@@ -27,5 +27,9 @@ internal static class ProductProjections
         CreatedAt = p.CreatedAt,
         UpdatedAt = p.UpdatedAt,
         DeletedAt = p.DeletedAt,
+        PrimarySupplierName = p.ProductSuppliers
+                                .Where(ps => ps.IsPrimary)
+                                .Select(ps => ps.Supplier.Name)
+                                .FirstOrDefault() ?? string.Empty,
     };
 }

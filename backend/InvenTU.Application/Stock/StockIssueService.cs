@@ -19,6 +19,7 @@ public sealed class StockIssueService(
     IStockLocationRepository stockLocationRepository,
     IStockIssueRepository stockIssueRepository,
     ICurrentUserService currentUserService,
+    ILiveFeedService liveFeedService,
     IValidator<IssueStockRequest> validator) : IStockIssueService
 {
     /// <summary>
@@ -64,15 +65,11 @@ public sealed class StockIssueService(
             ?? throw new WarehouseNotFoundException(request.WarehouseId);
 
         if (!warehouse.IsActive)
-        {
             throw new WarehouseNotActiveException(warehouse.Id);
-        }
 
         var location = await stockLocationRepository.GetForUpdateAsync(request.WarehouseId, request.StockLocationId, cancellationToken);
         if (location is null)
-        {
             throw new StockLocationInvalidException(request.StockLocationId, "does not exist or does not belong to the target warehouse");
-        }
 
         var currentUser = await currentUserService.GetCurrentUserAsync()
             ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
@@ -87,6 +84,21 @@ public sealed class StockIssueService(
             request.ReferenceNumber,
             request.Notes,
             cancellationToken);
+
+        await liveFeedService.BroadcastMovementAsync(new StockMovementLiveDto
+        {
+            MovementId = movementId,
+            MovementType = "Issue",
+            ProductId = request.ProductId,
+            ProductName = string.Empty,
+            Quantity = request.Quantity,
+            DisplayQuantity = -request.Quantity,                         // -Q: stock out
+            SourceWarehouseName = warehouse.Name,
+            LocationCode = StockMovementLiveDto.FormatLocation(location),
+            StatusOrReason = request.ReasonCode,
+            Notes = request.Notes,
+            OccurredAt = DateTimeOffset.UtcNow,
+        }, cancellationToken);
 
         return new StockIssueDto
         {
