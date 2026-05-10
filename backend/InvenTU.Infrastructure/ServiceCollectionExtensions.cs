@@ -3,7 +3,6 @@ using FluentValidation;
 using InvenTU.Application.Alerts;
 using InvenTU.Application.Auth;
 using InvenTU.Application.Services;
-using InvenTU.Application.Suppliers;
 using InvenTU.Application.Validators;
 using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Contracts.Services;
@@ -146,6 +145,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISupplierRepository, SupplierRepository>();
 
         services.AddScoped<IStatsRepository, StatsRepository>();
+        services.AddScoped<IReportsRepository, ReportsRepository>();
+
         return services;
     }
 }
