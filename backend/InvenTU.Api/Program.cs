@@ -119,15 +119,12 @@ using (var scope = app.Services.CreateScope())
     // 2. Seed Identity roles (uses RoleManager — must run after migration)
     await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
 
-    if (app.Environment.IsDevelopment())
-    {
-        // 3. Seed dev users with fixed IDs matching SeedIds.DevAdminUserId / DevStaffUserId
-        await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
+    // 3. Seed dev users with fixed IDs matching SeedIds.DevAdminUserId / DevStaffUserId
+    await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
 
-        // 4. Seed data that requires users to exist (StockMovements, PurchaseOrders,
-        //    AlertUserStates). DevDataSeeder guards against the user not existing.
-        await DevDataSeeder.SeedAsync(scope.ServiceProvider);
-    }
+    // 4. Seed data that requires users to exist (StockMovements, PurchaseOrders,
+    //    AlertUserStates). DevDataSeeder guards against the user not existing.
+    await DevDataSeeder.SeedAsync(scope.ServiceProvider);
 }
 
 app.UseCors("Frontend");
