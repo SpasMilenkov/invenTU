@@ -18,6 +18,7 @@ public sealed class StockIssueService(
     IWarehouseRepository warehouseRepository,
     IStockLocationRepository stockLocationRepository,
     IStockIssueRepository stockIssueRepository,
+    IProductRepository productRepository,
     ICurrentUserService currentUserService,
     ILiveFeedService liveFeedService,
     IValidator<IssueStockRequest> validator) : IStockIssueService
@@ -74,6 +75,9 @@ public sealed class StockIssueService(
         var currentUser = await currentUserService.GetCurrentUserAsync()
             ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
 
+        var product = await productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var productName = product?.Name ?? string.Empty;
+
         var (movementId, updatedStockLevel) = await stockIssueRepository.ExecuteAsync(
             request.ProductId,
             request.StockLocationId,
@@ -90,7 +94,7 @@ public sealed class StockIssueService(
             MovementId = movementId,
             MovementType = "Issue",
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = productName,
             Quantity = request.Quantity,
             DisplayQuantity = -request.Quantity,                         // -Q: stock out
             SourceWarehouseName = warehouse.Name,
@@ -104,7 +108,7 @@ public sealed class StockIssueService(
         {
             MovementId = movementId,
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = productName,
             WarehouseId = warehouse.Id,
             WarehouseName = warehouse.Name,
             StockLocationId = request.StockLocationId,

@@ -63,7 +63,7 @@ public sealed class StockAdjustmentService(
             MovementId = movementId,
             MovementType = "Adjustment",
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = adjustmentDto.ProductName,
             Quantity = Math.Abs(adjustmentDto.Delta),
             DisplayQuantity = adjustmentDto.Delta,                       // signed delta from the repo
             DestinationWarehouseName = warehouse.Name,

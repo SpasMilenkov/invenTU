@@ -53,8 +53,8 @@ public sealed class ReportsController(IReportsService reportsService) : Controll
     {
         ArgumentNullException.ThrowIfNull(query, nameof(query));
 
-        var toDate = query.ToDate ?? DateTime.UtcNow;
-        var fromDate = query.FromDate ?? toDate.AddDays(-90);
+        var toDate = EnsureUtc(query.ToDate ?? DateTime.UtcNow);
+        var fromDate = EnsureUtc(query.FromDate ?? toDate.AddDays(-90));
 
         if (fromDate > toDate)
         {
@@ -139,6 +139,155 @@ public sealed class ReportsController(IReportsService reportsService) : Controll
         return Encoding.UTF8.GetBytes(sb.ToString());
     }
 
+    /// <summary>
+    /// Exports the stock-movement report as a UTF-8 CSV file.
+    /// Accepts the same filters as <c>GET /api/v1/reports/stock-movement/pdf</c>.
+    /// </summary>
+    /// <param name="queryParams">
+    /// Optional date range, warehouse, movement-type, status, and product filters.
+    /// </param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>A <c>text/csv</c> file named <c>stock-movement-YYYY-MM-DD.csv</c>.</returns>
+    [HttpGet("stock-movement/export")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportStockMovementCsv(
+        [FromQuery] StockMovementReportQueryParams queryParams,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(queryParams);
+
+        var report = await reportsService.GetStockMovementReportAsync(queryParams, cancellationToken);
+        var csvBytes = BuildStockMovementCsvBytes(report);
+        var fileName = $"stock-movement-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+        return File(csvBytes, "text/csv", fileName);
+    }
+
+    private const int StockMovementCsvColumnCount = 11;
+
+    private static string PadStockMovementCsvRow(params string[] fields)
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < StockMovementCsvColumnCount; i++)
+        {
+            if (i > 0) sb.Append(',');
+            if (i < fields.Length) sb.Append(fields[i]);
+        }
+        return sb.ToString();
+    }
+
+    private static byte[] BuildStockMovementCsvBytes(StockMovementReportResponse report)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("CreatedAt,Reference,Product,SKU,Type,Quantity,Source,Destination,Status,PerformedBy,Notes");
+
+        foreach (var row in report.Items)
+        {
+            sb.Append(row.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)).Append(',');
+            sb.Append(EscapeCsvField(row.ReferenceNumber ?? string.Empty)).Append(',');
+            sb.Append(EscapeCsvField(row.ProductName)).Append(',');
+            sb.Append(EscapeCsvField(row.SKU)).Append(',');
+            sb.Append(EscapeCsvField(row.MovementType)).Append(',');
+            sb.Append(row.Quantity.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.Append(EscapeCsvField(row.SourceWarehouse ?? string.Empty)).Append(',');
+            sb.Append(EscapeCsvField(row.DestinationWarehouse ?? string.Empty)).Append(',');
+            sb.Append(EscapeCsvField(row.Status)).Append(',');
+            sb.Append(EscapeCsvField(row.PerformedBy)).Append(',');
+            sb.AppendLine(EscapeCsvField(row.Notes ?? string.Empty));
+        }
+
+        sb.AppendLine(PadStockMovementCsvRow());
+        sb.AppendLine(PadStockMovementCsvRow(EscapeCsvField("Counts by type:")));
+        foreach (var pair in report.CountsByType.OrderBy(p => p.Key, StringComparer.Ordinal))
+        {
+            sb.AppendLine(PadStockMovementCsvRow(
+                EscapeCsvField(pair.Key),
+                pair.Value.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        sb.AppendLine(PadStockMovementCsvRow());
+        sb.AppendLine(PadStockMovementCsvRow(EscapeCsvField("Counts by status:")));
+        foreach (var pair in report.CountsByStatus.OrderBy(p => p.Key, StringComparer.Ordinal))
+        {
+            sb.AppendLine(PadStockMovementCsvRow(
+                EscapeCsvField(pair.Key),
+                pair.Value.ToString(CultureInfo.InvariantCulture)));
+        }
+
+        sb.AppendLine(PadStockMovementCsvRow());
+        sb.AppendLine(PadStockMovementCsvRow(
+            "Total quantity moved",
+            report.TotalQuantityMoved.ToString(CultureInfo.InvariantCulture)));
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    /// <summary>
+    /// Exports the product-turnover report as a UTF-8 CSV file.
+    /// Accepts the same optional <c>fromDate</c> / <c>toDate</c> filters as
+    /// <c>GET /api/v1/reports/turnover</c>.
+    /// </summary>
+    /// <param name="query">Optional date range; defaults to the last 90 days when omitted.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>A <c>text/csv</c> file named <c>product-turnover-YYYY-MM-DD.csv</c>.</returns>
+    [HttpGet("turnover/export")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExportTurnoverCsv(
+        [FromQuery] TurnoverQueryParams query,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var toDate = EnsureUtc(query.ToDate ?? DateTime.UtcNow);
+        var fromDate = EnsureUtc(query.FromDate ?? toDate.AddDays(-90));
+
+        if (fromDate > toDate)
+        {
+            return BadRequest("fromDate must not be later than toDate.");
+        }
+
+        var report = await reportsService.GetTurnoverAsync(fromDate, toDate, cancellationToken);
+        var csvBytes = BuildTurnoverCsvBytes(report);
+        var fileName = $"product-turnover-{DateTime.UtcNow:yyyy-MM-dd}.csv";
+        return File(csvBytes, "text/csv", fileName);
+    }
+
+    private const int TurnoverCsvColumnCount = 6;
+
+    private static string PadTurnoverCsvRow(params string[] fields)
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < TurnoverCsvColumnCount; i++)
+        {
+            if (i > 0) sb.Append(',');
+            if (i < fields.Length) sb.Append(fields[i]);
+        }
+        return sb.ToString();
+    }
+
+    private static byte[] BuildTurnoverCsvBytes(TurnoverReportResponse report)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("SKU,Name,TotalUnitsIssued,AverageStockLevel,TurnoverRatio,Classification");
+
+        foreach (var item in report.Items)
+        {
+            sb.Append(EscapeCsvField(item.SKU)).Append(',');
+            sb.Append(EscapeCsvField(item.ProductName)).Append(',');
+            sb.Append(item.TotalUnitsIssued.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.Append(item.AverageStockLevel.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.Append(item.TurnoverRatio.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.AppendLine(EscapeCsvField(item.Classification));
+        }
+
+        sb.AppendLine(PadTurnoverCsvRow());
+        sb.AppendLine(PadTurnoverCsvRow("From", report.FromDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+        sb.AppendLine(PadTurnoverCsvRow("To", report.ToDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+        sb.AppendLine(PadTurnoverCsvRow("Days in period", report.DaysInPeriod.ToString(CultureInfo.InvariantCulture)));
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
     private static string EscapeCsvField(string value)
     {
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
@@ -148,4 +297,7 @@ public sealed class ReportsController(IReportsService reportsService) : Controll
 
         return value;
     }
+
+    private static DateTime EnsureUtc(DateTime value) =>
+        value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }

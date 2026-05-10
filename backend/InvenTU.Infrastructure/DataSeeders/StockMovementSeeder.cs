@@ -12,8 +12,14 @@ namespace InvenTU.Infrastructure.DataSeeders;
 /// </summary>
 internal static class StockMovementSeeder
 {
-    private static readonly DateTime SeedDate =
-        new(2025, 1, 15, 9, 0, 0, DateTimeKind.Utc);
+    // Relative to "now" so freshly-seeded dev databases always sit inside the
+    // default report windows (Stock Movement = 30 days, Turnover = 90 days).
+    // Receipts are dated 21 days ago; issues are layered on top a few days later.
+    private static readonly DateTime ReceiptDate =
+        DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-21), DateTimeKind.Utc);
+
+    private static readonly DateTime IssueDate =
+        DateTime.SpecifyKind(DateTime.UtcNow.Date.AddDays(-7), DateTimeKind.Utc);
 
     // SourceWarehouseId is null for initial receipts (goods arriving from outside).
     private static IReadOnlyList<StockMovement> BuildSeed() =>
@@ -32,7 +38,7 @@ internal static class StockMovementSeeder
             ReferenceNumber      = "INIT-PHN-001",
             Notes                = "Initial stock receipt",
             UserId               = SeedIds.DevAdminUserId,
-            CreatedAt            = SeedDate,
+            CreatedAt            = ReceiptDate,
         },
         new StockMovement
         {
@@ -48,7 +54,7 @@ internal static class StockMovementSeeder
             ReferenceNumber      = "INIT-PHN-002",
             Notes                = "Initial stock receipt",
             UserId               = SeedIds.DevAdminUserId,
-            CreatedAt            = SeedDate,
+            CreatedAt            = ReceiptDate,
         },
         new StockMovement
         {
@@ -64,7 +70,7 @@ internal static class StockMovementSeeder
             ReferenceNumber      = "INIT-LPT-001",
             Notes                = "Initial stock receipt",
             UserId               = SeedIds.DevAdminUserId,
-            CreatedAt            = SeedDate,
+            CreatedAt            = ReceiptDate,
         },
         new StockMovement
         {
@@ -80,7 +86,7 @@ internal static class StockMovementSeeder
             ReferenceNumber      = "INIT-LPT-002",
             Notes                = "Initial stock receipt — low quantity triggers alert",
             UserId               = SeedIds.DevAdminUserId,
-            CreatedAt            = SeedDate,
+            CreatedAt            = ReceiptDate,
         },
         new StockMovement
         {
@@ -96,7 +102,7 @@ internal static class StockMovementSeeder
             ReferenceNumber      = "INIT-OFF-001",
             Notes                = "Initial stock receipt — quantity near reorder point",
             UserId               = SeedIds.DevAdminUserId,
-            CreatedAt            = SeedDate,
+            CreatedAt            = ReceiptDate,
         },
         new StockMovement
         {
@@ -112,7 +118,93 @@ internal static class StockMovementSeeder
             ReferenceNumber      = "INIT-OFF-002",
             Notes                = "Initial stock receipt",
             UserId               = SeedIds.DevAdminUserId,
-            CreatedAt            = SeedDate,
+            CreatedAt            = ReceiptDate,
+        },
+
+        // Issue movements (a few weeks after the receipts) so the Turnover
+        // report produces a mix of FastMoving / Normal / SlowMoving classes.
+        // Phone1 receives heavy issue volume so its annualised ratio crosses
+        // the FastMoving threshold; Phone2/Laptop1/Paper1 land in Normal;
+        // Laptop2 and File1 receive no issues and stay SlowMoving.
+        new StockMovement
+        {
+            Id                   = SeedIds.MovementPhone1Issue1,
+            ProductId            = SeedIds.ProductPhone1,
+            SourceWarehouseId    = SeedIds.WarehouseMain,
+            DestinationWarehouseId = null,
+            StockLocationId      = SeedIds.LocationMainA1S1,
+            MovementType         = MovementType.Issue,
+            Quantity             = 100,
+            Status               = MovementStatus.Approved,
+            ReasonCode           = "SALE",
+            ReferenceNumber      = "ISS-PHN-001",
+            Notes                = "Sample issue for turnover seeding",
+            UserId               = SeedIds.DevAdminUserId,
+            CreatedAt            = IssueDate,
+        },
+        new StockMovement
+        {
+            Id                   = SeedIds.MovementPhone1Issue2,
+            ProductId            = SeedIds.ProductPhone1,
+            SourceWarehouseId    = SeedIds.WarehouseMain,
+            DestinationWarehouseId = null,
+            StockLocationId      = SeedIds.LocationMainA1S1,
+            MovementType         = MovementType.Issue,
+            Quantity             = 200,
+            Status               = MovementStatus.Approved,
+            ReasonCode           = "SALE",
+            ReferenceNumber      = "ISS-PHN-002",
+            Notes                = "Sample issue for turnover seeding",
+            UserId               = SeedIds.DevAdminUserId,
+            CreatedAt            = IssueDate.AddDays(3),
+        },
+        new StockMovement
+        {
+            Id                   = SeedIds.MovementPhone2Issue1,
+            ProductId            = SeedIds.ProductPhone2,
+            SourceWarehouseId    = SeedIds.WarehouseMain,
+            DestinationWarehouseId = null,
+            StockLocationId      = SeedIds.LocationMainA1S2,
+            MovementType         = MovementType.Issue,
+            Quantity             = 15,
+            Status               = MovementStatus.Approved,
+            ReasonCode           = "SALE",
+            ReferenceNumber      = "ISS-PHN-003",
+            Notes                = "Sample issue for turnover seeding",
+            UserId               = SeedIds.DevAdminUserId,
+            CreatedAt            = IssueDate.AddDays(1),
+        },
+        new StockMovement
+        {
+            Id                   = SeedIds.MovementLaptop1Issue,
+            ProductId            = SeedIds.ProductLaptop1,
+            SourceWarehouseId    = SeedIds.WarehouseMain,
+            DestinationWarehouseId = null,
+            StockLocationId      = SeedIds.LocationMainA1S1,
+            MovementType         = MovementType.Issue,
+            Quantity             = 8,
+            Status               = MovementStatus.Approved,
+            ReasonCode           = "SALE",
+            ReferenceNumber      = "ISS-LPT-001",
+            Notes                = "Sample issue for turnover seeding",
+            UserId               = SeedIds.DevAdminUserId,
+            CreatedAt            = IssueDate.AddDays(2),
+        },
+        new StockMovement
+        {
+            Id                   = SeedIds.MovementPaper1Issue,
+            ProductId            = SeedIds.ProductPaper1,
+            SourceWarehouseId    = SeedIds.WarehouseNorth,
+            DestinationWarehouseId = null,
+            StockLocationId      = SeedIds.LocationNorthB1S1,
+            MovementType         = MovementType.Issue,
+            Quantity             = 25,
+            Status               = MovementStatus.Approved,
+            ReasonCode           = "SALE",
+            ReferenceNumber      = "ISS-OFF-001",
+            Notes                = "Sample issue for turnover seeding",
+            UserId               = SeedIds.DevAdminUserId,
+            CreatedAt            = IssueDate.AddDays(4),
         },
     ];
 

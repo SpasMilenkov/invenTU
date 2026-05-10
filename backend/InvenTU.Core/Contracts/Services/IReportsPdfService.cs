@@ -65,4 +65,29 @@ public interface IReportsPdfService
     Task<(byte[] Bytes, string FileName)> GenerateStockMovementPdfAsync(
         StockMovementReportQueryParams queryParams,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Generates a product-turnover PDF report and returns the raw bytes
+    /// together with a descriptive filename.
+    /// </summary>
+    /// <param name="queryParams">
+    /// Optional date range. Both dates default to the last 90 days when omitted.
+    /// </param>
+    /// <param name="cancellationToken">Token used to propagate cancellation.</param>
+    /// <returns>
+    /// A tuple of:
+    /// <list type="bullet">
+    ///   <item><description>
+    ///     <c>Bytes</c> — the complete PDF file as a byte array.
+    ///   </description></item>
+    ///   <item><description>
+    ///     <c>FileName</c> — a descriptive filename for the
+    ///     <c>Content-Disposition</c> header,
+    ///     e.g. <c>product-turnover-2026-05-10.pdf</c>.
+    ///   </description></item>
+    /// </list>
+    /// </returns>
+    Task<(byte[] Bytes, string FileName)> GenerateTurnoverPdfAsync(
+        TurnoverQueryParams queryParams,
+        CancellationToken cancellationToken);
 }
