@@ -20,15 +20,7 @@ export interface ProductDto {
   deletedAt: string | null;
 }
 
-export interface PagedResult<T> {
-  items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
+export type { PagedResult } from './common';
 
 export type ArchiveStatusFilter = 'Active' | 'Archived' | 'All';
 
