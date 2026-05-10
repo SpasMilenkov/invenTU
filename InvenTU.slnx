@@ -1,12 +1,13 @@
 <Solution>
-  <Project Path="backend/InvenTU.Application/InvenTU.Application.csproj" />
-  <Project Path="backend/InvenTU.Core/InvenTU.Core.csproj" />
-  <Project Path="backend/InvenTU.Api/InvenTU.Api.csproj" />
-  <Project Path="backend/InvenTU.Infrastructure/InvenTU.Infrastructure.csproj" />
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="nuget.config" />
   </Folder>
+  <Project Path="backend/InvenTU.Api/InvenTU.Api.csproj" />
+  <Project Path="backend/InvenTU.Application/InvenTU.Application.csproj" />
+  <Project Path="backend/InvenTU.Core/InvenTU.Core.csproj" />
+  <Project Path="backend/InvenTU.Infrastructure/InvenTU.Infrastructure.csproj" />
+  <Project Path="InvenTU.Tests/InvenTU.Tests.csproj" Id="82986606-2538-48e1-b711-3014a96d0466" />
 </Solution>
