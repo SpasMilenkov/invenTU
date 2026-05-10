@@ -25,5 +25,15 @@ setup('authenticate as admin', async ({ page }) => {
   const cookies = await page.context().cookies();
   expect(cookies.find((c) => c.name === 'AccessToken')).toBeDefined();
 
+  // Strip the Secure flag from saved cookies so subsequent contexts on
+  // HTTP localhost (notably WebKit, which is RFC-strict) accept and send
+  // them. Chromium and Firefox apply a localhost exception to Secure
+  // cookies and worked without this; WebKit does not. Production runs
+  // over HTTPS through nginx, so this rewrite only affects the test
+  // fixture saved at playwright/.auth/admin.json.
+  const sanitized = cookies.map((c) => ({ ...c, secure: false }));
+  await page.context().clearCookies();
+  await page.context().addCookies(sanitized);
+
   await page.context().storageState({ path: AUTH_FILE });
 });
