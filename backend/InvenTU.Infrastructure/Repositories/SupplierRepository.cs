@@ -31,6 +31,26 @@ public sealed class SupplierRepository (InvenTUDbContext dbContext) : ISupplierR
         await dbContext.Suppliers.Where(s => s.Id == id).ExecuteDeleteAsync(cancellationToken);
     }
 
+    public async Task<bool> ArchiveAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var affected = await dbContext.Suppliers
+            .Where(s => s.Id == id && s.IsActive)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(s => s.IsActive, false),
+                cancellationToken);
+        return affected > 0;
+    }
+
+    public async Task<bool> RestoreAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var affected = await dbContext.Suppliers
+            .Where(s => s.Id == id && !s.IsActive)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(s => s.IsActive, true),
+                cancellationToken);
+        return affected > 0;
+    }
+
     public async Task<PurchaseOrder?> GetPurchaseOrderForUpdateAsync(Guid id, CancellationToken cancellationToken)
     {
         return await dbContext.PurchaseOrders.Where(po => po.Id == id).FirstOrDefaultAsync(cancellationToken);
@@ -75,15 +95,23 @@ public sealed class SupplierRepository (InvenTUDbContext dbContext) : ISupplierR
             .Where(s => s.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
     }
-    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string? search, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(SupplierQueryParams queryParams, CancellationToken cancellationToken)
     {
-        return await dbContext.Suppliers
-            .Where(s => s.IsActive
-                && (s.Name.ToUpper().Contains(search ?? "")
-                    || s.Address == null ? true : s.Address.ToUpper().Contains(search ?? "")
-                    || s.ContactPhone == null ? true : s.ContactPhone.ToUpper().Contains(search ?? "")
-                    || s.ContactEmail == null ? true : s.ContactEmail.ToUpper().Contains(search ?? "")
-                ))
+        var search = queryParams.Search;
+
+        var query = queryParams.Archive switch
+        {
+            ArchiveStatusFilter.Active   => dbContext.Suppliers.Where(s => s.IsActive),
+            ArchiveStatusFilter.Archived => dbContext.Suppliers.Where(s => !s.IsActive),
+            ArchiveStatusFilter.All      => dbContext.Suppliers.AsQueryable(),
+            _                            => dbContext.Suppliers.Where(s => s.IsActive),
+        };
+
+        return await query
+            .Where(s => s.Name.ToUpper().Contains(search ?? "")
+                || s.Address == null ? true : s.Address.ToUpper().Contains(search ?? "")
+                || s.ContactPhone == null ? true : s.ContactPhone.ToUpper().Contains(search ?? "")
+                || s.ContactEmail == null ? true : s.ContactEmail.ToUpper().Contains(search ?? ""))
             .Select(SupplierProjections.ToDto)
             .AsNoTracking()
             .ToListAsync(cancellationToken);

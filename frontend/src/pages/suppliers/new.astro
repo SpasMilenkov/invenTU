@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import SupplierCreatePage from '../../components/suppliers/SupplierCreatePage';
+---
+
+<Layout title="New supplier" crumb="Suppliers">
+  <SupplierCreatePage client:only="react" />
+</Layout>

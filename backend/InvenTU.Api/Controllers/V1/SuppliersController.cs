@@ -10,22 +10,19 @@ namespace InvenTU.Api.Controllers.V1;
 /// <summary>
 /// Controller for managing suppliers and their purchase order pipeline
 /// </summary>
-[Route("api/[controller]")]
+[Route("api/v1/suppliers")]
 [ApiController]
 [Authorize]
 public sealed class SuppliersController (ISupplierService supplierService) : ControllerBase
 {
     /// <summary>
-    /// Fetching a list of queried suppliers
+    /// Fetching a list of queried suppliers, optionally filtered by archive state.
     /// </summary>
-    /// <param name="search">Search term</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns></returns>
     [HttpGet]
     [Authorize(Roles = "Manager,Admin")]
-    public async Task<IActionResult> GetSuppliers([FromQuery] string? search, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetSuppliers([FromQuery] SupplierQueryParams queryParams, CancellationToken cancellationToken)
     {
-        var suppliers = await supplierService.GetSuppliersAsync(search, cancellationToken);
+        var suppliers = await supplierService.GetSuppliersAsync(queryParams, cancellationToken);
 
         return Ok(suppliers);
     }
@@ -71,6 +68,28 @@ public sealed class SuppliersController (ISupplierService supplierService) : Con
         await supplierService.DeleteSupplierAsync(id, cancellationToken);
 
         return Ok();
+    }
+    /// <summary>
+    /// Archives a supplier by setting IsActive = false. Returns 404 if the supplier is already archived or missing.
+    /// Requires Manager or Admin role.
+    /// </summary>
+    [HttpPatch("{id:guid}/archive")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<IActionResult> Archive(Guid id, CancellationToken cancellationToken)
+    {
+        await supplierService.ArchiveAsync(id, cancellationToken);
+        return NoContent();
+    }
+    /// <summary>
+    /// Restores a previously-archived supplier by setting IsActive = true. Returns 404 if the supplier does not exist or is already active.
+    /// Requires Manager or Admin role.
+    /// </summary>
+    [HttpPatch("{id:guid}/restore")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<IActionResult> Restore(Guid id, CancellationToken cancellationToken)
+    {
+        await supplierService.RestoreAsync(id, cancellationToken);
+        return NoContent();
     }
     /// <summary>
     /// Creates a new purchase order

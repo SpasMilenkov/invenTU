@@ -1,4 +1,4 @@
-namespace InvenTU.Core.DTOs.Products;
+namespace InvenTU.Core.Enums;
 
 public enum ArchiveStatusFilter
 {

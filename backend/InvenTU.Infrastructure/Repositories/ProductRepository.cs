@@ -2,6 +2,7 @@ using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.DTOs.Common;
 using InvenTU.Core.DTOs.Products;
 using InvenTU.Core.Entities;
+using InvenTU.Core.Enums;
 using InvenTU.Infrastructure.Data;
 using InvenTU.Infrastructure.Projections;
 using Microsoft.EntityFrameworkCore;

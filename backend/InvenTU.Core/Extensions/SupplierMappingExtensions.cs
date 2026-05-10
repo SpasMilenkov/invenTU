@@ -15,14 +15,16 @@ public static class SupplierMappingExtensions
             Address = createRequest.Address?.Trim(),
             ContactEmail = createRequest.ContactEmail,
             ContactPhone = Regex.Replace(createRequest.ContactPhone ?? "", "[-.\\s]", ""),
-            IsActive = true
+            IsActive = createRequest.IsActive,
         };
     }
+
     public static void ApplyUpdate(this Supplier supplier, UpdateSupplierRequest updateRequest)
     {
         supplier.Name = updateRequest.Name.Trim();
         supplier.Address = updateRequest.Address?.Trim();
         supplier.ContactEmail = updateRequest.ContactEmail;
         supplier.ContactPhone = Regex.Replace(updateRequest.ContactPhone ?? "", "[-.\\s]", "");
+        supplier.IsActive = updateRequest.IsActive;
     }
 }

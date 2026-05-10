@@ -1,3 +1,5 @@
+using InvenTU.Core.Enums;
+
 namespace InvenTU.Core.DTOs.Products;
 
 public sealed class ProductQueryParams
