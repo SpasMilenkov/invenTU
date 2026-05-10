@@ -17,6 +17,8 @@ interface LocationCascadeProps {
   prefix?: string;
   /** Optional section heading rendered above the fields */
   heading?: string;
+  warehouseTestId?: string;
+  locationTestId?: string;
 }
 
 export default function LocationCascade({
@@ -30,6 +32,8 @@ export default function LocationCascade({
   locationError,
   prefix = "",
   heading,
+  warehouseTestId,
+  locationTestId,
 }: LocationCascadeProps) {
   const warehouses = useActiveWarehouses();
   const locations = useStockLocations(warehouseId || null);
@@ -61,6 +65,7 @@ export default function LocationCascade({
         </label>
         <select
           id={`${prefix}warehouseId`}
+          data-testid={warehouseTestId}
           className={`select${warehouseError ? " input-error" : ""}`}
           value={warehouseId}
           onChange={(e) => {
@@ -111,6 +116,7 @@ export default function LocationCascade({
         </label>
         <select
           id={`${prefix}locationId`}
+          data-testid={locationTestId}
           className={`select${locationError ? " input-error" : ""}`}
           value={locationId}
           disabled={!warehouseId}

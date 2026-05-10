@@ -9,7 +9,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test:e2e": "bash scripts/e2e.sh",
+    "test:e2e:run": "playwright test",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:install": "playwright install --with-deps chromium firefox webkit"
   },
   "dependencies": {
     "@astrojs/node": "10.0.6",
@@ -28,8 +32,11 @@
     "zod": "4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^22.19.17",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "dotenv": "^16.6.1",
     "typescript": "5.9.3"
   },
   "packageManager": "pnpm@11.0.7+sha512.724a7b5d2319cdd7009d65e15a2c29aae9d3902b50585ca163d38a7737eb85bc4e72196879ff59768a71e81fe32aa71e8b70f088b2e24b9e4a2850d87e4607b5"

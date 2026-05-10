@@ -11,6 +11,7 @@
 *.sln.docstates
 *.env*
 !.env.example
+!frontend/.env.test
 **/certs
 
 # User-specific files (MonoDevelop/Xamarin Studio)
@@ -439,6 +440,9 @@ scripts/memory/project/src/pages/
 benchmark/projects/
 benchmark/results/
 test-results/
+playwright-report/
+playwright/.auth/
+.playwright/
 *.log
 .turbo/
 .eslintcache

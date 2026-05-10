@@ -5,6 +5,7 @@ interface QtyStepperProps {
   max?: number;
   hasError?: boolean;
   id?: string;
+  dataTestId?: string;
 }
 
 export default function QtyStepper({
@@ -14,6 +15,7 @@ export default function QtyStepper({
   max,
   hasError,
   id,
+  dataTestId,
 }: QtyStepperProps) {
   const v = parseInt(value, 10);
   const current = Number.isNaN(v) ? 0 : v;
@@ -45,6 +47,7 @@ export default function QtyStepper({
       </button>
       <input
         id={id}
+        data-testid={dataTestId}
         className="qty-input"
         inputMode="numeric"
         pattern="[0-9]*"

@@ -63,7 +63,7 @@ InvenTU.Api          ← web entrypoint, controllers, OpenAPI (depends on Infras
 
 - Astro SSR with Node adapter (`@astrojs/node`).
 - API client: `axios`.
-- No test framework configured yet.
+- E2E tests: Playwright. Run from `frontend/` with `pnpm test:e2e` (boots docker-compose, runs tests, tears down). See `frontend/tests/e2e/README.md`.
 
 ## Testing
 

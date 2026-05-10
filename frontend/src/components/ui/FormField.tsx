@@ -13,6 +13,8 @@ interface FormFieldProps {
   trailingLabel?: { text: string; href: string };
   /** Mark the field as required (renders an accent asterisk after the label). */
   required?: boolean;
+  /** Optional `data-testid` attribute applied to the underlying <input>. */
+  testId?: string;
 }
 
 export function FormField({
@@ -25,6 +27,7 @@ export function FormField({
   mono,
   trailingLabel,
   required,
+  testId,
 }: FormFieldProps) {
   return (
     <div className="field">
@@ -44,6 +47,7 @@ export function FormField({
         type={type}
         className={`input${mono ? ' mono' : ''}${error ? ' input-error' : ''}`}
         placeholder={placeholder}
+        data-testid={testId}
         {...registration}
       />
       {hint && !error && <p className="input-help">{hint}</p>}
@@ -58,9 +62,11 @@ interface SelectFieldProps {
   error?: FieldError;
   options: { value: string; label: string }[];
   required?: boolean;
+  /** Optional `data-testid` attribute applied to the underlying <select>. */
+  testId?: string;
 }
 
-export function SelectField({ label, registration, error, options, required }: SelectFieldProps) {
+export function SelectField({ label, registration, error, options, required, testId }: SelectFieldProps) {
   return (
     <div className="field">
       <div className="form-field-label">
@@ -72,6 +78,7 @@ export function SelectField({ label, registration, error, options, required }: S
       <select
         id={registration.name}
         className={`select${error ? ' input-error' : ''}`}
+        data-testid={testId}
         {...registration}
       >
         {options.map((opt) => (
