@@ -82,6 +82,22 @@ The four critical flows have stable `data-testid` hooks:
 Use `page.getByTestId('...')` for these. For everything else, prefer
 role-based queries: `page.getByRole('button', { name: /Save/ })`.
 
+## Specs in this directory
+
+| Spec | Cases |
+| --- | --- |
+| `login.spec.ts` | happy login · wrong password · empty submit · invalid email format |
+| `product-create.spec.ts` | happy create · duplicate SKU rejection · missing required fields · server 500 toast |
+| `stock-receive.spec.ts` | end-to-end receipt · submit-disabled gating · qty=0 rejection · location reset on warehouse change |
+| `dashboard.spec.ts` | renders 5 sections · KPI numeric values · chart hydrates · stats-failure retry banner |
+
+Helpers under `fixtures/`:
+
+- `auth.ts` — `test`, `expect`, `STORAGE_STATE_LOGGED_OUT`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- `data.ts` — `uniqueSku()` for collision-free SKUs across parallel runs
+- `selectors.ts` — `selectFirstCategory(page, wrapperTestId)`, `selectFirstOption(select)`
+- `forms.ts` — `fillProductForm(page, overrides)`, `walkStockReceive(page, overrides)`
+
 ## Artifacts
 
 - HTML report: `frontend/playwright-report/`
