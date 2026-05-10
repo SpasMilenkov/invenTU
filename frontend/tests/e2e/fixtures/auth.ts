@@ -20,4 +20,7 @@ export { expect };
  * Apply with `test.use({ storageState: STORAGE_STATE_LOGGED_OUT })` in
  * specs that exercise the login flow itself and must start unauthenticated.
  */
-export const STORAGE_STATE_LOGGED_OUT = { cookies: [], origins: [] } as const;
+export const STORAGE_STATE_LOGGED_OUT: { cookies: []; origins: [] } = {
+  cookies: [],
+  origins: [],
+};
