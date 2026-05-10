@@ -21,9 +21,9 @@ dotnet ef database update -p backend/InvenTU.Infrastructure         # apply migr
 ### Frontend (run from `frontend/`)
 
 ```bash
-npm install
-npm run dev       # dev server on :4321
-npm run build     # production build → ./dist/
+pnpm install
+pnpm dev         # dev server on :4321
+pnpm build       # production build → ./dist/
 ```
 
 ### Full Stack (Docker)
