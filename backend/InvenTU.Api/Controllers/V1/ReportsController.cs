@@ -2,6 +2,8 @@ using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.DTOs.Reports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+using System.Text;
 
 namespace InvenTU.Api.Controllers.V1;
 
@@ -61,5 +63,89 @@ public sealed class ReportsController(IReportsService reportsService) : Controll
 
         var result = await reportsService.GetTurnoverAsync(fromDate, toDate, cancellationToken);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Returns the FIFO-based stock valuation for every product that currently holds on-hand stock.
+    /// </summary>
+    /// <remarks>
+    /// <b>FIFO cost method:</b> Under FIFO, the oldest units are consumed first, so the
+    /// remaining on-hand stock is priced at the cost of the most recent purchase-order receipts.
+    /// When a product has no purchase-order history the product's <c>CostPrice</c> field is
+    /// used as the fallback unit cost.
+    ///
+    /// <b>Filters:</b>
+    /// <list type="bullet">
+    ///   <item><c>warehouseId</c> — restricts on-hand quantities to stock held in that warehouse.</item>
+    ///   <item><c>categoryId</c> — restricts rows to products belonging to that category.</item>
+    /// </list>
+    ///
+    /// The response includes a <c>grandTotal</c> which is the sum of all per-product
+    /// <c>totalValue</c> figures.
+    /// </remarks>
+    /// <param name="query">Optional warehouse and category filters.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>
+    /// An <see cref="InventoryValuationResponse"/> with per-product rows ordered by SKU
+    /// and a grand total.
+    /// </returns>
+    [HttpGet("inventory-valuation")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetInventoryValuation([FromQuery] InventoryValuationQueryParams query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var result = await reportsService.GetInventoryValuationAsync(query.WarehouseId, query.CategoryId, cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Exports the inventory-valuation report as a UTF-8 CSV file.
+    /// Accepts the same optional <c>warehouseId</c> and <c>categoryId</c> filters as
+    /// <c>GET /api/v1/reports/inventory-valuation</c>.
+    /// </summary>
+    /// <param name="query">Optional warehouse and category filters.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>A <c>text/csv</c> file named <c>inventory-valuation.csv</c>.</returns>
+    [HttpGet("inventory-valuation/export")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportInventoryValuationCsv([FromQuery] InventoryValuationQueryParams query, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        var result = await reportsService.GetInventoryValuationAsync(query.WarehouseId, query.CategoryId, cancellationToken);
+        var csvBytes = BuildCsvBytes(result);
+        return File(csvBytes, "text/csv", "inventory-valuation.csv");
+    }
+
+    private static byte[] BuildCsvBytes(InventoryValuationResponse report)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("SKU,Name,Category,TotalQuantity,UnitCost,TotalValue");
+
+        foreach (var item in report.Items)
+        {
+            sb.Append(EscapeCsvField(item.SKU)).Append(',');
+            sb.Append(EscapeCsvField(item.Name)).Append(',');
+            sb.Append(EscapeCsvField(item.Category)).Append(',');
+            sb.Append(item.TotalQuantity.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.Append(item.UnitCost.ToString(CultureInfo.InvariantCulture)).Append(',');
+            sb.AppendLine(item.TotalValue.ToString(CultureInfo.InvariantCulture));
+        }
+
+        sb.Append(",,,,Grand Total,");
+        sb.AppendLine(report.GrandTotal.ToString(CultureInfo.InvariantCulture));
+
+        return Encoding.UTF8.GetBytes(sb.ToString());
+    }
+
+    private static string EscapeCsvField(string value)
+    {
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+
+        return value;
     }
 }
