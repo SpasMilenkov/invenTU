@@ -21,6 +21,12 @@
           "Microsoft.Extensions.Logging.Abstractions": "10.0.7"
         }
       },
+      "QuestPDF": {
+        "type": "Direct",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      },
       "Microsoft.AspNetCore.Cryptography.Internal": {
         "type": "Transitive",
         "resolved": "10.0.5",
@@ -235,8 +241,29 @@
         }
       }
     },
-    "net10.0/linux-x64": {},
-    "net10.0/osx-x64": {},
-    "net10.0/win-x64": {}
+    "net10.0/linux-x64": {
+      "QuestPDF": {
+        "type": "Direct",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      }
+    },
+    "net10.0/osx-x64": {
+      "QuestPDF": {
+        "type": "Direct",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      }
+    },
+    "net10.0/win-x64": {
+      "QuestPDF": {
+        "type": "Direct",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      }
+    }
   }
 }

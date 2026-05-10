@@ -137,4 +137,92 @@ public sealed class ReportsRepository(InvenTUDbContext context) : IReportsReposi
 
         return new InventoryValuationRaw(snapshots, poLines);
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<StockMovementReportRow>> GetStockMovementsForReportAsync(
+        DateTime?         fromDate,
+        DateTime?         toDate,
+        Guid?             warehouseId,
+        string?           movementType,
+        string?           status,
+        Guid?             productId,
+        CancellationToken cancellationToken)
+    {
+        // Resolve string filter params to enums before entering the
+        //    expression tree — EF Core cannot translate Enum.Parse to SQL.
+        //    Invalid / unrecognised strings are treated as "no filter".
+        MovementType? movementTypeFilter =
+            movementType is not null && Enum.TryParse<MovementType>(movementType, ignoreCase: true, out var mt)
+                ? mt
+                : null;
+
+        MovementStatus? statusFilter =
+            status is not null && Enum.TryParse<MovementStatus>(status, ignoreCase: true, out var ms)
+                ? ms
+                : null;
+
+        // Query — enum-to-enum comparisons translate cleanly to SQL.
+        //    Warehouse name resolution and enum-to-string conversion are
+        //    intentionally deferred to the in-memory projection below to
+        //    avoid EF Core translation issues with .ToString() on enums.
+        var raw = await (
+            from sm in context.StockMovements
+            join p  in context.Products  on sm.ProductId equals p.Id
+            join u  in context.Users     on sm.UserId    equals u.Id
+
+            // Source warehouse — null for purely inbound movements (e.g. Receipt)
+            join sw in context.Warehouses
+                on sm.SourceWarehouseId equals (Guid?)sw.Id into sourceJoin
+            from sw in sourceJoin.DefaultIfEmpty()
+
+            // Destination warehouse — null for purely outbound movements (e.g. Issue)
+            join dw in context.Warehouses
+                on sm.DestinationWarehouseId equals (Guid?)dw.Id into destJoin
+            from dw in destJoin.DefaultIfEmpty()
+
+            where (!fromDate.HasValue           || sm.CreatedAt >= fromDate.Value)
+               && (!toDate.HasValue             || sm.CreatedAt <= toDate.Value)
+               && (!warehouseId.HasValue        || sm.SourceWarehouseId     == warehouseId.Value
+                                               || sm.DestinationWarehouseId == warehouseId.Value)
+               && (!movementTypeFilter.HasValue || sm.MovementType == movementTypeFilter.Value)
+               && (!statusFilter.HasValue       || sm.Status       == statusFilter.Value)
+               && (!productId.HasValue          || sm.ProductId    == productId.Value)
+
+            orderby sm.CreatedAt descending
+
+            select new
+            {
+                sm.Id,
+                sm.CreatedAt,
+                sm.ReferenceNumber,
+                ProductName         = p.Name,
+                p.SKU,
+                sm.MovementType,   // enum — projected to string below
+                sm.Quantity,
+                SourceWarehouse     = sw != null ? sw.Name : null,
+                DestinationWarehouse= dw != null ? dw.Name : null,
+                sm.Status,         // enum — projected to string below
+                PerformedBy         = u.FirstName + " " + u.LastName,
+                sm.Notes,
+            }
+
+        ).ToListAsync(cancellationToken);
+
+        // In-memory projection — safe to call .ToString() on enums here.
+        return raw.ConvertAll(r => new StockMovementReportRow(
+            r.Id,
+            r.CreatedAt,
+            r.ReferenceNumber,
+            r.ProductName,
+            r.SKU,
+            r.MovementType.ToString(),
+            r.Quantity,
+            r.SourceWarehouse,
+            r.DestinationWarehouse,
+            r.Status.ToString(),
+            r.PerformedBy,
+            r.Notes));
+    }
+
+
 }

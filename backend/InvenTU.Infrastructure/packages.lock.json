@@ -487,7 +487,8 @@
         "dependencies": {
           "FluentValidation": "[12.1.1, )",
           "InvenTU.Core": "[1.0.0, )",
-          "Microsoft.Extensions.Hosting.Abstractions": "[10.0.7, )"
+          "Microsoft.Extensions.Hosting.Abstractions": "[10.0.7, )",
+          "QuestPDF": "[2026.2.4, )"
         }
       },
       "inventu.core": {
@@ -514,10 +515,37 @@
           "Microsoft.Extensions.FileProviders.Abstractions": "10.0.7",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.7"
         }
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
       }
     },
-    "net10.0/linux-x64": {},
-    "net10.0/osx-x64": {},
-    "net10.0/win-x64": {}
+    "net10.0/linux-x64": {
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      }
+    },
+    "net10.0/osx-x64": {
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      }
+    },
+    "net10.0/win-x64": {
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      }
+    }
   }
 }
