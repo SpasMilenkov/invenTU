@@ -10,8 +10,9 @@ internal static class SupplierProjections
     {
         Id = s.Id,
         Name = s.Name,
-        ContactEmail =  s.ContactEmail,
+        ContactEmail = s.ContactEmail,
         ContactPhone = s.ContactPhone,
         Address = s.Address,
+        IsActive = s.IsActive,
     };
 }

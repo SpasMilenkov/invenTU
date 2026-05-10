@@ -66,13 +66,32 @@ public sealed class SupplierService (
 
         await supplierRepository.DeleteSupplierAsync(id, cancellationToken);
     }
+
+    public async Task ArchiveAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var archived = await supplierRepository.ArchiveAsync(id, cancellationToken);
+        if (!archived)
+            throw new SupplierNotFoundException(id);
+    }
+
+    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var restored = await supplierRepository.RestoreAsync(id, cancellationToken);
+        if (!restored)
+            throw new SupplierNotFoundException(id);
+    }
     public async Task<PagedResult<PurchaseOrderDTO>> GetPurchaseOrdersAsync(PurchaseOrderQueryParams purchaseOrderQueryParams, CancellationToken cancellationToken)
     {
         return await supplierRepository.GetPurchaseOrdersAsync(purchaseOrderQueryParams, cancellationToken);
     }
-    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(string? search, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<SupplierDTO>> GetSuppliersAsync(SupplierQueryParams queryParams, CancellationToken cancellationToken)
     {
-        return await supplierRepository.GetSuppliersAsync(search?.Trim().ToUpperInvariant(), cancellationToken);
+        var normalised = new SupplierQueryParams
+        {
+            Search = queryParams.Search?.Trim().ToUpperInvariant(),
+            Archive = queryParams.Archive,
+        };
+        return await supplierRepository.GetSuppliersAsync(normalised, cancellationToken);
     }
     public async Task UpdatePurchaseOrderStatusAsync(Guid id, CancellationToken cancellationToken)
     {
