@@ -2,6 +2,7 @@ using System.Text;
 using FluentValidation;
 using InvenTU.Application.Alerts;
 using InvenTU.Application.Auth;
+using InvenTU.Application.Reports.Pdf;
 using InvenTU.Application.Services;
 using InvenTU.Application.Validators;
 using InvenTU.Core.Contracts.Repositories;
@@ -143,7 +144,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<IStockMovementRepository, StockMovementRepository>();
         services.AddScoped<ISupplierRepository, SupplierRepository>();
-
+        services.AddScoped<IReportsPdfService, ReportsPdfService>();
         services.AddScoped<IStatsRepository, StatsRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
 
