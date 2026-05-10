@@ -12,14 +12,14 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "10.0.4",
+    "@astrojs/node": "10.0.6",
     "@astrojs/react": "5.0.2",
     "@hookform/resolvers": "5.2.2",
     "@microsoft/signalr": "10.0.0",
     "@tailwindcss/vite": "4.2.2",
     "@tanstack/react-query": "5.96.1",
-    "astro": "6.1.2",
-    "axios": "1.13.6",
+    "astro": "6.2.1",
+    "axios": "1.15.2",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "7.72.0",
@@ -32,5 +32,5 @@
     "@types/react-dom": "19.2.3",
     "typescript": "5.9.3"
   },
-  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
+  "packageManager": "pnpm@11.0.7+sha512.724a7b5d2319cdd7009d65e15a2c29aae9d3902b50585ca163d38a7737eb85bc4e72196879ff59768a71e81fe32aa71e8b70f088b2e24b9e4a2850d87e4607b5"
 }
