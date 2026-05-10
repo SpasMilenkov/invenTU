@@ -66,4 +66,17 @@ public sealed class ProductsController(IProductService productService) : Control
         await productService.ArchiveAsync(id, cancellationToken);
         return NoContent();
     }
+
+    /// <summary>
+    /// Restores a previously-archived product by clearing DeletedAt.
+    /// Returns 404 if the product does not exist or is not currently archived.
+    /// Requires Manager or Admin role.
+    /// </summary>
+    [HttpPatch("{id:guid}/restore")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<IActionResult> Restore(Guid id, CancellationToken cancellationToken)
+    {
+        await productService.RestoreAsync(id, cancellationToken);
+        return NoContent();
+    }
 }

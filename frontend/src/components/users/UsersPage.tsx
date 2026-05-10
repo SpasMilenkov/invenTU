@@ -53,14 +53,12 @@ function UsersPageInner() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex w-full flex-col gap-5">
+      <div className="page-head">
         <div>
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-            Team
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-text-primary">Users</h1>
-          <p className="mt-1 text-sm text-text-muted">
+          <div className="page-sub">ADMIN / USERS</div>
+          <h1 className="page-title">Users</h1>
+          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
             {isAdmin
               ? 'Create accounts, assign roles, and deactivate members who leave.'
               : 'Read-only view of team members. Ask an administrator to make changes.'}
@@ -75,7 +73,7 @@ function UsersPageInner() {
             + New user
           </button>
         )}
-      </header>
+      </div>
 
       <UsersTable
         data={list.data}

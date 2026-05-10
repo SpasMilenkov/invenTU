@@ -11,7 +11,7 @@ internal static class ProductSeeder
 
     private static readonly IReadOnlyList<Product> Seed =
     [
-        // ── Phones ────────────────────────────────────────────────────────────
+        // Phones
         new Product
         {
             Id                 = SeedIds.ProductPhone1,
@@ -51,7 +51,7 @@ internal static class ProductSeeder
             UpdatedAt          = SeedDate,
         },
 
-        // ── Laptops ───────────────────────────────────────────────────────────
+        // Laptops
         new Product
         {
             Id                 = SeedIds.ProductLaptop1,
@@ -92,7 +92,7 @@ internal static class ProductSeeder
             UpdatedAt          = SeedDate,
         },
 
-        // ── Paper & Stationery ────────────────────────────────────────────────
+        // Paper & Stationery
         new Product
         {
             // Intentionally seeded near ReorderPoint to trigger an Alert.
@@ -114,7 +114,7 @@ internal static class ProductSeeder
             UpdatedAt          = SeedDate,
         },
 
-        // ── Storage & Organisation ────────────────────────────────────────────
+        // Storage & Organisation
         new Product
         {
             Id                 = SeedIds.ProductFile1,

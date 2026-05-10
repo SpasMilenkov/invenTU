@@ -6,7 +6,7 @@ import {
   type UpdateProfileValues,
   type ChangePasswordValues,
 } from '../../lib/schemas/profile';
-import { roleBadgeClasses } from '../../lib/users/roleBadge';
+import { Tag } from '../ui/Tag';
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -58,21 +58,21 @@ function Section({
 }) {
   const rail =
     tone === 'security'
-      ? 'before:bg-warning-400/70 dark:before:bg-warning-500/60'
+      ? 'before:bg-[color:var(--color-warn)]'
       : 'before:bg-transparent';
 
   return (
     <section
-      className={`relative grid grid-cols-1 gap-6 px-6 py-8 md:grid-cols-[minmax(220px,1fr)_minmax(0,2fr)] md:gap-10 before:absolute before:left-0 before:top-6 before:bottom-6 before:w-[3px] before:rounded-full before:content-[''] ${rail}`}
+      className={`relative grid grid-cols-1 gap-6 px-6 py-7 md:grid-cols-[minmax(220px,1fr)_minmax(0,2fr)] md:gap-10 before:absolute before:left-0 before:top-6 before:bottom-6 before:w-[3px] before:content-[''] ${rail}`}
     >
       <div className="md:pr-2">
         {eyebrow && (
-          <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-text-muted">
+          <p className="mb-2 micro" style={{ color: 'var(--color-ink-3)' }}>
             {eyebrow}
           </p>
         )}
-        <h3 className="text-base font-semibold text-text-primary">{title}</h3>
-        <p className="mt-1 text-sm leading-relaxed text-text-muted">{description}</p>
+        <h3 className="text-[14px] font-semibold" style={{ color: 'var(--color-ink)' }}>{title}</h3>
+        <p className="mt-1 text-[12.5px] leading-relaxed" style={{ color: 'var(--color-ink-3)' }}>{description}</p>
       </div>
       <div className="min-w-0">{children}</div>
     </section>
@@ -88,12 +88,14 @@ function IdentityHero() {
 
   if (isLoading) {
     return (
-      <div className="relative overflow-hidden rounded-[1.25rem] border border-surface-border bg-surface p-8 shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-        <div className="flex items-center gap-5">
-          <div className="h-20 w-20 animate-pulse rounded-2xl bg-surface-alt" />
-          <div className="flex-1 space-y-3">
-            <div className="h-5 w-48 animate-pulse rounded bg-surface-alt" />
-            <div className="h-3 w-64 animate-pulse rounded bg-surface-alt" />
+      <div className="panel">
+        <div className="panel-body">
+          <div className="flex items-center gap-5">
+            <div className="h-16 w-16 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} />
+            <div className="flex-1 space-y-3">
+              <div className="h-4 w-48 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} />
+              <div className="h-3 w-64 animate-pulse" style={{ background: 'var(--color-bg-sunk)' }} />
+            </div>
           </div>
         </div>
       </div>
@@ -102,77 +104,36 @@ function IdentityHero() {
 
   if (isError || !data) {
     return (
-      <div className="rounded-[1.25rem] border border-danger-200 bg-danger-50 p-8 text-sm text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+      <div className="info-card" style={{ borderLeftColor: 'var(--color-crit)', background: 'var(--color-crit-soft)', color: 'var(--color-crit)' }}>
         Could not load your profile. Try refreshing the page.
       </div>
     );
   }
 
   return (
-    <div className="relative overflow-hidden rounded-[1.25rem] border border-surface-border bg-surface shadow-card dark:border-secondary-700 dark:bg-secondary-800">
-      {/* Decorative gradient wash — subtle, bounded by the card */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.08] dark:opacity-[0.12]"
-        style={{
-          background:
-            'radial-gradient(80% 120% at 100% 0%, var(--color-accent-400) 0%, transparent 55%), radial-gradient(70% 100% at 0% 100%, var(--color-primary-500) 0%, transparent 55%)',
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary-400/40 to-transparent dark:via-primary-300/30"
-      />
-
-      <div className="relative flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-5">
-          <div className="relative">
+    <div className="panel">
+      <div className="panel-head">
+        <span className="panel-title">ACCOUNT</span>
+        <Tag kind="accent">{data.role || 'Unknown'}</Tag>
+      </div>
+      <div className="panel-body">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
             <div
-              aria-hidden
-              className="absolute -inset-1 rounded-2xl opacity-40 blur-md"
-              style={{
-                background:
-                  'linear-gradient(135deg, var(--color-primary-500), var(--color-accent-500))',
-              }}
-            />
-            <div
-              className="relative flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-semibold tracking-wide text-white"
-              style={{
-                background:
-                  'linear-gradient(135deg, var(--color-primary-600), var(--color-accent-600))',
-                boxShadow:
-                  '0 10px 30px -12px rgb(76 110 245 / 0.55), inset 0 1px 0 0 rgb(255 255 255 / 0.18)',
-              }}
+              className="grid h-16 w-16 place-items-center font-mono text-lg font-bold text-white"
+              style={{ background: 'var(--color-accent)' }}
             >
               {getInitials(data.firstName, data.lastName)}
             </div>
+            <div>
+              <h2 className="text-[20px] font-semibold leading-tight" style={{ color: 'var(--color-ink)' }}>
+                {data.firstName} {data.lastName}
+              </h2>
+              <p className="mt-0.5 font-mono text-[11.5px] tracking-wide" style={{ color: 'var(--color-ink-3)' }}>
+                {data.email.toUpperCase()}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-              Account
-            </p>
-            <h2 className="mt-1 text-2xl font-semibold leading-tight text-text-primary">
-              {data.firstName} {data.lastName}
-            </h2>
-            <p className="mt-1 text-sm text-text-muted">{data.email}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-start gap-2 md:items-end">
-          <span className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-            Access level
-          </span>
-          <span
-            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold tracking-wide ${roleBadgeClasses(
-              data.role || 'Unknown',
-            )}`}
-          >
-            <span
-              aria-hidden
-              className="h-1.5 w-1.5 rounded-full bg-current opacity-70"
-            />
-            {data.role || 'Unknown'}
-          </span>
         </div>
       </div>
     </div>
@@ -270,26 +231,14 @@ function UpdateNameForm() {
 
       {serverError && <p className="input-error-msg">{serverError}</p>}
 
-      <div className="flex items-center justify-between gap-4 border-t border-surface-border pt-4 dark:border-secondary-700">
-        <div className="min-h-[1.25rem] text-xs">
+      <div className="flex items-center justify-between gap-4 pt-4" style={{ borderTop: '1px solid var(--color-rule)' }}>
+        <div className="min-h-[1.25rem] text-[11px] font-mono uppercase tracking-wider">
           {success ? (
-            <span className="inline-flex items-center gap-1.5 font-medium text-success-600 dark:text-success-400">
-              <svg
-                aria-hidden
-                className="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              Saved
-            </span>
+            <span style={{ color: 'var(--color-ok)' }}>● SAVED</span>
           ) : dirty ? (
-            <span className="text-text-muted">Unsaved changes</span>
+            <span style={{ color: 'var(--color-warn)' }}>UNSAVED CHANGES</span>
           ) : (
-            <span className="text-text-muted">Your display name across invenTU.</span>
+            <span style={{ color: 'var(--color-ink-3)' }}>YOUR DISPLAY NAME ACROSS INVENTU</span>
           )}
         </div>
         <button
@@ -421,35 +370,23 @@ function ChangePasswordForm() {
       </p>
 
       {serverErrors.length > 0 && (
-        <ul className="rounded-md border border-danger-200 bg-danger-50 p-3 text-xs text-danger-700 dark:border-danger-900/60 dark:bg-danger-950/40 dark:text-danger-300">
+        <ul className="info-card text-[12px]" style={{ borderLeftColor: 'var(--color-crit)', background: 'var(--color-crit-soft)', color: 'var(--color-crit)' }}>
           {serverErrors.map((msg, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span aria-hidden className="mt-0.5 text-danger-500">•</span>
+              <span aria-hidden className="mt-0.5">•</span>
               <span>{msg}</span>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="flex items-center justify-between gap-4 border-t border-surface-border pt-4 dark:border-secondary-700">
-        <div className="min-h-[1.25rem] text-xs">
+      <div className="flex items-center justify-between gap-4 pt-4" style={{ borderTop: '1px solid var(--color-rule)' }}>
+        <div className="min-h-[1.25rem] text-[11px] font-mono uppercase tracking-wider">
           {success ? (
-            <span className="inline-flex items-center gap-1.5 font-medium text-success-600 dark:text-success-400">
-              <svg
-                aria-hidden
-                className="h-3.5 w-3.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              Password updated
-            </span>
+            <span style={{ color: 'var(--color-ok)' }}>● PASSWORD UPDATED</span>
           ) : (
-            <span className="text-text-muted">
-              You will stay signed in on this device.
+            <span style={{ color: 'var(--color-ink-3)' }}>
+              YOU WILL STAY SIGNED IN ON THIS DEVICE
             </span>
           )}
         </div>
@@ -476,28 +413,30 @@ function scorePassword(pw: string): 0 | 1 | 2 | 3 | 4 {
 }
 
 function StrengthMeter({ strength }: { strength: 0 | 1 | 2 | 3 | 4 }) {
-  const tones = [
-    'bg-secondary-200 dark:bg-secondary-700',
-    'bg-danger-400',
-    'bg-warning-400',
-    'bg-accent-400',
-    'bg-accent-500',
+  const colors = [
+    'var(--color-bg-sunk)',
+    'var(--color-crit)',
+    'var(--color-warn)',
+    'var(--color-ok)',
+    'var(--color-ok)',
   ];
-  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const active = tones[strength];
+  const labels = ['', 'WEAK', 'FAIR', 'GOOD', 'STRONG'];
+  const active = colors[strength];
   return (
     <div className="mt-2 flex items-center gap-2">
       <div className="flex flex-1 gap-1">
         {[0, 1, 2, 3].map((i) => (
           <span
             key={i}
-            className={`h-1 flex-1 rounded-full transition-colors ${
-              i < strength ? active : 'bg-secondary-200 dark:bg-secondary-700'
-            }`}
+            className="h-1 flex-1 transition-colors"
+            style={{ background: i < strength ? active : 'var(--color-bg-sunk)' }}
           />
         ))}
       </div>
-      <span className="w-12 text-right text-[0.65rem] font-medium uppercase tracking-wider text-text-muted">
+      <span
+        className="w-12 text-right font-mono text-[10px] uppercase tracking-wider"
+        style={{ color: 'var(--color-ink-3)' }}
+      >
         {labels[strength]}
       </span>
     </div>
@@ -510,25 +449,22 @@ function StrengthMeter({ strength }: { strength: 0 | 1 | 2 | 3 | 4 }) {
 
 export default function ProfilePage() {
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
-      <header className="rise-in" style={{ animationDelay: '0ms' }}>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-          Settings
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-text-primary">Your profile</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Manage how you appear in invenTU and keep your sign-in credentials current.
-        </p>
-      </header>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      <div className="page-head rise-in" style={{ animationDelay: '0ms' }}>
+        <div>
+          <div className="page-sub">ADMIN / PROFILE</div>
+          <h1 className="page-title">Your profile</h1>
+          <p className="mt-1 text-[12.5px]" style={{ color: 'var(--color-ink-3)' }}>
+            Manage how you appear in invenTU and keep your sign-in credentials current.
+          </p>
+        </div>
+      </div>
 
       <div className="rise-in" style={{ animationDelay: '60ms' }}>
         <IdentityHero />
       </div>
 
-      <div
-        className="rise-in overflow-hidden rounded-[1.25rem] border border-surface-border bg-surface shadow-card dark:border-secondary-700 dark:bg-secondary-800"
-        style={{ animationDelay: '120ms' }}
-      >
+      <div className="rise-in panel" style={{ animationDelay: '120ms', overflow: 'hidden' }}>
         <Section
           eyebrow="Profile"
           title="Display name"
@@ -537,7 +473,7 @@ export default function ProfilePage() {
           <UpdateNameForm />
         </Section>
 
-        <div className="border-t border-surface-border dark:border-secondary-700" />
+        <div style={{ borderTop: '1px solid var(--color-rule)' }} />
 
         <Section
           eyebrow="Security"

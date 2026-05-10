@@ -9,7 +9,9 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.env
+*.env*
+!.env.example
+**/certs
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -438,7 +440,6 @@ benchmark/projects/
 benchmark/results/
 test-results/
 *.log
-package-lock.json
 .turbo/
 .eslintcache
 .pnpm-store

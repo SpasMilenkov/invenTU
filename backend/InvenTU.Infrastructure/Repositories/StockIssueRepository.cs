@@ -7,8 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InvenTU.Infrastructure.Repositories;
 
+/// <summary>
+/// EF Core implementation of <see cref="IStockIssueRepository"/>.
+/// Executes the issue operation and its audit record inside a single
+/// database transaction with optimistic-concurrency protection.
+/// </summary>
 public sealed class StockIssueRepository(InvenTUDbContext dbContext) : IStockIssueRepository
 {
+    /// <inheritdoc/>
     public async Task<(Guid MovementId, decimal UpdatedStockLevel)> ExecuteAsync(
         Guid productId,
         Guid stockLocationId,
@@ -16,6 +22,7 @@ public sealed class StockIssueRepository(InvenTUDbContext dbContext) : IStockIss
         decimal quantity,
         Guid userId,
         string reasonCode,
+        string? referenceNumber,
         string? notes,
         CancellationToken cancellationToken = default)
     {
@@ -45,6 +52,7 @@ public sealed class StockIssueRepository(InvenTUDbContext dbContext) : IStockIss
             CreatedAt = DateTime.UtcNow,
             UserId = userId,
             ReasonCode = reasonCode,
+            ReferenceNumber = referenceNumber,
             Notes = notes,
         };
         dbContext.StockMovements.Add(movement);

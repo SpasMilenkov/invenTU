@@ -40,8 +40,10 @@ export function useActiveWarehouses() {
   return useQuery<WarehouseSummary[]>({
     queryKey: ["warehouses", "active"],
     queryFn: async () => {
-      const res = await apiClient.get<WarehouseSummary[]>("/warehouses");
-      return res.data.filter((w) => w.isActive);
+      const res = await apiClient.get<PagedResult<WarehouseSummary>>("/warehouses", {
+        params: { page: 1, pageSize: 200, status: "All" },
+      });
+      return res.data.items.filter((w) => w.isActive);
     },
     staleTime: 60 * 1000,
   });

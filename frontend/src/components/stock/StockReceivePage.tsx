@@ -1,17 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { receiveStockSchema } from "../../lib/schemas/stock";
 import { extractAuthErrorMessage } from "../../lib/auth/errors";
 import {
   useReceiveStock,
   type StockReceiptResult,
 } from "../../lib/hooks/useStockOperations";
-import { useStockLocations } from "../../lib/hooks/useReferenceData";
+import {
+  useStockLocations,
+  useStockItemsForLocation,
+} from "../../lib/hooks/useReferenceData";
 import QueryProvider from "../providers/QueryProvider";
-import LocationCascade from "./shared/LocationCascade";
 import ProductSelector from "./shared/ProductSelector";
+import StockSubNav from "./shared/StockSubNav";
+import LocationPanel from "./shared/LocationPanel";
+import FlowSteps from "./shared/FlowSteps";
+import QtyStepper from "./shared/QtyStepper";
+import CommitBar from "./shared/CommitBar";
 
 type FormValues = z.infer<typeof receiveStockSchema>;
 
@@ -40,7 +48,7 @@ function StockReceiveForm() {
     watch,
     setValue,
     reset,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(receiveStockSchema),
     defaultValues: INITIAL,
@@ -49,16 +57,47 @@ function StockReceiveForm() {
 
   const warehouseId = watch("warehouseId");
   const stockLocationId = watch("stockLocationId");
+  const productId = watch("productId");
+  const quantityStr = watch("quantity");
+  const referenceNumber = watch("referenceNumber");
+  const qty = parseFloat(quantityStr) || 0;
 
   const locations = useStockLocations(warehouseId || null);
+  const stockItems = useStockItemsForLocation(
+    productId || null,
+    warehouseId || null,
+  );
   const receive = useReceiveStock();
+
+  const locationCode = useMemo(
+    () =>
+      locations.data?.find((l) => l.id === stockLocationId)?.fullLocationCode ??
+      "",
+    [locations.data, stockLocationId],
+  );
+
+  const currentLevel =
+    stockItems.data?.find((i) => i.stockLocationId === stockLocationId)
+      ?.quantity ?? 0;
+  const newLevel = currentLevel + qty;
+  const visualMax = Math.max(newLevel, currentLevel, 1);
+
+  const stepIndex =
+    !warehouseId
+      ? 0
+      : !stockLocationId
+        ? 1
+        : !productId
+          ? 2
+          : qty <= 0
+            ? 3
+            : 4;
 
   function handleWarehouseChange(id: string) {
     setValue("warehouseId", id, { shouldValidate: true });
     setValue("zone", "");
     setValue("stockLocationId", "");
   }
-
   function handleZoneChange(z: string) {
     setValue("zone", z);
     setValue("stockLocationId", "");
@@ -75,67 +114,85 @@ function StockReceiveForm() {
         referenceNumber: data.referenceNumber || undefined,
         notes: data.notes || undefined,
       });
-      const locationCode =
-        locations.data?.find((l) => l.id === data.stockLocationId)
-          ?.fullLocationCode ?? data.stockLocationId;
-      setSuccess({ result, locationCode });
+      const code = locationCode || data.stockLocationId;
+      setSuccess({ result, locationCode: code });
+      toast.success(`Received ${result.quantity} of ${result.productName}`);
     } catch (err) {
       setServerError(extractAuthErrorMessage(err));
     }
   };
 
   if (success) {
-    const { result, locationCode } = success;
+    const { result, locationCode: code } = success;
     return (
-      <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <svg
-              className="h-5 w-5 shrink-0 text-success-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+      <div className="panel">
+        <div className="panel-head">
+          <span className="panel-title">RECEIPT CONFIRMED</span>
+          <span className="tag tag-ok">SUCCESS</span>
+        </div>
+        <div className="panel-body">
+          <h2
+            className="text-[15px] font-semibold"
+            style={{ color: "var(--color-ink)" }}
+          >
+            Stock received successfully
+          </h2>
+          <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[12.5px]">
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="text-base font-semibold text-text-primary">
-              Stock received successfully
-            </span>
-          </div>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt className="text-text-muted">Product</dt>
-            <dd className="font-medium text-text-primary">
-              {result.productName}
+              Product
+            </dt>
+            <dd className="strong">{result.productName}</dd>
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              Warehouse
+            </dt>
+            <dd className="strong">{result.warehouseName}</dd>
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              Location
+            </dt>
+            <dd className="sku">{code}</dd>
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              Quantity received
+            </dt>
+            <dd
+              className="tnum strong"
+              style={{ color: "var(--color-ok)" }}
+            >
+              +{result.quantity}
             </dd>
-            <dt className="text-text-muted">Warehouse</dt>
-            <dd className="font-medium text-text-primary">
-              {result.warehouseName}
-            </dd>
-            <dt className="text-text-muted">Location</dt>
-            <dd className="font-medium text-text-primary">{locationCode}</dd>
-            <dt className="text-text-muted">Quantity received</dt>
-            <dd className="font-medium text-success-600">+{result.quantity}</dd>
-            <dt className="text-text-muted">New stock level</dt>
-            <dd className="font-medium text-text-primary">
-              {result.updatedStockLevel}
-            </dd>
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              New stock level
+            </dt>
+            <dd className="tnum strong">{result.updatedStockLevel}</dd>
             {result.referenceNumber && (
               <>
-                <dt className="text-text-muted">Reference</dt>
-                <dd className="font-medium text-text-primary">
-                  {result.referenceNumber}
-                </dd>
+                <dt
+                  className="font-mono text-[10.5px] uppercase tracking-wider"
+                  style={{ color: "var(--color-ink-3)" }}
+                >
+                  Reference
+                </dt>
+                <dd className="sku">{result.referenceNumber}</dd>
               </>
             )}
           </dl>
           <button
             type="button"
-            className="btn btn-secondary mt-2 self-start"
+            className="btn btn-secondary mt-5"
             onClick={() => {
               setSuccess(null);
               reset(INITIAL);
@@ -149,146 +206,266 @@ function StockReceiveForm() {
   }
 
   return (
-    <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-      <h2 className="mb-5 text-base font-semibold text-text-primary">
-        Receive stock
-      </h2>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-4"
-        noValidate
-      >
-        <Controller
-          control={control}
-          name="warehouseId"
-          render={({ field }) => (
-            <LocationCascade
-              warehouseId={field.value}
-              onWarehouseChange={handleWarehouseChange}
-              zone={watch("zone")}
-              onZoneChange={handleZoneChange}
-              locationId={stockLocationId}
-              onLocationChange={(id) =>
-                setValue("stockLocationId", id, { shouldValidate: true })
-              }
-              warehouseError={errors.warehouseId?.message}
-              locationError={errors.stockLocationId?.message}
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="productId"
-          render={({ field }) => (
-            <ProductSelector
-              value={field.value}
-              onChange={(id) =>
-                setValue("productId", id, { shouldValidate: true })
-              }
-              error={errors.productId?.message}
-            />
-          )}
-        />
-
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-1 flex-col">
+      <div className="page-head">
         <div>
-          <label className="input-label" htmlFor="recv-quantity">
-            Quantity
-          </label>
-          <Controller
-            control={control}
-            name="quantity"
-            render={({ field }) => (
-              <input
-                {...field}
-                id="recv-quantity"
-                type="number"
-                min="0"
-                step="any"
-                className={`input${errors.quantity ? " input-error" : ""}`}
-                placeholder="0"
-              />
-            )}
-          />
-          {errors.quantity && (
-            <p className="input-error-msg">{errors.quantity.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="input-label" htmlFor="recv-ref">
-            Reference number{" "}
-            <span className="font-normal text-text-muted">(optional)</span>
-          </label>
-          <Controller
-            control={control}
-            name="referenceNumber"
-            render={({ field }) => (
-              <input
-                {...field}
-                id="recv-ref"
-                type="text"
-                className="input"
-                placeholder="e.g. PO-2026-001"
-              />
-            )}
-          />
-        </div>
-
-        <div>
-          <label className="input-label" htmlFor="recv-notes">
-            Notes{" "}
-            <span className="font-normal text-text-muted">(optional)</span>
-          </label>
-          <Controller
-            control={control}
-            name="notes"
-            render={({ field }) => (
-              <input
-                {...field}
-                id="recv-notes"
-                type="text"
-                className="input"
-                placeholder="Any additional information…"
-              />
-            )}
-          />
-        </div>
-
-        {serverError && (
-          <p className="rounded-md bg-danger-50 px-4 py-3 text-sm text-danger-700 dark:bg-danger-900/20 dark:text-danger-400">
-            {serverError}
-          </p>
-        )}
-
-        <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={!isValid || isSubmitting}
+          <div className="page-sub">OPERATE / STOCK / RECEIVE</div>
+          <h1 className="page-title">Receive stock</h1>
+          <p
+            className="mt-1 text-[12.5px]"
+            style={{ color: "var(--color-ink-3)" }}
           >
-            {isSubmitting ? "Receiving…" : "Receive stock"}
-          </button>
+            Record inbound goods from a purchase order or direct delivery.
+          </p>
         </div>
-      </form>
-    </div>
+        <FlowSteps
+          steps={["Source", "Location", "Item", "Quantity", "Confirm"]}
+          current={stepIndex}
+        />
+      </div>
+
+      {/* Controls grid */}
+      <div className="stock-grid cols-2">
+        <div className="form-section">
+          <div className="form-section-head">
+            <div className="form-section-step">01</div>
+            <div>
+              <h3 className="form-section-title">Source &amp; item</h3>
+              <div className="form-section-hint">
+                Where it came from · what is being received
+              </div>
+            </div>
+          </div>
+          <div className="form-section-body">
+            <div>
+              <label className="input-label" htmlFor="recv-ref">
+                Reference number{" "}
+                <span className="font-normal text-text-muted">(optional)</span>
+              </label>
+              <Controller
+                control={control}
+                name="referenceNumber"
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    id="recv-ref"
+                    type="text"
+                    className="input mono"
+                    placeholder="e.g. PO-2026-001"
+                  />
+                )}
+              />
+            </div>
+
+            <Controller
+              control={control}
+              name="productId"
+              render={({ field }) => (
+                <ProductSelector
+                  value={field.value}
+                  onChange={(id) =>
+                    setValue("productId", id, { shouldValidate: true })
+                  }
+                  error={errors.productId?.message}
+                />
+              )}
+            />
+
+            <div>
+              <label className="input-label" htmlFor="recv-qty">
+                Quantity received
+              </label>
+              <Controller
+                control={control}
+                name="quantity"
+                render={({ field }) => (
+                  <QtyStepper
+                    id="recv-qty"
+                    value={field.value}
+                    onChange={(next) =>
+                      setValue("quantity", next, { shouldValidate: true })
+                    }
+                    hasError={!!errors.quantity}
+                  />
+                )}
+              />
+              {errors.quantity && (
+                <p className="input-error-msg">{errors.quantity.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="input-label" htmlFor="recv-notes">
+                Notes{" "}
+                <span className="font-normal text-text-muted">(optional)</span>
+              </label>
+              <Controller
+                control={control}
+                name="notes"
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    id="recv-notes"
+                    type="text"
+                    className="input"
+                    placeholder="Any additional information…"
+                  />
+                )}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section-head">
+            <div className="form-section-step">02</div>
+            <div>
+              <h3 className="form-section-title">Put-away location</h3>
+              <div className="form-section-hint">
+                Pick the bin where the pallet lands
+              </div>
+            </div>
+          </div>
+          <div className="form-section-body">
+            <Controller
+              control={control}
+              name="warehouseId"
+              render={({ field }) => (
+                <LocationPanel
+                  caption="DESTINATION"
+                  hint={locationCode || undefined}
+                  warehouseId={field.value}
+                  onWarehouseChange={handleWarehouseChange}
+                  zone={watch("zone")}
+                  onZoneChange={handleZoneChange}
+                  locationId={stockLocationId}
+                  onLocationChange={(id) =>
+                    setValue("stockLocationId", id, { shouldValidate: true })
+                  }
+                  warehouseError={errors.warehouseId?.message}
+                  locationError={errors.stockLocationId?.message}
+                />
+              )}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Hero — dock door */}
+      <div className="receive-dock">
+        <div className="dock-truck">
+          <div className="dock-truck-label">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="square"
+            >
+              <rect x="2" y="7" width="11" height="9" />
+              <path d="M13 10 H18 L21 13.5 V16 H13 Z" />
+              <circle cx="6.5" cy="18" r="1.8" />
+              <circle cx="17" cy="18" r="1.8" />
+            </svg>
+            <div>
+              <div className="micro">INBOUND TRUCK</div>
+              <div className="strong">{referenceNumber || "no reference yet"}</div>
+            </div>
+          </div>
+          <div
+            className="dock-truck-pkg"
+            data-has-product={!!productId}
+          >
+            <span className="dock-pkg-qty">{qty > 0 ? `+${qty}` : "—"}</span>
+            <span className="dock-pkg-sku">
+              {productId ? "ready to land" : "scan or pick a product"}
+            </span>
+          </div>
+        </div>
+
+        <div className="dock-arrow" aria-hidden="true">
+          <span className="micro">ARRIVES AT</span>
+          <div className="dock-arrow-line">
+            <div className="dock-arrow-head" />
+          </div>
+        </div>
+
+        <div className="dock-bin">
+          <div className="dock-bin-cell">
+            <div
+              className="bin-fill-anim"
+              style={{
+                height: `${Math.min(100, (currentLevel / visualMax) * 100)}%`,
+              }}
+            />
+            <div
+              className="bin-fill-anim incoming"
+              style={{
+                height: `${Math.min(100, (qty / visualMax) * 100)}%`,
+                bottom: `${Math.min(100, (currentLevel / visualMax) * 100)}%`,
+              }}
+            />
+          </div>
+          <div className="dock-bin-meta">
+            <span className="micro">DESTINATION</span>
+            <span className="sku">{locationCode || "— pick a location —"}</span>
+            <div className="dock-bin-numbers">
+              <span>
+                <span className="micro">CURRENT</span>
+                <span className="num">{stockLocationId ? currentLevel : "—"}</span>
+              </span>
+              <span className="dock-bin-arrow">→</span>
+              <span className="dock-bin-after">
+                <span className="micro">AFTER</span>
+                <span className="num strong">
+                  {stockLocationId ? newLevel : "—"}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {serverError && (
+        <p
+          className="info-card mt-4"
+          style={{
+            borderLeftColor: "var(--color-crit)",
+            background: "var(--color-crit-soft)",
+            color: "var(--color-crit)",
+          }}
+        >
+          {serverError}
+        </p>
+      )}
+
+      <CommitBar
+        caption="YOU ARE ABOUT TO RECEIVE"
+        headline={
+          <>
+            <span className="commit-delta ok">+{qty}</span>
+            <span className="sku">{productId ? "selected" : "—"}</span>
+            <span className="commit-arrow">into</span>
+            <span className="sku">{locationCode || "—"}</span>
+          </>
+        }
+        primaryLabel={`Receive ${qty || ""}`.trim()}
+        primaryDisabled={
+          !warehouseId || !stockLocationId || !productId || qty <= 0
+        }
+        primaryLoading={isSubmitting}
+        loadingLabel="Receiving…"
+      />
+    </form>
   );
 }
 
 function StockReceivePageInner() {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-          Stock Operations
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-text-primary">
-          Receive Stock
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Record inbound stock from a purchase order or direct receipt.
-        </p>
-      </header>
+    <div className="flex w-full flex-col gap-5 flex-1">
+      <StockSubNav active="receive" />
       <StockReceiveForm />
     </div>
   );

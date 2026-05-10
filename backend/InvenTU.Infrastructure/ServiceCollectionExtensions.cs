@@ -1,10 +1,16 @@
 using System.Text;
-using InvenTU.Application.Validators;
 using FluentValidation;
+using InvenTU.Application.Alerts;
+using InvenTU.Application.Auth;
+using InvenTU.Application.Services;
+using InvenTU.Application.Validators;
+using InvenTU.Core.Contracts.Repositories;
+using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Auth;
 using InvenTU.Infrastructure.Data;
 using InvenTU.Infrastructure.DataSeeders;
+using InvenTU.Infrastructure.Repositories;
 using InvenTU.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -12,12 +18,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using InvenTU.Core.Contracts.Repositories;
-using InvenTU.Infrastructure.Repositories;
-using InvenTU.Core.Contracts.Services;
-using InvenTU.Application.Auth;
-using InvenTU.Application.Services;
-using InvenTU.Application.Alerts;
 
 namespace InvenTU.Infrastructure;
 
@@ -92,15 +92,31 @@ public static class ServiceCollectionExtensions
 
                 options.Events = new JwtBearerEvents
                 {
-                    OnMessageReceived = context =>
+                    OnMessageReceived = ctx =>
                     {
-                        if (string.IsNullOrEmpty(context.Token) &&
-                            context.Request.Cookies.TryGetValue("AccessToken", out var cookieToken))
+                        // 1. Cookie (your existing auth mechanism)
+                        if (string.IsNullOrEmpty(ctx.Token) &&
+                            ctx.Request.Cookies.TryGetValue("AccessToken", out var cookieToken))
                         {
-                            context.Token = cookieToken;
+                            ctx.Token = cookieToken;
                         }
+
+                        // 2. Query string fallback — SignalR WebSocket transport can't set
+                        //    the Authorization header on the upgrade request, so the client
+                        //    SDK falls back to ?access_token=<jwt> automatically.
+                        if (string.IsNullOrEmpty(ctx.Token))
+                        {
+                            var token = ctx.Request.Query["access_token"];
+                            if (!string.IsNullOrEmpty(token) &&
+                                ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                            {
+                                ctx.Token = token;
+                            }
+                        }
+
                         return Task.CompletedTask;
                     }
+
                 };
             });
 
@@ -122,8 +138,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IAlertRepository, AlertRepository>();
         services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
+
+        services.AddScoped<IStatsRepository, StatsRepository>();
+        services.AddScoped<IReportsRepository, ReportsRepository>();
 
         return services;
     }

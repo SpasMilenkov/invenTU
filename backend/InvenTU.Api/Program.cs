@@ -7,6 +7,9 @@ using InvenTU.Infrastructure.DataSeeders;
 using Microsoft.AspNetCore.Authorization;
 using InvenTU.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using InvenTU.Api.Hubs;
+using InvenTU.Api.Services;
+using InvenTU.Core.Contracts.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +64,10 @@ builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, Authorizati
 builder.Services.AddInvenTUInfrastructure(builder.Configuration);
 builder.Services.AddInvenTUApplication();
 
+builder.Services.AddSignalR();
+builder.Services.AddScoped<ILiveFeedService, SignalRLiveFeedService>();
+builder.Services.AddScoped<IAlertNotificationService, SignalRAlertNotificationService>();
+builder.Services.AddHealthChecks();
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
@@ -112,15 +119,12 @@ using (var scope = app.Services.CreateScope())
     // 2. Seed Identity roles (uses RoleManager — must run after migration)
     await IdentityRoleSeeder.SeedRolesAsync(scope.ServiceProvider);
 
-    if (app.Environment.IsDevelopment())
-    {
-        // 3. Seed dev users with fixed IDs matching SeedIds.DevAdminUserId / DevStaffUserId
-        await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
+    // 3. Seed dev users with fixed IDs matching SeedIds.DevAdminUserId / DevStaffUserId
+    await DevUserSeeder.SeedAsync(scope.ServiceProvider, builder.Configuration);
 
-        // 4. Seed data that requires users to exist (StockMovements, PurchaseOrders,
-        //    AlertUserStates). DevDataSeeder guards against the user not existing.
-        await DevDataSeeder.SeedAsync(scope.ServiceProvider);
-    }
+    // 4. Seed data that requires users to exist (StockMovements, PurchaseOrders,
+    //    AlertUserStates). DevDataSeeder guards against the user not existing.
+    await DevDataSeeder.SeedAsync(scope.ServiceProvider);
 }
 
 app.UseCors("Frontend");
@@ -131,6 +135,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<StockHub>("/hubs/stock");
+app.MapHub<AlertHub>("hubs/alerts");
+
+app.MapHealthChecks("/api/v1/health");
 
 try
 {

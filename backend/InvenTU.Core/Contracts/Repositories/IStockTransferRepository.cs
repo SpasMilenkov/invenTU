@@ -16,6 +16,8 @@ public interface IStockTransferRepository
         Guid destinationWarehouseId,
         decimal quantity,
         Guid userId,
+        string? reasonCode,
+        string? referenceNumber,
         string? notes,
         CancellationToken cancellationToken = default);
 }

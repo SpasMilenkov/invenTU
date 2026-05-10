@@ -1,10 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import AppLayout from "../layouts/Layout.astro";
+import DashboardPage from "../components/dashboard/DashboardPage";
 ---
 
-<Layout title="Dashboard">
-  <div class="rounded-lg border border-dashed border-surface-border-strong bg-surface p-8 text-center">
-    <h2 class="text-xl font-semibold text-text-secondary">Dashboard</h2>
-    <p class="mt-2 text-text-muted">This page is under construction.</p>
-  </div>
-</Layout>
+<AppLayout title="Dashboard">
+    <DashboardPage client:load />
+</AppLayout>

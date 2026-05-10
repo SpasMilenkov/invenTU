@@ -101,4 +101,11 @@ public sealed class ProductService(
 
         await productRepository.ArchiveAsync(id, DateTime.UtcNow, cancellationToken);
     }
+
+    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var restored = await productRepository.RestoreAsync(id, DateTime.UtcNow, cancellationToken);
+        if (!restored)
+            throw new ProductNotFoundException(id);
+    }
 }

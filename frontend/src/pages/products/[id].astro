@@ -1,0 +1,10 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProductDetailPage from '../../components/products/ProductDetailPage';
+
+const { id } = Astro.params;
+---
+
+<Layout title="Product">
+  <ProductDetailPage productId={id} client:only="react" />
+</Layout>

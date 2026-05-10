@@ -1,18 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { transferStockSchema } from "../../lib/schemas/stock";
 import { extractAuthErrorMessage } from "../../lib/auth/errors";
 import {
   useTransferStock,
   type StockTransferResult,
 } from "../../lib/hooks/useStockOperations";
-import { useStockLocations } from "../../lib/hooks/useReferenceData";
+import {
+  useStockLocations,
+  useStockItemsForLocation,
+} from "../../lib/hooks/useReferenceData";
 import QueryProvider from "../providers/QueryProvider";
-import LocationCascade from "./shared/LocationCascade";
 import ProductSelector from "./shared/ProductSelector";
-import LiveStockDisplay from "./shared/LiveStockDisplay";
+import StockSubNav from "./shared/StockSubNav";
+import LocationPanel from "./shared/LocationPanel";
+import FlowSteps from "./shared/FlowSteps";
+import QtyStepper from "./shared/QtyStepper";
+import CommitBar from "./shared/CommitBar";
 
 type FormValues = z.infer<typeof transferStockSchema>;
 
@@ -44,7 +51,7 @@ function StockTransferForm() {
     watch,
     setValue,
     reset,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(transferStockSchema),
     defaultValues: INITIAL,
@@ -56,38 +63,77 @@ function StockTransferForm() {
   const dstWarehouseId = watch("dstWarehouseId");
   const dstLocationId = watch("dstLocationId");
   const productId = watch("productId");
-  const quantity = watch("quantity");
+  const quantityStr = watch("quantity");
+  const qty = parseFloat(quantityStr) || 0;
 
   const srcLocations = useStockLocations(srcWarehouseId || null);
   const dstLocations = useStockLocations(dstWarehouseId || null);
+  const srcStock = useStockItemsForLocation(
+    productId || null,
+    srcWarehouseId || null,
+  );
+  const dstStock = useStockItemsForLocation(
+    productId || null,
+    dstWarehouseId || null,
+  );
   const transfer = useTransferStock();
+
+  const srcLocationCode = useMemo(
+    () =>
+      srcLocations.data?.find((l) => l.id === srcLocationId)
+        ?.fullLocationCode ?? "",
+    [srcLocations.data, srcLocationId],
+  );
+  const dstLocationCode = useMemo(
+    () =>
+      dstLocations.data?.find((l) => l.id === dstLocationId)
+        ?.fullLocationCode ?? "",
+    [dstLocations.data, dstLocationId],
+  );
+
+  const srcCurrent =
+    srcStock.data?.find((i) => i.stockLocationId === srcLocationId)
+      ?.quantityAvailable ?? 0;
+  const dstCurrent =
+    dstStock.data?.find((i) => i.stockLocationId === dstLocationId)?.quantity ??
+    0;
+  const srcAfter = Math.max(0, srcCurrent - qty);
+  const dstAfter = dstCurrent + qty;
+  const overdraw = qty > 0 && qty > srcCurrent && !!srcLocationId && !!productId;
+  const visualMax = Math.max(srcCurrent, dstAfter, 1);
+
+  const stepIndex =
+    !srcLocationId
+      ? 0
+      : !productId
+        ? 1
+        : !dstLocationId
+          ? 2
+          : qty <= 0
+            ? 3
+            : 4;
 
   function setSrcWarehouse(id: string) {
     setValue("srcWarehouseId", id, { shouldValidate: true });
     setValue("srcZone", "");
     setValue("srcLocationId", "");
   }
-
   function setSrcZone(z: string) {
     setValue("srcZone", z);
     setValue("srcLocationId", "");
   }
-
   function setSrcLocation(id: string) {
     setValue("srcLocationId", id, { shouldValidate: true });
   }
-
   function setDstWarehouse(id: string) {
     setValue("dstWarehouseId", id, { shouldValidate: true });
     setValue("dstZone", "");
     setValue("dstLocationId", "");
   }
-
   function setDstZone(z: string) {
     setValue("dstZone", z);
     setValue("dstLocationId", "");
   }
-
   function setDstLocation(id: string) {
     setValue("dstLocationId", id, { shouldValidate: true });
   }
@@ -104,60 +150,71 @@ function StockTransferForm() {
         quantity: parseFloat(data.quantity),
         notes: data.notes || undefined,
       });
-      const srcLocationCode =
-        srcLocations.data?.find((l) => l.id === data.srcLocationId)
-          ?.fullLocationCode ?? data.srcLocationId;
-      const dstLocationCode =
-        dstLocations.data?.find((l) => l.id === data.dstLocationId)
-          ?.fullLocationCode ?? data.dstLocationId;
-      setSuccess({ result, srcLocationCode, dstLocationCode });
+      const srcCode = srcLocationCode || data.srcLocationId;
+      const dstCode = dstLocationCode || data.dstLocationId;
+      setSuccess({ result, srcLocationCode: srcCode, dstLocationCode: dstCode });
+      toast.success(
+        `Transferred ${result.quantity} of ${result.productName}`,
+      );
     } catch (err) {
       setServerError(extractAuthErrorMessage(err));
     }
   };
 
   if (success) {
-    const { result, srcLocationCode, dstLocationCode } = success;
+    const { result, srcLocationCode: srcCode, dstLocationCode: dstCode } =
+      success;
     return (
-      <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <svg
-              className="h-5 w-5 shrink-0 text-success-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+      <div className="panel">
+        <div className="panel-head">
+          <span className="panel-title">TRANSFER CONFIRMED</span>
+          <span className="tag tag-ok">SUCCESS</span>
+        </div>
+        <div className="panel-body">
+          <h2
+            className="text-[15px] font-semibold"
+            style={{ color: "var(--color-ink)" }}
+          >
+            Transfer completed successfully
+          </h2>
+          <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-[12.5px]">
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span className="text-base font-semibold text-text-primary">
-              Transfer completed successfully
-            </span>
-          </div>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <dt className="text-text-muted">Product</dt>
-            <dd className="font-medium text-text-primary">
-              {result.productName}
+              Product
+            </dt>
+            <dd className="strong">{result.productName}</dd>
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              Quantity
+            </dt>
+            <dd className="tnum strong">{result.quantity}</dd>
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              From
+            </dt>
+            <dd className="strong">
+              {result.sourceWarehouseName} — <span className="sku">{srcCode}</span>
             </dd>
-            <dt className="text-text-muted">Quantity</dt>
-            <dd className="font-medium text-text-primary">{result.quantity}</dd>
-            <dt className="text-text-muted">From</dt>
-            <dd className="font-medium text-text-primary">
-              {result.sourceWarehouseName} — {srcLocationCode}
-            </dd>
-            <dt className="text-text-muted">To</dt>
-            <dd className="font-medium text-text-primary">
-              {result.destinationWarehouseName} — {dstLocationCode}
+            <dt
+              className="font-mono text-[10.5px] uppercase tracking-wider"
+              style={{ color: "var(--color-ink-3)" }}
+            >
+              To
+            </dt>
+            <dd className="strong">
+              {result.destinationWarehouseName} —{" "}
+              <span className="sku">{dstCode}</span>
             </dd>
           </dl>
           <button
             type="button"
-            className="btn btn-secondary mt-2 self-start"
+            className="btn btn-secondary mt-5"
             onClick={() => {
               setSuccess(null);
               reset(INITIAL);
@@ -171,150 +228,336 @@ function StockTransferForm() {
   }
 
   return (
-    <div className="rounded-card border border-surface-border bg-surface p-6 shadow-card">
-      <h2 className="mb-5 text-base font-semibold text-text-primary">
-        Transfer stock
-      </h2>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-6"
-        noValidate
-      >
-        {/* Source */}
-        <div className="flex flex-col gap-4 rounded-lg border border-surface-border p-4">
-          <LocationCascade
-            heading="Source"
-            prefix="src-"
-            warehouseId={srcWarehouseId}
-            onWarehouseChange={setSrcWarehouse}
-            zone={watch("srcZone")}
-            onZoneChange={setSrcZone}
-            locationId={srcLocationId}
-            onLocationChange={setSrcLocation}
-            warehouseError={errors.srcWarehouseId?.message}
-            locationError={errors.srcLocationId?.message}
-          />
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-1 flex-col">
+      <div className="page-head">
+        <div>
+          <div className="page-sub">OPERATE / STOCK / TRANSFER</div>
+          <h1 className="page-title">Transfer stock</h1>
+          <p
+            className="mt-1 text-[12.5px]"
+            style={{ color: "var(--color-ink-3)" }}
+          >
+            Move stock between locations or warehouses.
+          </p>
         </div>
+        <FlowSteps
+          steps={["From", "Item", "To", "Quantity", "Confirm"]}
+          current={stepIndex}
+        />
+      </div>
 
-        {/* Product + quantity */}
-        <div className="flex flex-col gap-4">
-          <Controller
-            control={control}
-            name="productId"
-            render={({ field }) => (
-              <ProductSelector
-                value={field.value}
-                onChange={(id) =>
-                  setValue("productId", id, { shouldValidate: true })
-                }
-                error={errors.productId?.message}
-              />
-            )}
-          />
-
-          <div>
-            <label className="input-label" htmlFor="xfer-quantity">
-              Quantity
-            </label>
+      {/* Controls grid */}
+      <div className="stock-grid cols-3">
+        <div className="form-section">
+          <div className="form-section-head">
+            <div className="form-section-step">01</div>
+            <div>
+              <h3 className="form-section-title">Source</h3>
+              <div className="form-section-hint">From which bin</div>
+            </div>
+          </div>
+          <div className="form-section-body">
             <Controller
               control={control}
-              name="quantity"
+              name="srcWarehouseId"
               render={({ field }) => (
-                <input
-                  {...field}
-                  id="xfer-quantity"
-                  type="number"
-                  min="0"
-                  step="any"
-                  className={`input${errors.quantity ? " input-error" : ""}`}
-                  placeholder="0"
+                <LocationPanel
+                  variant="src"
+                  caption="FROM"
+                  hint={srcLocationCode || undefined}
+                  prefix="src-"
+                  warehouseId={field.value}
+                  onWarehouseChange={setSrcWarehouse}
+                  zone={watch("srcZone")}
+                  onZoneChange={setSrcZone}
+                  locationId={srcLocationId}
+                  onLocationChange={setSrcLocation}
+                  warehouseError={errors.srcWarehouseId?.message}
+                  locationError={errors.srcLocationId?.message}
                 />
               )}
             />
-            {errors.quantity && (
-              <p className="input-error-msg">{errors.quantity.message}</p>
-            )}
-            <div className="mt-1">
-              <LiveStockDisplay
-                productId={productId}
-                warehouseId={srcWarehouseId}
-                locationId={srcLocationId}
-                enteredQuantity={parseFloat(quantity) || 0}
+          </div>
+        </div>
+
+        <div className="form-section">
+          <div className="form-section-head">
+            <div className="form-section-step">02</div>
+            <div>
+              <h3 className="form-section-title">Item &amp; quantity</h3>
+              <div className="form-section-hint">What to move</div>
+            </div>
+          </div>
+          <div className="form-section-body">
+            <Controller
+              control={control}
+              name="productId"
+              render={({ field }) => (
+                <ProductSelector
+                  value={field.value}
+                  onChange={(id) =>
+                    setValue("productId", id, { shouldValidate: true })
+                  }
+                  error={errors.productId?.message}
+                />
+              )}
+            />
+
+            <div>
+              <label className="input-label" htmlFor="xfer-qty">
+                Quantity
+              </label>
+              <Controller
+                control={control}
+                name="quantity"
+                render={({ field }) => (
+                  <QtyStepper
+                    id="xfer-qty"
+                    value={field.value}
+                    onChange={(next) =>
+                      setValue("quantity", next, { shouldValidate: true })
+                    }
+                    max={
+                      srcLocationId && productId ? srcCurrent : undefined
+                    }
+                    hasError={!!errors.quantity || overdraw}
+                  />
+                )}
+              />
+              {errors.quantity && (
+                <p className="input-error-msg">{errors.quantity.message}</p>
+              )}
+              {srcLocationId && productId && (
+                <p
+                  className="font-mono text-[10.5px] uppercase tracking-wider mt-1"
+                  style={{
+                    color: overdraw
+                      ? "var(--color-crit)"
+                      : "var(--color-ink-3)",
+                  }}
+                >
+                  SOURCE AVAILABLE:{" "}
+                  <span
+                    className="tnum"
+                    style={{
+                      color: "var(--color-ink)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {srcCurrent}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="input-label" htmlFor="xfer-notes">
+                Notes{" "}
+                <span className="font-normal text-text-muted">(optional)</span>
+              </label>
+              <Controller
+                control={control}
+                name="notes"
+                render={({ field }) => (
+                  <input
+                    {...field}
+                    id="xfer-notes"
+                    type="text"
+                    className="input"
+                    placeholder="Any additional information…"
+                  />
+                )}
               />
             </div>
           </div>
         </div>
 
-        {/* Destination */}
-        <div className="flex flex-col gap-4 rounded-lg border border-surface-border p-4">
-          <LocationCascade
-            heading="Destination"
-            prefix="dst-"
-            warehouseId={dstWarehouseId}
-            onWarehouseChange={setDstWarehouse}
-            zone={watch("dstZone")}
-            onZoneChange={setDstZone}
-            locationId={dstLocationId}
-            onLocationChange={setDstLocation}
-            warehouseError={errors.dstWarehouseId?.message}
-            locationError={errors.dstLocationId?.message}
-          />
+        <div className="form-section">
+          <div className="form-section-head">
+            <div className="form-section-step">03</div>
+            <div>
+              <h3 className="form-section-title">Destination</h3>
+              <div className="form-section-hint">Into which bin</div>
+            </div>
+          </div>
+          <div className="form-section-body">
+            <Controller
+              control={control}
+              name="dstWarehouseId"
+              render={({ field }) => (
+                <LocationPanel
+                  variant="dst"
+                  caption="TO"
+                  hint={dstLocationCode || undefined}
+                  prefix="dst-"
+                  warehouseId={field.value}
+                  onWarehouseChange={setDstWarehouse}
+                  zone={watch("dstZone")}
+                  onZoneChange={setDstZone}
+                  locationId={dstLocationId}
+                  onLocationChange={setDstLocation}
+                  warehouseError={errors.dstWarehouseId?.message}
+                  locationError={errors.dstLocationId?.message}
+                />
+              )}
+            />
+          </div>
         </div>
+      </div>
 
-        <div>
-          <label className="input-label" htmlFor="xfer-notes">
-            Notes{" "}
-            <span className="font-normal text-text-muted">(optional)</span>
-          </label>
-          <Controller
-            control={control}
-            name="notes"
-            render={({ field }) => (
-              <input
-                {...field}
-                id="xfer-notes"
-                type="text"
-                className="input"
-                placeholder="Any additional information…"
+      {overdraw && (
+        <p
+          className="info-card mt-4"
+          style={{
+            borderLeftColor: "var(--color-crit)",
+            background: "var(--color-crit-soft)",
+            color: "var(--color-crit)",
+          }}
+        >
+          <strong>Overdraw:</strong> source location only holds {srcCurrent}.
+          Reduce the quantity or pick a different source.
+        </p>
+      )}
+
+      {/* A → B rail */}
+      <div className="transfer-rail">
+        <div className="transfer-bin-card src">
+          <div className="transfer-bin-header">
+            <span className="micro">FROM</span>
+            <span className="sku strong">
+              {srcLocationCode || "— pick a source —"}
+            </span>
+          </div>
+          <div className="transfer-bin-viz">
+            <div className="bin-tower">
+              <div
+                className="bin-tower-stay"
+                style={{ height: `${(srcAfter / visualMax) * 100}%` }}
               />
-            )}
-          />
+              <div
+                className="bin-tower-leave"
+                style={{
+                  height: `${(Math.min(qty, srcCurrent) / visualMax) * 100}%`,
+                  bottom: `${(srcAfter / visualMax) * 100}%`,
+                }}
+              />
+            </div>
+            <div className="bin-tower-numbers">
+              <div>
+                <span className="micro">NOW</span>
+                <span className="num">
+                  {srcLocationId && productId ? srcCurrent : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="micro">AFTER</span>
+                <span className={`num${overdraw ? " crit" : ""}`}>
+                  {srcLocationId && productId ? srcAfter : "—"}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {serverError && (
-          <p className="rounded-md bg-danger-50 px-4 py-3 text-sm text-danger-700 dark:bg-danger-900/20 dark:text-danger-400">
-            {serverError}
-          </p>
-        )}
-
-        <div className="flex justify-end pt-1">
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={!isValid || isSubmitting}
-          >
-            {isSubmitting ? "Transferring…" : "Transfer stock"}
-          </button>
+        <div className="transfer-track">
+          <div className="transfer-track-rail">
+            <div className="transfer-track-pkg">
+              <div className="transfer-track-pkg-qty">
+                {qty > 0 ? `+${qty}` : "—"}
+              </div>
+              <div className="transfer-track-pkg-sku">
+                {productId ? "in transit" : "no product"}
+              </div>
+            </div>
+          </div>
+          <div className="transfer-track-meta">
+            <span>{productId ? "selected product" : "PICK A PRODUCT"}</span>
+          </div>
         </div>
-      </form>
-    </div>
+
+        <div className="transfer-bin-card dst">
+          <div className="transfer-bin-header">
+            <span className="micro">TO</span>
+            <span className="sku strong">
+              {dstLocationCode || "— pick a destination —"}
+            </span>
+          </div>
+          <div className="transfer-bin-viz">
+            <div className="bin-tower">
+              <div
+                className="bin-tower-stay"
+                style={{ height: `${(dstCurrent / visualMax) * 100}%` }}
+              />
+              <div
+                className="bin-tower-arrive"
+                style={{
+                  height: `${(qty / visualMax) * 100}%`,
+                  bottom: `${(dstCurrent / visualMax) * 100}%`,
+                }}
+              />
+            </div>
+            <div className="bin-tower-numbers">
+              <div>
+                <span className="micro">NOW</span>
+                <span className="num">
+                  {dstLocationId && productId ? dstCurrent : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="micro">AFTER</span>
+                <span className="num">
+                  {dstLocationId && productId ? dstAfter : "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {serverError && (
+        <p
+          className="info-card mt-4"
+          style={{
+            borderLeftColor: "var(--color-crit)",
+            background: "var(--color-crit-soft)",
+            color: "var(--color-crit)",
+          }}
+        >
+          {serverError}
+        </p>
+      )}
+
+      <CommitBar
+        caption="TRANSFER SUMMARY"
+        headline={
+          <>
+            <span className="commit-delta info">{qty}</span>
+            <span className="sku">{productId ? "selected" : "—"}</span>
+            <span className="commit-arrow">·</span>
+            <span className="sku">{srcLocationCode || "—"}</span>
+            <span className="commit-arrow">→</span>
+            <span className="sku">{dstLocationCode || "—"}</span>
+          </>
+        }
+        primaryLabel={`Move ${qty || ""}`.trim()}
+        primaryDisabled={
+          !srcLocationId ||
+          !dstLocationId ||
+          !productId ||
+          qty <= 0 ||
+          overdraw
+        }
+        primaryLoading={isSubmitting}
+        loadingLabel="Transferring…"
+      />
+    </form>
   );
 }
 
 function StockTransferPageInner() {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-text-muted">
-          Stock Operations
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-text-primary">
-          Transfer Stock
-        </h1>
-        <p className="mt-1 text-sm text-text-muted">
-          Move stock between locations or warehouses.
-        </p>
-      </header>
+    <div className="flex w-full flex-col gap-5 flex-1">
+      <StockSubNav active="transfer" />
       <StockTransferForm />
     </div>
   );

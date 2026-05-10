@@ -1,10 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SuppliersPage from '../../components/suppliers/SuppliersPage';
 ---
 
-<Layout title="Suppliers">
-  <div class="rounded-lg border border-dashed border-surface-border-strong bg-surface p-8 text-center">
-    <h2 class="text-xl font-semibold text-text-secondary">Suppliers</h2>
-    <p class="mt-2 text-text-muted">This page is under construction.</p>
-  </div>
+<Layout title="Suppliers" crumb="Suppliers">
+  <SuppliersPage client:only="react" />
 </Layout>

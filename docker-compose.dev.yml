@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5434:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -36,7 +36,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
-    command: npm run dev -- --host 0.0.0.0
+    command: pnpm dev --host 0.0.0.0
     volumes:
       - ./frontend:/usr/src/app
       - /usr/src/app/node_modules
@@ -46,6 +46,9 @@ services:
       PUBLIC_API_BASE_URL: http://localhost:${PORT}/api/v1
       CHOKIDAR_USEPOLLING: "true"
       WATCHPACK_POLLING: "true"
+      PUBLIC_HUB_URL: ${PUBLIC_HUB_URL}
+      PUBLIC_ALERTS_HUB_URL: ${PUBLIC_ALERTS_HUB_URL}
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL}
     depends_on:
       - api
 

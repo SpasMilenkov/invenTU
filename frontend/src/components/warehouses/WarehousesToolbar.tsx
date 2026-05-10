@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { WarehouseStatusFilter } from '../../lib/hooks/useWarehouses';
+import { Icon } from '../ui/Icon';
 
 interface Props {
   search: string;
@@ -16,6 +17,12 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   }, [value, delayMs]);
   return debounced;
 }
+
+const STATUSES: { value: WarehouseStatusFilter; label: string }[] = [
+  { value: 'All', label: 'All' },
+  { value: 'Active', label: 'Active' },
+  { value: 'Inactive', label: 'Inactive' },
+];
 
 export default function WarehousesToolbar({
   search,
@@ -34,25 +41,30 @@ export default function WarehousesToolbar({
   }, [debouncedSearch]);
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <input
-        type="text"
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        placeholder="Search by code or name…"
-        className="input max-w-xs"
-        aria-label="Search warehouses"
-      />
-      <select
-        value={status}
-        onChange={(e) => onStatusChange(e.target.value as WarehouseStatusFilter)}
-        className="select max-w-xs"
-        aria-label="Filter by status"
-      >
-        <option value="All">All warehouses</option>
-        <option value="Active">Active only</option>
-        <option value="Inactive">Inactive only</option>
-      </select>
+    <div className="toolbar">
+      <div className="search">
+        <Icon name="search" size={14} style={{ color: 'var(--color-ink-3)' }} />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search by code or name…"
+          aria-label="Search warehouses"
+        />
+      </div>
+      <div className="flex items-center gap-1.5">
+        {STATUSES.map((s) => (
+          <button
+            key={s.value}
+            type="button"
+            className="chip"
+            data-on={status === s.value}
+            onClick={() => onStatusChange(s.value)}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
