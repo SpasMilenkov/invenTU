@@ -1,3 +1,5 @@
+using InvenTU.Core.DTOs.Reports;
+
 namespace InvenTU.Core.Contracts.Repositories;
 
 /// <summary>
@@ -19,25 +21,13 @@ public interface IReportsRepository
     /// The list is unordered; callers are responsible for any sorting.
     /// </returns>
     Task<IReadOnlyList<ProductTurnoverData>> GetTurnoverDataAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken);
-}
 
-/// <summary>
-/// Raw per-product data fetched from the database for turnover calculation.
-/// </summary>
-/// <param name="ProductId">Product identifier.</param>
-/// <param name="ProductName">Product display name.</param>
-/// <param name="SKU">Stock-keeping unit code.</param>
-/// <param name="TotalUnitsIssued">
-/// Sum of quantities on Issue movements within the reporting window
-/// (status <c>Active</c> or <c>Approved</c> only).
-/// </param>
-/// <param name="AverageStockLevel">
-/// Current on-hand quantity across all stock locations (point-in-time snapshot).
-/// Always greater than zero — the repository filters out zero-stock products.
-/// </param>
-public sealed record ProductTurnoverData(
-    Guid ProductId,
-    string ProductName,
-    string SKU,
-    decimal TotalUnitsIssued,
-    decimal AverageStockLevel);
+    /// <summary>
+    /// Returns all data required to compute FIFO-based inventory valuation.
+    /// Only active, non-deleted products with on-hand stock greater than zero are included.
+    /// </summary>
+    /// <param name="warehouseId">When supplied, restricts stock quantities to this warehouse.</param>
+    /// <param name="categoryId">When supplied, restricts products to this category.</param>
+    /// <param name="cancellationToken">Token used to cancel the database queries.</param>
+    Task<InventoryValuationRaw> GetInventoryValuationDataAsync(Guid? warehouseId, Guid? categoryId, CancellationToken cancellationToken);
+}

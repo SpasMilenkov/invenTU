@@ -22,4 +22,16 @@ public interface IReportsService
     /// and per-product turnover data ordered by ratio descending.
     /// </returns>
     Task<TurnoverReportResponse> GetTurnoverAsync(DateTime fromDate, DateTime toDate, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Computes the FIFO-based inventory valuation for all products that currently hold stock.
+    /// </summary>
+    /// <param name="warehouseId">When supplied, limits stock quantities to this warehouse.</param>
+    /// <param name="categoryId">When supplied, limits products to this category.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>
+    /// An <see cref="InventoryValuationResponse"/> containing per-product valuation rows
+    /// and a grand total, ordered by SKU ascending.
+    /// </returns>
+    Task<InventoryValuationResponse> GetInventoryValuationAsync(Guid? warehouseId, Guid? categoryId, CancellationToken cancellationToken);
 }
