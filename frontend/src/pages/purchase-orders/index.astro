@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PurchaseOrdersPage from '../../components/purchase-orders/PurchaseOrdersPage';
+---
+
+<Layout title="Purchase orders" crumb="Purchase Orders">
+  <PurchaseOrdersPage client:only="react" />
+</Layout>

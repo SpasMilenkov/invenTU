@@ -1,18 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import SuppliersPage from '../../components/suppliers/SuppliersPage';
 ---
 
 <Layout title="Suppliers" crumb="Suppliers">
-  <div class="page-head">
-    <div>
-      <div class="page-sub">PROCURE / SUPPLIERS</div>
-      <h1 class="page-title">Suppliers</h1>
-    </div>
-  </div>
-  <div class="empty">
-    <div class="micro" style="margin-bottom: 8px;">UNDER CONSTRUCTION</div>
-    <p class="text-[13px]" style="color: var(--color-ink-3);">
-      Supplier registry, lead times, and purchase order flows will live here.
-    </p>
-  </div>
+  <SuppliersPage client:only="react" />
 </Layout>
