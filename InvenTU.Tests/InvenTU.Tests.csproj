@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Respawn" />
     <PackageReference Include="xunit.abstractions" />
     <PackageReference Include="xunit.extensibility.core" />
   </ItemGroup>

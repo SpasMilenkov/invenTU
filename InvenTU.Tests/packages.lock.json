@@ -13,6 +13,12 @@
           "Microsoft.Extensions.Hosting": "10.0.7"
         }
       },
+      "Respawn": {
+        "type": "Direct",
+        "requested": "[7.0.0, )",
+        "resolved": "7.0.0",
+        "contentHash": "AyWlducZGOnmlEVz4PaL3Qv8wcY3ClPZS9CrlDnSVahGd/E9tTEgSFiC8yoV/F6o6P6IYm8xnHFa/vmWT8tfcw=="
+      },
       "xunit.abstractions": {
         "type": "Direct",
         "requested": "[2.0.3, )",
@@ -669,7 +675,8 @@
         "dependencies": {
           "FluentValidation": "[12.1.1, )",
           "InvenTU.Core": "[1.0.0, )",
-          "Microsoft.Extensions.Hosting.Abstractions": "[10.0.7, )"
+          "Microsoft.Extensions.Hosting.Abstractions": "[10.0.7, )",
+          "QuestPDF": "[2026.2.4, )"
         }
       },
       "inventu.core": {
@@ -801,6 +808,12 @@
           "Npgsql": "10.0.2"
         }
       },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
+      },
       "Serilog.AspNetCore": {
         "type": "CentralTransitive",
         "requested": "[10.0.0, )",
@@ -855,6 +868,12 @@
         "type": "Transitive",
         "resolved": "10.0.7",
         "contentHash": "WbmDLeTPYhEzXhvYVioTVn/D1XX6bovyny9n5p8Zxtf03+eY385RB818teZm6n+fA63iZNvng0/Np4tLuhkMhQ=="
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
       }
     },
     "net10.0/osx-x64": {
@@ -862,6 +881,12 @@
         "type": "Transitive",
         "resolved": "10.0.7",
         "contentHash": "WbmDLeTPYhEzXhvYVioTVn/D1XX6bovyny9n5p8Zxtf03+eY385RB818teZm6n+fA63iZNvng0/Np4tLuhkMhQ=="
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
       }
     },
     "net10.0/win-x64": {
@@ -869,6 +894,12 @@
         "type": "Transitive",
         "resolved": "10.0.7",
         "contentHash": "WbmDLeTPYhEzXhvYVioTVn/D1XX6bovyny9n5p8Zxtf03+eY385RB818teZm6n+fA63iZNvng0/Np4tLuhkMhQ=="
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2026.2.4, )",
+        "resolved": "2026.2.4",
+        "contentHash": "fajBdRJFr3hu2Mr6mEVsXjvVKD9Q/Q6hfPEUMpV/xlwxWdFebmpGdi0FLQTApMvpapy72v9dvcGuk7e7NQmQyQ=="
       }
     }
   }
