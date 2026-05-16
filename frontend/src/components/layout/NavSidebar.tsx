@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Purchase Orders", href: "/purchase-orders", glyph: "cart", group: "PROCURE" },
   { label: "Reports", href: "/reports", glyph: "chart", group: "ANALYZE" },
   { label: "Users", href: "/users", glyph: "users", group: "ADMIN" },
+  { label: "Audit Log", href: "/audit-logs", glyph: "file", group: "ADMIN" },
   { label: "Profile", href: "/profile", glyph: "user", group: "ADMIN" },
 ];
 

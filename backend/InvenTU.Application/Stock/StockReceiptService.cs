@@ -12,6 +12,7 @@ public sealed class StockReceiptService(
     IWarehouseRepository warehouseRepository,
     IStockLocationRepository stockLocationRepository,
     IStockReceiptRepository stockReceiptRepository,
+    IProductRepository productRepository,
     ICurrentUserService currentUserService,
     ILiveFeedService liveFeedService,
     IValidator<ReceiveStockRequest> validator) : IStockReceiptService
@@ -42,6 +43,9 @@ public sealed class StockReceiptService(
         var currentUser = await currentUserService.GetCurrentUserAsync()
             ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
 
+        var product = await productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var productName = product?.Name ?? string.Empty;
+
         var (movementId, updatedStockLevel) = await stockReceiptRepository.ExecuteAsync(
             request.ProductId,
             request.StockLocationId,
@@ -57,7 +61,7 @@ public sealed class StockReceiptService(
             MovementId = movementId,
             MovementType = "Receipt",
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = productName,
             Quantity = request.Quantity,
             DisplayQuantity = request.Quantity,                          // +Q: stock in
             DestinationWarehouseName = warehouse.Name,
@@ -71,7 +75,7 @@ public sealed class StockReceiptService(
         {
             MovementId = movementId,
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = productName,
             WarehouseId = warehouse.Id,
             WarehouseName = warehouse.Name,
             StockLocationId = request.StockLocationId,

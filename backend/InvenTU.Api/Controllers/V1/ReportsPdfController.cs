@@ -95,4 +95,31 @@ public sealed class ReportsPdfController(IReportsPdfService reportsPdfService) :
 
         return File(bytes, "application/pdf", fileName);
     }
+
+    /// <summary>
+    /// Generates and streams a Product Turnover PDF report.
+    /// </summary>
+    /// <remarks>
+    /// The report shows the annualised turnover ratio per product across
+    /// the requested date window (defaults to the last 90 days).
+    /// </remarks>
+    /// <param name="queryParams">Optional <c>fromDate</c> / <c>toDate</c> query-string filters.</param>
+    /// <param name="cancellationToken">Token used to propagate cancellation.</param>
+    /// <returns>
+    /// A <c>200 OK</c> response whose body is the PDF file streamed with
+    /// <c>Content-Type: application/pdf</c> and
+    /// <c>Content-Disposition: attachment; filename="product-turnover-YYYY-MM-DD.pdf"</c>.
+    /// </returns>
+    [HttpGet("turnover/pdf")]
+    [Produces("application/pdf")]
+    public async Task<IActionResult> GetTurnoverPdf(
+        [FromQuery] TurnoverQueryParams queryParams,
+        CancellationToken cancellationToken)
+    {
+        var (bytes, fileName) = await reportsPdfService.GenerateTurnoverPdfAsync(
+            queryParams,
+            cancellationToken);
+
+        return File(bytes, "application/pdf", fileName);
+    }
 }
