@@ -10,6 +10,7 @@ using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Auth;
 using InvenTU.Infrastructure.Data;
+using InvenTU.Infrastructure.Data.Interceptors;
 using InvenTU.Infrastructure.DataSeeders;
 using InvenTU.Infrastructure.Repositories;
 using InvenTU.Infrastructure.Settings;
@@ -29,9 +30,12 @@ public static class ServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.AddDbContext<InvenTUDbContext>(options =>
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
+        services.AddDbContext<InvenTUDbContext>((sp, options) =>
             options
                 .UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>())
                 // Synchronous seeding — called by EF tooling (dotnet ef database update)
                 // and by EnsureCreated. Both sync and async must mirror each other.
                 .UseSeeding((context, _) =>
@@ -147,6 +151,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReportsPdfService, ReportsPdfService>();
         services.AddScoped<IStatsRepository, StatsRepository>();
         services.AddScoped<IReportsRepository, ReportsRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         return services;
     }
