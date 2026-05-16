@@ -4,6 +4,7 @@ export const ROUTE_ROLES: Record<string, readonly string[]> = {
   '/suppliers': ['Admin', 'Manager'],
   '/purchase-orders': ['Admin', 'Manager'],
   '/reports': ['Admin', 'Manager'],
+  '/audit-logs': ['Admin'],
 };
 
 export function getRequiredRoles(pathname: string): readonly string[] | null {
