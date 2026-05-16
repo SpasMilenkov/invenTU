@@ -23,6 +23,7 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
     public DbSet<ProductSupplier> ProductSuppliers { get; set; }
     public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
     public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -133,5 +134,26 @@ public sealed class InvenTUDbContext(DbContextOptions<InvenTUDbContext> options)
         builder.Entity<StockMovement>().Property(sm => sm.Status).HasConversion<string>();
         builder.Entity<Alert>().Property(a => a.AlertType).HasConversion<string>();
         builder.Entity<PurchaseOrder>().Property(po => po.Status).HasConversion<string>();
+
+        builder.Entity<AuditLog>(entity =>
+        {
+            entity.Property(a => a.Action).HasConversion<string>().HasMaxLength(16);
+            entity.Property(a => a.EntityType).HasMaxLength(64);
+            entity.Property(a => a.ChangedFields).HasColumnType("jsonb");
+
+            entity.HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(a => a.Timestamp)
+                .IsDescending()
+                .HasDatabaseName("ix_audit_logs_timestamp");
+            entity.HasIndex(a => a.EntityType).HasDatabaseName("ix_audit_logs_entity_type");
+            entity.HasIndex(a => a.Action).HasDatabaseName("ix_audit_logs_action");
+            entity.HasIndex(a => a.UserId).HasDatabaseName("ix_audit_logs_user_id");
+            entity.HasIndex(a => new { a.EntityType, a.EntityId })
+                .HasDatabaseName("ix_audit_logs_entity_type_entity_id");
+        });
     }
 }
