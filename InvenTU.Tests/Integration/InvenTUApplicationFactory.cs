@@ -1,5 +1,7 @@
 using System.Data.Common;
 using InvenTU.Infrastructure.Data;
+using InvenTU.Infrastructure.DataSeeders;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -38,21 +40,41 @@ public sealed class InvenTUApplicationFactory : WebApplicationFactory<Program>
             // Connect to dedicated testing DB
             services.AddDbContext<InvenTUDbContext>(options =>
                 options.UseNpgsql(_testConnectionString));
+
+            services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes("Test")
+                    .Combine(options.DefaultPolicy)
+                    .Build();
+            });
+
+            var db = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
+
+            db.Database.Migrate();
+            db.Database.EnsureCreated();
         });
     }
-    public async Task InitializeAsync(CancellationToken cancellationToken)
+    public async Task InitializeAsync()
     {
         _dbConnection = new NpgsqlConnection(_testConnectionString);
 
-        await _dbConnection.OpenAsync(cancellationToken);
+        await _dbConnection.OpenAsync();
 
         _respawner = await Respawner.CreateAsync(_dbConnection, new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
         });
     }
-    public async Task ResetDbAsync(CancellationToken cancellationToken)
+    public async Task ResetDbAsync()
     {
         await _respawner.ResetAsync(_dbConnection);
+    }
+    public async Task SeedDbAsync(IServiceScope scope)
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
+
+        await dbContext.Database.MigrateAsync();
+        await SeedOrchestrator.SeedAsync(dbContext);
     }
 }
