@@ -20,6 +20,7 @@ public sealed class StockTransferService(
     IWarehouseRepository warehouseRepository,
     IStockLocationRepository stockLocationRepository,
     IStockTransferRepository stockTransferRepository,
+    IProductRepository productRepository,
     ICurrentUserService currentUserService,
     IAlertService alertService,
     ILiveFeedService liveFeedService,
@@ -120,6 +121,9 @@ public sealed class StockTransferService(
         var currentUser = await currentUserService.GetCurrentUserAsync()
             ?? throw new InvalidOperationException("Authenticated user could not be resolved.");
 
+        var product = await productRepository.GetByIdAsync(request.ProductId, cancellationToken);
+        var productName = product?.Name ?? string.Empty;
+
         var movementId = await stockTransferRepository.ExecuteAsync(
             request.ProductId,
             request.SourceStockLocationId,
@@ -138,7 +142,7 @@ public sealed class StockTransferService(
             MovementId = movementId,
             MovementType = "Transfer",
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = productName,
             Quantity = request.Quantity,
             DisplayQuantity = request.Quantity,                          // direction via source/dest names
             SourceWarehouseName = sourceWarehouse.Name,
@@ -152,7 +156,7 @@ public sealed class StockTransferService(
         {
             MovementId = movementId,
             ProductId = request.ProductId,
-            ProductName = string.Empty,
+            ProductName = productName,
             SourceWarehouseId = sourceWarehouse.Id,
             SourceWarehouseName = sourceWarehouse.Name,
             DestinationWarehouseId = destWarehouse.Id,

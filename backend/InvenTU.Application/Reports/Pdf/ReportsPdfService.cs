@@ -1,4 +1,3 @@
-using InvenTU.Core.Contracts.Repositories;
 using InvenTU.Core.Contracts.Services;
 using InvenTU.Core.DTOs.Reports;
 using QuestPDF.Fluent;
@@ -8,9 +7,9 @@ namespace InvenTU.Application.Reports.Pdf;
 
 /// <summary>
 /// Application-layer implementation of <see cref="IReportsPdfService"/>.
-/// Orchestrates data retrieval via <see cref="IReportsService"/> and
-/// <see cref="IReportsRepository"/>, then delegates PDF rendering to the
-/// QuestPDF document templates in <c>InvenTU.Application.Reports.Pdf</c>.
+/// Orchestrates data retrieval via <see cref="IReportsService"/>, then delegates
+/// PDF rendering to the QuestPDF document templates in
+/// <c>InvenTU.Application.Reports.Pdf</c>.
 /// </summary>
 /// <remarks>
 /// The QuestPDF Community licence is registered once in the static constructor.
@@ -20,7 +19,6 @@ namespace InvenTU.Application.Reports.Pdf;
 public sealed class ReportsPdfService : IReportsPdfService
 {
     private readonly IReportsService _reportsService;
-    private readonly IReportsRepository _reportsRepository;
     private readonly byte[] _logoBytes;
 
     // Static initialisation
@@ -40,22 +38,16 @@ public sealed class ReportsPdfService : IReportsPdfService
     /// the embedded company logo from the assembly manifest.
     /// </summary>
     /// <param name="reportsService">
-    /// Service that computes inventory valuation report data.
-    /// </param>
-    /// <param name="reportsRepository">
-    /// Repository used to fetch stock movement rows for the PDF report.
+    /// Service that computes report data (inventory valuation, stock movement, etc.).
     /// </param>
     /// <exception cref="InvalidOperationException">
     /// Thrown when the embedded logo resource cannot be located in the assembly
     /// manifest — usually because the file was not set to
     /// <c>EmbeddedResource</c> in the project file.
     /// </exception>
-    public ReportsPdfService(
-        IReportsService reportsService,
-        IReportsRepository reportsRepository)
+    public ReportsPdfService(IReportsService reportsService)
     {
         _reportsService = reportsService;
-        _reportsRepository = reportsRepository;
         _logoBytes = LoadLogoBytes();
     }
 
@@ -83,49 +75,32 @@ public sealed class ReportsPdfService : IReportsPdfService
         StockMovementReportQueryParams queryParams,
         CancellationToken cancellationToken)
     {
-        // Resolve date defaults so the filter summary in the PDF shows
-        // concrete values rather than blanks.
-        var toDate = queryParams.ToDate ?? DateTime.UtcNow;
-        var fromDate = queryParams.FromDate ?? toDate.AddDays(-30);
-
-        var rows = await _reportsRepository.GetStockMovementsForReportAsync(
-            fromDate,
-            toDate,
-            queryParams.WarehouseId,
-            queryParams.MovementType,
-            queryParams.Status,
-            queryParams.ProductId,
+        var response = await _reportsService.GetStockMovementReportAsync(
+            queryParams,
             cancellationToken);
-
-        var countsByType = rows
-            .GroupBy(r => r.MovementType)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var countsByStatus = rows
-            .GroupBy(r => r.Status)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        var response = new StockMovementReportResponse
-        {
-            GeneratedAt = DateTime.UtcNow,
-            Filters = new StockMovementReportQueryParams
-            {
-                FromDate = fromDate,
-                ToDate = toDate,
-                WarehouseId = queryParams.WarehouseId,
-                MovementType = queryParams.MovementType,
-                Status = queryParams.Status,
-                ProductId = queryParams.ProductId,
-            },
-            Items = rows,
-            CountsByType = countsByType,
-            CountsByStatus = countsByStatus,
-            TotalQuantityMoved = rows.Sum(r => r.Quantity),
-        };
 
         var document = new StockMovementDocument(response, _logoBytes);
         var bytes = document.GeneratePdf();
         var fileName = $"stock-movement-{DateTime.UtcNow:yyyy-MM-dd}.pdf";
+
+        return (bytes, fileName);
+    }
+
+    /// <inheritdoc />
+    public async Task<(byte[] Bytes, string FileName)> GenerateTurnoverPdfAsync(
+        TurnoverQueryParams queryParams,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(queryParams);
+
+        var toDate = EnsureUtc(queryParams.ToDate ?? DateTime.UtcNow);
+        var fromDate = EnsureUtc(queryParams.FromDate ?? toDate.AddDays(-90));
+
+        var data = await _reportsService.GetTurnoverAsync(fromDate, toDate, cancellationToken);
+
+        var document = new TurnoverDocument(data, _logoBytes);
+        var bytes = document.GeneratePdf();
+        var fileName = $"product-turnover-{DateTime.UtcNow:yyyy-MM-dd}.pdf";
 
         return (bytes, fileName);
     }
@@ -155,4 +130,7 @@ public sealed class ReportsPdfService : IReportsPdfService
         stream.CopyTo(ms);
         return ms.ToArray();
     }
+
+    private static DateTime EnsureUtc(DateTime value) =>
+        value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }

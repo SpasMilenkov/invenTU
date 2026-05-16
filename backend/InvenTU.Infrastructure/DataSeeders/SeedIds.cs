@@ -49,13 +49,20 @@ public static class SeedIds
     public static readonly Guid StockItemPaper1  = Guid.Parse("ffffffff-0005-0000-0000-000000000000");
     public static readonly Guid StockItemFile1   = Guid.Parse("ffffffff-0006-0000-0000-000000000000");
 
-    // StockMovements
+    // StockMovements — initial receipts (one per stock item, dated relative to seeding time so reports return data)
     public static readonly Guid MovementPhone1Init  = Guid.Parse("11111111-0001-0000-0000-000000000000");
     public static readonly Guid MovementPhone2Init  = Guid.Parse("11111111-0002-0000-0000-000000000000");
     public static readonly Guid MovementLaptop1Init = Guid.Parse("11111111-0003-0000-0000-000000000000");
     public static readonly Guid MovementLaptop2Init = Guid.Parse("11111111-0004-0000-0000-000000000000");
     public static readonly Guid MovementPaper1Init  = Guid.Parse("11111111-0005-0000-0000-000000000000");
     public static readonly Guid MovementFile1Init   = Guid.Parse("11111111-0006-0000-0000-000000000000");
+
+    // StockMovements — sample issues so the Turnover report has non-zero data
+    public static readonly Guid MovementPhone1Issue1 = Guid.Parse("11111111-1001-0000-0000-000000000000");
+    public static readonly Guid MovementPhone1Issue2 = Guid.Parse("11111111-1002-0000-0000-000000000000");
+    public static readonly Guid MovementPhone2Issue1 = Guid.Parse("11111111-1003-0000-0000-000000000000");
+    public static readonly Guid MovementLaptop1Issue = Guid.Parse("11111111-1004-0000-0000-000000000000");
+    public static readonly Guid MovementPaper1Issue  = Guid.Parse("11111111-1005-0000-0000-000000000000");
 
     // PurchaseOrders
     public static readonly Guid PurchaseOrderTech   = Guid.Parse("22222222-0001-0000-0000-000000000000");

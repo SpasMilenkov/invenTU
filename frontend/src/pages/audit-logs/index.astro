@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AuditLogsPage from '../../components/audit-logs/AuditLogsPage';
+---
+
+<Layout title="Audit Log" crumb="Audit Log">
+  <AuditLogsPage client:only="react" />
+</Layout>

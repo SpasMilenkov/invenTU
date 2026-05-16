@@ -3,6 +3,7 @@ FROM node:lts-alpine AS dev
 WORKDIR /usr/src/app
 RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+ENV CI=true
 RUN pnpm install --frozen-lockfile
 EXPOSE 4321
 

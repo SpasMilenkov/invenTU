@@ -1,18 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import ReportsPage from '../../components/reports/ReportsPage';
 ---
 
 <Layout title="Reports" crumb="Reports">
-  <div class="page-head">
-    <div>
-      <div class="page-sub">ANALYZE / REPORTS</div>
-      <h1 class="page-title">Reports</h1>
-    </div>
-  </div>
-  <div class="empty">
-    <div class="micro" style="margin-bottom: 8px;">UNDER CONSTRUCTION</div>
-    <p class="text-[13px]" style="color: var(--color-ink-3);">
-      Stock turnover, low-stock alerts, and movement summaries will appear here.
-    </p>
-  </div>
+  <ReportsPage client:only="react" />
 </Layout>
