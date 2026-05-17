@@ -29,14 +29,19 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test InvenTU.Tests/InvenTU.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+        run: >
+          dotnet test InvenTU.Tests/InvenTU.Tests.csproj
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: "TestResults/**/*.trx"
+          path: TestResults/**/*.trx
 
   frontend-e2e:
     name: frontend e2e (chromium)
@@ -47,12 +52,17 @@ jobs:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: app_db
       PORT: 4000
-      JWT_SECRET: ci-only-secret-key-minimum-32-chars-long!!
+
+      # Match backend .NET config binding
+      JwtSettings__Secret: "ci-only-secret-key-minimum-32-chars-long!!"
+
       PUBLIC_HUB_URL: http://localhost:4000/hubs/live-feed
       PUBLIC_ALERTS_HUB_URL: http://localhost:4000/hubs/alerts
       INTERNAL_API_BASE_URL: http://api:4000/api/v1
+
       E2E_BASE_URL: http://localhost:4321
       E2E_API_HEALTH_URL: http://localhost:4000/api/v1/health
+      E2E_HEALTH_TIMEOUT_SECS: 180
 
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +90,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          cache: "pnpm"
+          cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install frontend dependencies
@@ -93,10 +103,24 @@ jobs:
         working-directory: frontend
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Run Playwright (chromium + setup project)
+      # Debug step to verify CI actually sees test files
+      - name: Debug Playwright test discovery
         if: steps.detect.outputs.has_tests == 'true'
         working-directory: frontend
-        run: pnpm test:e2e -- --project=setup --project=chromium
+        run: |
+          echo "==> Current dir: $(pwd)"
+          echo "==> Listing tests:"
+          find tests/e2e -type f | sort || true
+          echo "==> Playwright discovered tests:"
+          pnpm exec playwright test --list || true
+
+      # Important fix:
+      # do NOT pass --project args through pnpm/bash wrapper yet
+      # let playwright.config.ts handle project selection
+      - name: Run Playwright
+        if: steps.detect.outputs.has_tests == 'true'
+        working-directory: frontend
+        run: pnpm test:e2e
 
       - name: Upload Playwright HTML report
         if: always() && steps.detect.outputs.has_tests == 'true'
