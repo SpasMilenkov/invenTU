@@ -20,10 +20,13 @@ const COMMANDS: CommandGroup[] = [
     items: [
       { id: 'go-dashboard', label: 'Go to Dashboard', glyph: 'grid', href: '/', meta: 'G D' },
       { id: 'go-products', label: 'Go to Products', glyph: 'box', href: '/products', meta: 'G P' },
+      { id: 'go-categories', label: 'Go to Categories', glyph: 'tag', href: '/categories', meta: 'G C' },
+      { id: 'go-orders', label: 'Go to Purchase Orders', glyph: 'clipboard', href: '/purchase-orders', meta: 'G O' },
       { id: 'go-warehouses', label: 'Go to Warehouses', glyph: 'warehouse', href: '/warehouses', meta: 'G W' },
       { id: 'go-stock', label: 'Go to Stock Operations', glyph: 'scan', href: '/stock', meta: 'G S' },
       { id: 'go-suppliers', label: 'Go to Suppliers', glyph: 'truck', href: '/suppliers', meta: 'G L' },
       { id: 'go-reports', label: 'Go to Reports', glyph: 'chart', href: '/reports', meta: 'G R' },
+      { id: 'go-audit', label: 'Go to Audit', glyph: 'shield', href: '/audit-logs', meta: 'G A' },
       { id: 'go-users', label: 'Go to Users', glyph: 'users', href: '/users', meta: 'G U' },
       { id: 'go-profile', label: 'Go to Profile', glyph: 'user', href: '/profile', meta: '' },
     ],
