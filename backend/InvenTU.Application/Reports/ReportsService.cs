@@ -55,10 +55,10 @@ public sealed class ReportsService(IReportsRepository reportsRepository) : IRepo
         var annualisedRatio = Math.Round(periodTurnover * annualisationFactor, 4);
 
         var classification = annualisedRatio > FastMovingThreshold
-            ? "FastMoving"
+            ? ProductTurnoverClassifications.FastMoving
             : annualisedRatio < SlowMovingThreshold
-                ? "SlowMoving"
-                : "Normal";
+                ? ProductTurnoverClassifications.SlowMoving
+                : ProductTurnoverClassifications.Normal;
 
         return new ProductTurnoverDto
         {
@@ -113,6 +113,52 @@ public sealed class ReportsService(IReportsRepository reportsRepository) : IRepo
         };
     }
 
+    /// <inheritdoc />
+    public async Task<StockMovementReportResponse> GetStockMovementReportAsync(
+        StockMovementReportQueryParams queryParams,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(queryParams);
+
+        var toDate = EnsureUtc(queryParams.ToDate ?? DateTime.UtcNow);
+        var fromDate = EnsureUtc(queryParams.FromDate ?? toDate.AddDays(-30));
+
+        var rows = await reportsRepository.GetStockMovementsForReportAsync(
+            fromDate,
+            toDate,
+            queryParams.WarehouseId,
+            queryParams.MovementType,
+            queryParams.Status,
+            queryParams.ProductId,
+            cancellationToken);
+
+        var countsByType = rows
+            .GroupBy(r => r.MovementType)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var countsByStatus = rows
+            .GroupBy(r => r.Status)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        return new StockMovementReportResponse
+        {
+            GeneratedAt = DateTime.UtcNow,
+            Filters = new StockMovementReportQueryParams
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                WarehouseId = queryParams.WarehouseId,
+                MovementType = queryParams.MovementType,
+                Status = queryParams.Status,
+                ProductId = queryParams.ProductId,
+            },
+            Items = rows,
+            CountsByType = countsByType,
+            CountsByStatus = countsByStatus,
+            TotalQuantityMoved = rows.Sum(r => r.Quantity),
+        };
+    }
+
     /// <summary>
     /// Computes the FIFO unit cost for a product given its on-hand quantity and purchase-order cost layers.
     /// </summary>
@@ -147,4 +193,7 @@ public sealed class ReportsService(IReportsRepository reportsRepository) : IRepo
             ? fallbackCostPrice
             : Math.Round(totalCost / totalAllocated, 6);
     }
+
+    private static DateTime EnsureUtc(DateTime value) =>
+        value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
 }

@@ -37,4 +37,10 @@ public sealed class CurrentUserService(IHttpContextAccessor httpContextAccessor,
 
         return currentUser;
     }
+
+    public Guid? GetCurrentUserId()
+    {
+        var raw = httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return Guid.TryParse(raw, out var id) ? id : null;
+    }
 }

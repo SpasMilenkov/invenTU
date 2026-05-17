@@ -72,4 +72,42 @@ apiClient.interceptors.response.use(
   },
 );
 
+function parseFilename(disposition: string | undefined): string | null {
+  if (!disposition) return null;
+  const match = /filename\*?=(?:UTF-8'')?"?([^";\n]+)"?/i.exec(disposition);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+export async function downloadFile(
+  url: string,
+  params: Record<string, unknown> | undefined,
+  fallbackName: string,
+): Promise<void> {
+  const cleaned: Record<string, unknown> = {};
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === null || v === '') continue;
+      cleaned[k] = v;
+    }
+  }
+
+  const response = await apiClient.get<Blob>(url, {
+    params: cleaned,
+    responseType: 'blob',
+  });
+
+  const disposition = response.headers['content-disposition'] as string | undefined;
+  const filename = parseFilename(disposition) ?? fallbackName;
+
+  const blobUrl = URL.createObjectURL(response.data);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+}
+
 export default apiClient;
+

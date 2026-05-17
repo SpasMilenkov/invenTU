@@ -1,4 +1,5 @@
 using FluentValidation;
+using InvenTU.Application.AuditLogs;
 using InvenTU.Application.Auth;
 using InvenTU.Application.Categories;
 using InvenTU.Application.Categories.Validators;
@@ -69,6 +70,7 @@ public static class ServiceCollectionExtensions
         services.AddHostedService<LowStockMonitoringService>();
         services.AddScoped<IStatsService, StatsService>();
         services.AddScoped<IReportsService, ReportsService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         return services;
     }

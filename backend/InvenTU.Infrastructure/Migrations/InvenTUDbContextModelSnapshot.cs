@@ -91,6 +91,56 @@ namespace InvenTU.Infrastructure.Migrations
                     b.ToTable("AlertUserStates");
                 });
 
+            modelBuilder.Entity("InvenTU.Core.Entities.AuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("ChangedFields")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Action")
+                        .HasDatabaseName("ix_audit_logs_action");
+
+                    b.HasIndex("EntityType")
+                        .HasDatabaseName("ix_audit_logs_entity_type");
+
+                    b.HasIndex("Timestamp")
+                        .IsDescending()
+                        .HasDatabaseName("ix_audit_logs_timestamp");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_audit_logs_user_id");
+
+                    b.HasIndex("EntityType", "EntityId")
+                        .HasDatabaseName("ix_audit_logs_entity_type_entity_id");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("InvenTU.Core.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -757,6 +807,16 @@ namespace InvenTU.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Alert");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InvenTU.Core.Entities.AuditLog", b =>
+                {
+                    b.HasOne("InvenTU.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
                 });

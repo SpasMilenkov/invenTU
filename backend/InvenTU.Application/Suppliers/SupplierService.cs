@@ -19,7 +19,19 @@ public sealed class SupplierService (
     {
         var newPurchaseOrder = createPurchaseOrderRequest.ToEntity();
 
-        await supplierRepository.CreatePurchaseOrdersAsync(newPurchaseOrder, cancellationToken);
+        newPurchaseOrder.OrderDate = DateTime.SpecifyKind(
+            newPurchaseOrder.OrderDate,
+            DateTimeKind.Utc);
+
+        newPurchaseOrder.ExpectedDate = newPurchaseOrder.ExpectedDate.HasValue
+            ? DateTime.SpecifyKind(
+                newPurchaseOrder.ExpectedDate.Value,
+                DateTimeKind.Utc)
+            : null;
+
+        await supplierRepository.CreatePurchaseOrdersAsync(
+            newPurchaseOrder,
+            cancellationToken);
 
         return new PurchaseOrderDTO
         {
@@ -37,7 +49,7 @@ public sealed class SupplierService (
 
         if (!validationResult.IsValid)
         {
-            // Reformats the validation error into more descriptive custom exception 
+            // Reformats the validation error into more descriptive custom exception
             var errorDictionary = validationResult.Errors.GroupBy(e => e.PropertyName)
                                     .ToDictionary(p => p.Key,
                                         p => p.Select(p => p.ErrorMessage).ToArray()
@@ -105,7 +117,7 @@ public sealed class SupplierService (
 
         if (!validationResult.IsValid)
         {
-            // Reformats the validation error into more descriptive custom exception 
+            // Reformats the validation error into more descriptive custom exception
             var errorDictionary = validationResult.Errors.GroupBy(e => e.PropertyName)
                                     .ToDictionary(p => p.Key,
                                         p => p.Select(p => p.ErrorMessage).ToArray()

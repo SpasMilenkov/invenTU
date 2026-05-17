@@ -111,6 +111,7 @@ function ProductCreatePageInner() {
       <Panel>
         <form
           id="product-create-form"
+          data-testid="product-form"
           onSubmit={handleSubmit(onSubmit)}
           noValidate
           className="flex flex-col gap-6"
@@ -125,6 +126,7 @@ function ProductCreatePageInner() {
                 registration={register('sku')}
                 error={errors.sku}
                 placeholder="ACME-001"
+                testId="product-sku"
               />
               {skuValue !== '' && skuAvailability.status === 'checking' && (
                 <p className="input-help">Checking…</p>
@@ -139,12 +141,13 @@ function ProductCreatePageInner() {
               registration={register('name')}
               error={errors.name}
               placeholder="Stainless bolt 50mm"
+              testId="product-name"
             />
           </div>
 
           {/* Classification */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div data-testid="product-category">
               <span className="input-label">Category</span>
               <Controller
                 control={control}
@@ -168,6 +171,7 @@ function ProductCreatePageInner() {
                 render={({ field, fieldState }) => (
                   <select
                     id="primaryWarehouseId"
+                    data-testid="product-warehouse"
                     className={`select${fieldState.error ? ' input-error' : ''}`}
                     value={field.value ?? ''}
                     onChange={(e) => field.onChange(e.target.value)}
@@ -196,12 +200,14 @@ function ProductCreatePageInner() {
               type="number"
               registration={register('unitPrice', { valueAsNumber: true })}
               error={errors.unitPrice}
+              testId="product-unit-price"
             />
             <FormField
               label="Cost price"
               type="number"
               registration={register('costPrice', { valueAsNumber: true })}
               error={errors.costPrice}
+              testId="product-cost-price"
             />
           </div>
 
@@ -273,6 +279,7 @@ function ProductCreatePageInner() {
             <button
               type="submit"
               className="btn btn-primary"
+              data-testid="product-submit"
               disabled={mutation.isPending || skuAvailability.status === 'taken'}
             >
               {mutation.isPending ? 'Creating…' : 'Create product'}

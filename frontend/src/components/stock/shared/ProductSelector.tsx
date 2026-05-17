@@ -7,6 +7,7 @@ interface ProductSelectorProps {
   value: string;
   onChange: (productId: string) => void;
   error?: string;
+  selectTestId?: string;
 }
 
 export default function ProductSelector({
@@ -15,6 +16,7 @@ export default function ProductSelector({
   value,
   onChange,
   error,
+  selectTestId,
 }: ProductSelectorProps) {
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -41,6 +43,7 @@ export default function ProductSelector({
       />
       <select
         id={id}
+        data-testid={selectTestId}
         className={`select${error ? " input-error" : ""}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}

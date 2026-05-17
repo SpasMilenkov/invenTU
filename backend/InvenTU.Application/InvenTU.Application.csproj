@@ -9,7 +9,13 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+    <PackageReference Include="QuestPDF" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\logo.png" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <ProjectReference Include="..\InvenTU.Core\InvenTU.Core.csproj" />

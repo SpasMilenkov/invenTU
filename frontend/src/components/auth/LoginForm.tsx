@@ -61,6 +61,7 @@ function LoginFormInner() {
         placeholder="you@example.com"
         mono
         required
+        testId="login-email"
       />
       <FormField
         label="Password"
@@ -70,10 +71,11 @@ function LoginFormInner() {
         placeholder="••••••••"
         mono
         required
+        testId="login-password"
       />
 
       {mutation.isError && (
-        <p className="input-error-msg text-center">
+        <p className="input-error-msg text-center" data-testid="login-error">
           {extractAuthErrorMessage(mutation.error)}
         </p>
       )}
@@ -83,6 +85,7 @@ function LoginFormInner() {
         className="btn btn-primary"
         style={{ height: 42, justifyContent: 'center' }}
         disabled={mutation.isPending}
+        data-testid="login-submit"
       >
         {mutation.isPending ? 'Signing in…' : (
           <>

@@ -36,9 +36,9 @@ export interface ProductQueryParams {
 export interface StockByWarehouse {
   warehouseId: string;
   warehouseName: string;
-  totalQuantity: number;
-  totalQuantityReserved: number;
-  totalQuantityAvailable: number;
+  quantity: number;
+  quantityReserved: number;
+  quantityAvailable: number;
 }
 
 export interface StockSummary {
