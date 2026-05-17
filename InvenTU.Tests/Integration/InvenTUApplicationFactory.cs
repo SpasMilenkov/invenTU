@@ -1,9 +1,15 @@
 using System.Data.Common;
+using System.Security.Claims;
+using InvenTU.Core.Entities;
 using InvenTU.Infrastructure.Data;
 using InvenTU.Infrastructure.DataSeeders;
+using InvenTU.Tests.Integration.Auth;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +29,7 @@ public sealed class InvenTUApplicationFactory : WebApplicationFactory<Program>
         //todo: init Integration settings
         builder.UseEnvironment("Development");
 
-        builder.ConfigureServices(services =>
+        builder.ConfigureTestServices(services =>
         {
             // Inject config
             var provider = services.BuildServiceProvider();
@@ -42,12 +48,14 @@ public sealed class InvenTUApplicationFactory : WebApplicationFactory<Program>
                 options.UseNpgsql(_testConnectionString));
 
             services.AddAuthorization(options =>
-            {
-                options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .AddAuthenticationSchemes("Test")
-                    .Combine(options.DefaultPolicy)
-                    .Build();
-            });
+                {
+                    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                        .AddAuthenticationSchemes("Test")
+                        .Combine(options.DefaultPolicy)
+                        .Build();
+                }).AddAuthentication().AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+
+            services.AddScoped(_ => new AuthClaimProvider());
 
             var db = scope.ServiceProvider.GetRequiredService<InvenTUDbContext>();
 

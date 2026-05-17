@@ -1,4 +1,3 @@
-using InvenTU.Tests.Integration;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InvenTU.Tests.Integration.ControllerTests;
