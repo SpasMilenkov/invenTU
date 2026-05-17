@@ -29,14 +29,14 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test InvenTU.Tests/InvenTU.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+        run: dotnet test InvenTU.Tests/InvenTU.Tests.csproj --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: "**/TestResults/test-results.trx"
+          path: "TestResults/**/*.trx"
 
   frontend-e2e:
     name: frontend e2e (chromium)
