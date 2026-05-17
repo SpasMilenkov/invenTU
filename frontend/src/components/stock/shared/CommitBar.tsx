@@ -9,6 +9,7 @@ interface CommitBarProps {
   loadingLabel?: string;
   onSecondary?: () => void;
   secondaryLabel?: string;
+  primaryTestId?: string;
 }
 
 export default function CommitBar({
@@ -20,6 +21,7 @@ export default function CommitBar({
   loadingLabel = "Submitting…",
   onSecondary,
   secondaryLabel = "Reset",
+  primaryTestId,
 }: CommitBarProps) {
   return (
     <div className="commit-bar">
@@ -41,6 +43,7 @@ export default function CommitBar({
         <button
           type="submit"
           className="btn btn-primary"
+          data-testid={primaryTestId}
           disabled={primaryDisabled || primaryLoading}
         >
           {primaryLoading ? loadingLabel : primaryLabel}

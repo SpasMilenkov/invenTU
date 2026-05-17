@@ -82,53 +82,56 @@ function DashboardInner() {
       {/* Page header */}
       <div className="page-head" style={{ marginBottom: 0 }}>
         <div>
-          <h1 className="page-title">Dashboard</h1>
+          <h1 className="page-title" data-testid="dashboard-heading">Dashboard</h1>
           <p className="page-sub">Warehouse health at a glance</p>
         </div>
       </div>
 
       {/* KPI cards */}
-      {statsError ? (
-        <ErrorBanner message={statsErrorMsg} />
-      ) : statsLoading || !stats ? (
-        // Fall back to a full skeleton while at least one query is pending.
-        // If individual tiles are needed independently, KpiCards itself can
-        // consume useStats and render per-tile skeletons — but that couples
-        // the component to its data source. The granular flags are passed
-        // through so KpiCards can gate each tile without re-fetching.
-        <KpiSkeleton />
-      ) : (
-        <KpiCards
-          stats={stats}
-          inventoryHealthReady={inventoryHealthReady}
-          alertsReady={alertsReady}
-          pipelineReady={pipelineReady}
-        />
-      )}
+      <section data-testid="dashboard-kpis">
+        {statsError ? (
+          <ErrorBanner message={statsErrorMsg} />
+        ) : statsLoading || !stats ? (
+          <KpiSkeleton />
+        ) : (
+          <KpiCards
+            stats={stats}
+            inventoryHealthReady={inventoryHealthReady}
+            alertsReady={alertsReady}
+            pipelineReady={pipelineReady}
+          />
+        )}
+      </section>
 
       {/* Chart row + low-stock panel */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.25fr_1fr]">
         <AlertPanel />
-        {dashError ? (
-          <ErrorBanner message={dashErrorMsg} />
-        ) : dashLoading || !dashData ? (
-          <ChartSkeleton />
-        ) : (
-          <StockByCategoryChart items={dashData.stockByCategory} />
-        )}
+        <section data-testid="dashboard-chart">
+          {dashError ? (
+            <ErrorBanner message={dashErrorMsg} />
+          ) : dashLoading || !dashData ? (
+            <ChartSkeleton />
+          ) : (
+            <StockByCategoryChart items={dashData.stockByCategory} />
+          )}
+        </section>
 
         {/* AlertPanel is always mounted — it owns its own loading state */}
       </div>
 
       {/* Recent movements feed */}
-      {dashLoading || !dashData ? (
-        <FeedSkeleton />
-      ) : (
-        <RecentMovements movements={dashData.recentMovements} />
-      )}
+      <section data-testid="dashboard-recent-movements">
+        {dashLoading || !dashData ? (
+          <FeedSkeleton />
+        ) : (
+          <RecentMovements movements={dashData.recentMovements} />
+        )}
+      </section>
 
       {/* Live stock feed (self-managed) */}
-      <LiveStockFeed />
+      <section data-testid="dashboard-live-feed">
+        <LiveStockFeed />
+      </section>
     </div>
   );
 }

@@ -125,7 +125,7 @@ function StockReceiveForm() {
   if (success) {
     const { result, locationCode: code } = success;
     return (
-      <div className="panel">
+      <div className="panel" data-testid="stock-receive-confirmation">
         <div className="panel-head">
           <span className="panel-title">RECEIPT CONFIRMED</span>
           <span className="tag tag-ok">SUCCESS</span>
@@ -206,7 +206,7 @@ function StockReceiveForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-1 flex-col">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-1 flex-col" data-testid="stock-receive-form">
       <div className="page-head">
         <div>
           <div className="page-sub">OPERATE / STOCK / RECEIVE</div>
@@ -249,6 +249,7 @@ function StockReceiveForm() {
                   <input
                     {...field}
                     id="recv-ref"
+                    data-testid="stock-receive-ref"
                     type="text"
                     className="input mono"
                     placeholder="e.g. PO-2026-001"
@@ -267,6 +268,7 @@ function StockReceiveForm() {
                     setValue("productId", id, { shouldValidate: true })
                   }
                   error={errors.productId?.message}
+                  selectTestId="stock-receive-product"
                 />
               )}
             />
@@ -281,6 +283,7 @@ function StockReceiveForm() {
                 render={({ field }) => (
                   <QtyStepper
                     id="recv-qty"
+                    dataTestId="stock-receive-qty"
                     value={field.value}
                     onChange={(next) =>
                       setValue("quantity", next, { shouldValidate: true })
@@ -306,6 +309,7 @@ function StockReceiveForm() {
                   <input
                     {...field}
                     id="recv-notes"
+                    data-testid="stock-receive-notes"
                     type="text"
                     className="input"
                     placeholder="Any additional information…"
@@ -344,6 +348,8 @@ function StockReceiveForm() {
                   }
                   warehouseError={errors.warehouseId?.message}
                   locationError={errors.stockLocationId?.message}
+                  warehouseTestId="stock-receive-warehouse"
+                  locationTestId="stock-receive-location"
                 />
               )}
             />
@@ -457,6 +463,7 @@ function StockReceiveForm() {
         }
         primaryLoading={isSubmitting}
         loadingLabel="Receiving…"
+        primaryTestId="stock-receive-submit"
       />
     </form>
   );

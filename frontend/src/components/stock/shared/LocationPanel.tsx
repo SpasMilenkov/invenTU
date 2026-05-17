@@ -17,6 +17,8 @@ interface LocationPanelProps {
   warehouseError?: string;
   locationError?: string;
   prefix?: string;
+  warehouseTestId?: string;
+  locationTestId?: string;
 }
 
 export default function LocationPanel({
