@@ -135,9 +135,9 @@ function StockBreakdown({ productId }: { productId: string }) {
             {s.byWarehouse.map((w) => (
               <tr key={w.warehouseId}>
                 <td className="strong">{w.warehouseName}</td>
-                <td className="num">{w.totalQuantityAvailable}</td>
-                <td className="num">{w.totalQuantityReserved}</td>
-                <td className="num">{w.totalQuantity}</td>
+                <td className="num">{w.quantityAvailable}</td>
+                <td className="num">{w.quantityReserved}</td>
+                <td className="num">{w.quantity}</td>
               </tr>
             ))}
           </tbody>
