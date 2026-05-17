@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+<PackageReference Include="Moq" />
     <PackageReference Include="Respawn" />
     <PackageReference Include="xunit.abstractions" />
     <PackageReference Include="xunit.runner.visualstudio">
