@@ -13,14 +13,17 @@ public sealed class TestAuthHandler(
     AuthClaimProvider claimProvider) : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     public const string SchemeName = "Test";
+
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        if (claimProvider.Claims.Count == 0)
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+
         var identity = new ClaimsIdentity(claimProvider.Claims, SchemeName);
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, SchemeName);
-
-        var result = AuthenticateResult.Success(ticket);
-
-        return Task.FromResult(result);
+        return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }
