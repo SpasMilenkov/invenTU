@@ -53,7 +53,7 @@ jobs:
       POSTGRES_DB: app_db
       PORT: 4000
 
-      # Match backend .NET config binding
+      # Must match .NET configuration binding
       JwtSettings__Secret: "ci-only-secret-key-minimum-32-chars-long!!"
 
       PUBLIC_HUB_URL: http://localhost:4000/hubs/live-feed
@@ -75,7 +75,7 @@ jobs:
             echo "::notice::Frontend E2E tests detected; running."
           else
             echo "has_tests=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::No frontend E2E tests in this branch; skipping setup."
+            echo "::notice::No frontend E2E tests found; skipping."
           fi
 
       - name: Setup pnpm
@@ -98,13 +98,12 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright browsers (chromium)
+      - name: Install Playwright browsers (chromium only)
         if: steps.detect.outputs.has_tests == 'true'
         working-directory: frontend
         run: pnpm exec playwright install --with-deps chromium
 
-      # Debug step to verify CI actually sees test files
-      - name: Debug Playwright test discovery
+      - name: Debug Playwright discovery
         if: steps.detect.outputs.has_tests == 'true'
         working-directory: frontend
         run: |
@@ -114,9 +113,6 @@ jobs:
           echo "==> Playwright discovered tests:"
           pnpm exec playwright test --list || true
 
-      # Important fix:
-      # do NOT pass --project args through pnpm/bash wrapper yet
-      # let playwright.config.ts handle project selection
       - name: Run Playwright
         if: steps.detect.outputs.has_tests == 'true'
         working-directory: frontend
@@ -130,7 +126,7 @@ jobs:
           path: frontend/playwright-report/
           if-no-files-found: ignore
 
-      - name: Upload Playwright test artifacts (screenshots/videos/traces)
+      - name: Upload Playwright artifacts
         if: always() && steps.detect.outputs.has_tests == 'true'
         uses: actions/upload-artifact@v4
         with:
