@@ -25,8 +25,7 @@ public sealed class UpdateProductRequestValidator : AbstractValidator<UpdateProd
             .MaximumLength(20).WithMessage("UnitOfMeasure must not exceed 20 characters.");
 
         RuleFor(x => x.MinStockLevel)
-            .GreaterThanOrEqualTo(0).WithMessage("MinStockLevel must be 0 or greater.")
-            .When(x => x.MaxStockLevel.HasValue);
+            .GreaterThanOrEqualTo(0).WithMessage("MinStockLevel must be 0 or greater.");
 
         RuleFor(x => x.MaxStockLevel)
             .GreaterThanOrEqualTo(0).WithMessage("MaxStockLevel must be 0 or greater.")
