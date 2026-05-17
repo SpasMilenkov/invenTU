@@ -33,6 +33,7 @@ public sealed class StockIssueServiceTests
                     Mock<IWarehouseRepository> wh,
                     Mock<IStockLocationRepository> loc,
                     Mock<IStockIssueRepository> repo,
+                    Mock<IProductRepository> prod,
                     Mock<ICurrentUserService> usr,
                     Mock<ILiveFeedService> feed,
                     Mock<IValidator<IssueStockRequest>> val) Build(bool valid = true)
@@ -42,27 +43,28 @@ public sealed class StockIssueServiceTests
         var repo = new Mock<IStockIssueRepository>();
         var usr = new Mock<ICurrentUserService>();
         var feed = new Mock<ILiveFeedService>();
+        var prod = new Mock<IProductRepository>();
         var val = new Mock<IValidator<IssueStockRequest>>();
         val.Setup(v => v.ValidateAsync(It.IsAny<IssueStockRequest>(), It.IsAny<CancellationToken>()))
            .ReturnsAsync(valid
                ? new ValidationResult()
                : new ValidationResult(new[] { new ValidationFailure("X", "fail") }));
 
-        var svc = new StockIssueService(wh.Object, loc.Object, repo.Object, usr.Object, feed.Object, val.Object);
-        return (svc, wh, loc, repo, usr, feed, val);
+        var svc = new StockIssueService(wh.Object, loc.Object, repo.Object, prod.Object, usr.Object, feed.Object, val.Object);
+        return (svc, wh, loc, repo, prod, usr, feed, val);
     }
 
     [Fact]
     public async Task IssueAsync_ValidationFails_Throws()
     {
-        var (svc, _, _, _, _, _, _) = Build(valid: false);
+        var (svc, _, _, _, _, _, _, _) = Build(valid: false);
         await Assert.ThrowsAsync<CoreValidationException>(() => svc.IssueAsync(ValidRequest));
     }
 
     [Fact]
     public async Task IssueAsync_WarehouseMissing_Throws()
     {
-        var (svc, wh, _, _, _, _, _) = Build();
+        var (svc, wh, _, _, _, _, _, _) = Build();
         wh.Setup(r => r.GetForUpdateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
           .ReturnsAsync((Warehouse?)null);
         await Assert.ThrowsAsync<WarehouseNotFoundException>(() => svc.IssueAsync(ValidRequest));
@@ -71,7 +73,7 @@ public sealed class StockIssueServiceTests
     [Fact]
     public async Task IssueAsync_WarehouseInactive_Throws()
     {
-        var (svc, wh, _, _, _, _, _) = Build();
+        var (svc, wh, _, _, _, _, _, _) = Build();
         wh.Setup(r => r.GetForUpdateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
           .ReturnsAsync(new Warehouse { Id = ValidRequest.WarehouseId, IsActive = false });
         await Assert.ThrowsAsync<WarehouseNotActiveException>(() => svc.IssueAsync(ValidRequest));
@@ -80,7 +82,7 @@ public sealed class StockIssueServiceTests
     [Fact]
     public async Task IssueAsync_LocationMissing_Throws()
     {
-        var (svc, wh, loc, _, _, _, _) = Build();
+        var (svc, wh, loc, _, _, _, _, _) = Build();
         wh.Setup(r => r.GetForUpdateAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
           .ReturnsAsync(new Warehouse { Id = ValidRequest.WarehouseId, IsActive = true });
         loc.Setup(r => r.GetForUpdateAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
