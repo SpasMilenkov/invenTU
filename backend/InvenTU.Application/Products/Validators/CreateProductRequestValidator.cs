@@ -40,6 +40,6 @@ public sealed class CreateProductRequestValidator : AbstractValidator<CreateProd
 
         RuleFor(x => x.ReorderPoint)
             .GreaterThanOrEqualTo(0).WithMessage("ReorderPoint must be 0 or greater.")
-            .LessThanOrEqualTo(x => x.MinStockLevel).WithMessage("ReorderPoint must be less than or equal to MaxStockLevel.");
+            .GreaterThanOrEqualTo(x => x.MinStockLevel).WithMessage("ReorderPoint must be greater than or equal to MinStockLevel.");
     }
 }
