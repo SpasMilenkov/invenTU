@@ -1,41 +1,44 @@
-import type { ReactElement, SVGProps } from 'react';
+import type { ReactElement, SVGProps } from "react";
 
 export type IconName =
-  | 'grid'
-  | 'box'
-  | 'warehouse'
-  | 'truck'
-  | 'bell'
-  | 'cart'
-  | 'chart'
-  | 'user'
-  | 'users'
-  | 'search'
-  | 'plus'
-  | 'arrow'
-  | 'arrow_down'
-  | 'arrow_up'
-  | 'filter'
-  | 'x'
-  | 'chev'
-  | 'chev_down'
-  | 'cube'
-  | 'settings'
-  | 'list'
-  | 'inbox'
-  | 'layers'
-  | 'scan'
-  | 'file'
-  | 'check'
-  | 'sun'
-  | 'moon'
-  | 'menu'
-  | 'logout'
-  | 'edit'
-  | 'trash'
-  | 'sliders';
+  | "grid"
+  | "box"
+  | "warehouse"
+  | "truck"
+  | "bell"
+  | "cart"
+  | "chart"
+  | "user"
+  | "users"
+  | "search"
+  | "plus"
+  | "arrow"
+  | "arrow_down"
+  | "arrow_up"
+  | "filter"
+  | "x"
+  | "chev"
+  | "chev_down"
+  | "cube"
+  | "settings"
+  | "list"
+  | "inbox"
+  | "layers"
+  | "scan"
+  | "file"
+  | "check"
+  | "sun"
+  | "moon"
+  | "menu"
+  | "logout"
+  | "edit"
+  | "trash"
+  | "sliders"
+  | "tag"
+  | "clipboard"
+  | "shield";
 
-interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
+interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
   name: IconName;
   size?: number;
 }
@@ -199,6 +202,25 @@ const PATHS: Record<IconName, ReactElement> = {
       <rect x="7" y="5" width="4" height="4" />
       <rect x="13" y="10" width="4" height="4" />
       <rect x="9" y="15" width="4" height="4" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M4 4 H13 L20 12 L13 20 H4 Z" />
+      <circle cx="9" cy="12" r="1.5" />
+    </>
+  ),
+  clipboard: (
+    <>
+      <path d="M9 3 H15 V6 H9 Z" />
+      <path d="M7 5 H5 V21 H19 V5 H17 V6 H7 Z" />
+      <path d="M9 11 H15 M9 15 H15" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 3 L20 7 V13 C20 18 16 21 12 22 C8 21 4 18 4 13 V7 Z" />
+      <path d="M9 12 L11 14 L15 10" />
     </>
   ),
 };
