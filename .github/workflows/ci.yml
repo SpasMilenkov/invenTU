@@ -72,6 +72,7 @@ jobs:
         if: steps.detect.outputs.has_tests == 'true'
         uses: pnpm/action-setup@v4
         with:
+          version: 11.0.7
           run_install: false
 
       - name: Setup Node
